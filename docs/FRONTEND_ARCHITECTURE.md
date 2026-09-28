@@ -124,7 +124,7 @@ Future page scripts should be additive and must not fork the theme system.
 | Mobile bottom nav | `.mobile-nav` |
 | Drawer / menu | `.mobile-drawer` |
 | Breadcrumbs | `.breadcrumb` (global; unused on Home) |
-| FAQ | not built; use global typography/cards when added |
+| FAQ | built inside Support (`#faq`, `.faq-item`, `.support-faq-section` in `css/support.css`); sits directly under the search field and doubles as the search-results area |
 
 ---
 

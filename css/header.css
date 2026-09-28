@@ -54,22 +54,14 @@
   font-size: 0.92rem;
 }
 
-.nav-link:hover,
-.nav-link.is-active {
+.nav-link:hover {
   color: var(--primary);
   background: var(--primary-soft);
 }
 
-.nav-link.is-active::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 0.18rem;
-  width: 0.85rem;
-  height: 0.16rem;
-  border-radius: var(--radius-pill);
-  background: var(--primary);
-  transform: translateX(-50%);
+.nav-link.is-active {
+  color: var(--primary);
+  background: rgba(255, 106, 0, 0.08);
 }
 
 .header-actions {

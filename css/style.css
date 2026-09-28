@@ -434,11 +434,12 @@ h5 {
   position: relative;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow: visible;
 }
 
-.form-field:has(.form-textarea),
-.form-field:has(.textarea) {
-  padding-top: 0.5rem;
+.form-field.is-open {
+  z-index: 16;
 }
 
 .form-field > .form-icon {
@@ -450,22 +451,39 @@ h5 {
   pointer-events: none;
   z-index: 2;
   line-height: 1;
+  width: 1rem;
+  text-align: center;
+}
+
+.form-field:has(.form-textarea),
+.form-field:has(.textarea) {
+  --form-textarea-inset: 1.15rem;
 }
 
 .form-field:has(.form-textarea) > .form-icon,
 .form-field:has(.textarea) > .form-icon {
-  top: calc(0.5rem + 1.15rem);
+  top: var(--form-textarea-inset);
+  transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 0.875rem;
+  font-size: 0.875rem;
 }
 
-.form-field:focus-within > .form-icon {
+.form-field:focus-within > .form-icon,
+.form-field.is-open > .form-icon {
   color: var(--primary);
 }
 
 .form-field:has(> .form-icon) .form-input,
 .form-field:has(> .form-icon) .form-textarea,
+.form-field:has(> .form-icon) .form-select,
+.form-field:has(> .form-icon) .form-select-trigger,
 .form-field:has(> .form-icon) .input,
-.form-field:has(> .form-icon) .textarea {
-  padding-left: 2.8rem;
+.form-field:has(> .form-icon) .textarea,
+.form-field:has(> .form-icon) .select {
+  padding-left: 2.85rem;
 }
 
 .form-label {
@@ -473,7 +491,8 @@ h5 {
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  padding: 0;
+  transform-origin: left center;
+  padding: 0 0.35rem;
   margin: 0;
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -481,30 +500,42 @@ h5 {
   color: var(--color-text-muted);
   background: transparent;
   pointer-events: none;
-  max-width: calc(100% - 2.4rem);
+  max-width: calc(100% - 3.2rem);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  z-index: 1;
+  z-index: 3;
+  transition: top var(--transition), left var(--transition), transform var(--transition), color var(--transition), background var(--transition), max-width var(--transition);
 }
 
 .form-field:has(> .form-icon) .form-label {
-  left: 2.8rem;
+  left: 2.7rem;
+}
+
+.form-field:has(.form-textarea) .form-label,
+.form-field:has(.textarea) .form-label {
+  top: var(--form-textarea-inset);
+  transform: none;
+  line-height: 1;
+  height: 0.875rem;
+  display: inline-flex;
+  align-items: center;
 }
 
 .form-input,
 .form-select,
+.form-select-trigger,
 .input,
 .select {
   width: 100%;
   height: 3.25rem;
   min-height: 3.25rem;
-  padding: 0 1rem;
+  padding: 0.9rem 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   color: var(--color-text);
-  line-height: 3.25rem;
+  line-height: 1.25;
   vertical-align: middle;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
@@ -525,7 +556,10 @@ h5 {
 .textarea {
   width: 100%;
   min-height: 8rem;
-  padding: 1.15rem 1rem;
+  padding-top: var(--form-textarea-inset, 1.15rem);
+  padding-right: 1rem;
+  padding-bottom: 1.15rem;
+  padding-left: 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -535,19 +569,44 @@ h5 {
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 
+.form-field:has(> .form-icon) .form-textarea,
+.form-field:has(> .form-icon) .textarea {
+  padding-left: 2.85rem;
+}
+
 .form-select,
 .select {
   appearance: none;
-  padding-right: 2.4rem;
+  padding-right: 2.5rem;
   background-image: linear-gradient(45deg, transparent 50%, var(--color-text-muted) 50%), linear-gradient(135deg, var(--color-text-muted) 50%, transparent 50%);
-  background-position: right 1rem center, right 0.65rem center;
-  background-size: 0.4rem 0.4rem, 0.4rem 0.4rem;
+  background-position: calc(100% - 1.05rem) calc(50% - 0.12rem), calc(100% - 0.72rem) calc(50% - 0.12rem);
+  background-size: 0.38rem 0.38rem, 0.38rem 0.38rem;
   background-repeat: no-repeat;
+  color-scheme: inherit;
+  accent-color: var(--primary);
+}
+
+html[data-theme="light"] .form-select,
+html[data-theme="light"] .select {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] .form-select,
+html[data-theme="dark"] .select {
+  color-scheme: dark;
+}
+
+.form-select option,
+.select option {
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus,
+.form-select-trigger:focus,
+.form-select-trigger:focus-visible,
 .input:focus,
 .textarea:focus,
 .select:focus {
@@ -556,55 +615,153 @@ h5 {
   box-shadow: var(--focus-ring);
 }
 
+.form-field.is-open .form-select-trigger {
+  border-color: var(--primary);
+  box-shadow: var(--focus-ring);
+}
+
+.form-field:focus-within .form-label,
+.form-field.is-open .form-label,
+.form-field.is-filled .form-label,
 .form-field:has(.form-input:not(:placeholder-shown)) .form-label,
 .form-field:has(.input:not(:placeholder-shown)) .form-label,
-.form-field:has(.form-input:-webkit-autofill) .form-label,
-.form-field:has(.input:-webkit-autofill) .form-label {
-  opacity: 0;
-}
-
-.form-field:has(.form-select) .form-label,
-.form-field:has(.select) .form-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.form-field:has(.form-textarea) .form-label,
-.form-field:has(.textarea) .form-label {
-  left: 0.9rem;
-  top: 1.15rem;
-  padding: 0 0.35rem;
-  background: var(--color-surface);
-  transform: translateY(-50%);
-  transform-origin: left center;
-  transition: top var(--transition), transform var(--transition), color var(--transition), left var(--transition);
-}
-
-.form-field:has(> .form-icon):has(.form-textarea) .form-label,
-.form-field:has(> .form-icon):has(.textarea) .form-label {
-  left: 2.5rem;
-}
-
-.form-field:has(.form-textarea):focus-within .form-label,
-.form-field:has(.textarea):focus-within .form-label,
 .form-field:has(.form-textarea:not(:placeholder-shown)) .form-label,
-.form-field:has(.textarea:not(:placeholder-shown)) .form-label {
+.form-field:has(.textarea:not(:placeholder-shown)) .form-label,
+.form-field:has(.form-input:-webkit-autofill) .form-label,
+.form-field:has(.input:-webkit-autofill) .form-label,
+.form-field:has(select option:checked:not([value=""])) .form-label {
   top: 0;
-  left: 0.9rem;
+  left: 0.85rem;
   transform: translateY(-50%) scale(0.85);
+  background: var(--color-surface);
+  max-width: calc(100% - 1.7rem);
+  color: var(--color-text-muted);
+}
+
+.form-field:focus-within .form-label,
+.form-field.is-open .form-label {
   color: var(--primary);
 }
 
-.form-field:has(.form-textarea):focus-within .form-label,
-.form-field:has(.textarea):focus-within .form-label {
+.form-select[data-enhanced="true"],
+.select[data-enhanced="true"] {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 3.25rem;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.form-select-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  appearance: none;
+  padding-right: 2.5rem;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 400;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.form-select-trigger::after {
+  content: "";
+  position: absolute;
+  right: 1.05rem;
+  top: 50%;
+  width: 0.42rem;
+  height: 0.42rem;
+  margin-top: -0.28rem;
+  border-right: 1.8px solid var(--color-text-muted);
+  border-bottom: 1.8px solid var(--color-text-muted);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.form-field.is-open .form-select-trigger::after {
+  margin-top: -0.05rem;
+  transform: rotate(225deg);
+}
+
+.form-field:focus-within .form-select-trigger::after,
+.form-field.is-open .form-select-trigger::after {
+  border-color: var(--primary);
+}
+
+.form-select-value {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+
+.form-select-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  z-index: 12;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  max-height: 16rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
+}
+
+.form-select-menu[hidden] {
+  display: none;
+}
+
+.form-select-option {
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  cursor: pointer;
+  line-height: 1.3;
+}
+
+.form-select-option.is-placeholder {
+  color: var(--color-text-muted);
+}
+
+.form-select-option:hover,
+.form-select-option.is-active {
+  background: var(--primary-soft);
   color: var(--primary);
+}
+
+.form-select-option.is-selected:not(.is-placeholder),
+.form-select-option[aria-selected="true"]:not(.is-placeholder) {
+  background: var(--primary);
+  color: #fff;
+}
+
+.form-select-option.is-selected:not(.is-placeholder):hover,
+.form-select-option.is-selected.is-active:not(.is-placeholder),
+.form-select-option[aria-selected="true"]:not(.is-placeholder):hover,
+.form-select-option[aria-selected="true"]:not(.is-placeholder).is-active {
+  background: var(--primary-hover);
+  color: #fff;
 }
 
 .form-helper {
@@ -622,10 +779,18 @@ h5 {
 .form-field.is-invalid .form-input,
 .form-field.is-invalid .form-select,
 .form-field.is-invalid .form-textarea,
+.form-field.is-invalid .form-select-trigger,
 .form-field.is-invalid .input,
 .form-field.is-invalid .textarea,
 .form-field.is-invalid .select {
   border-color: #c1121f;
+}
+
+form:not(.input-group) > .btn[type="submit"] {
+  width: max-content;
+  max-width: 100%;
+  justify-self: start;
+  align-self: start;
 }
 
 .input-group {
@@ -1204,6 +1369,10 @@ html[data-theme="light"] .promo-dark .chip {
 
   .brand-logo-icon {
     height: 1.9rem;
+  }
+
+  .form-select-menu {
+    max-height: 12rem;
   }
 }
 

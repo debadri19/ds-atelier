@@ -33,7 +33,7 @@
 
 .support-search {
   max-width: 40rem;
-  margin: 0 auto var(--space-7);
+  margin: 0 auto;
 }
 
 .support-search-field {
@@ -44,6 +44,15 @@
   margin-top: 0.55rem;
   font-size: var(--fs-sm);
   color: var(--color-text-muted);
+}
+
+.support-faq-section {
+  padding-top: var(--space-6);
+}
+
+/* Search has no matches: collapse the empty FAQ block so the no-results note stays the only message under the search field */
+.support-faq-section:not(:has([data-faq-item]:not([hidden]))) {
+  display: none;
 }
 
 .support-topic-grid,
@@ -187,10 +196,20 @@
 }
 
 @media (max-width: 576px) {
-  .support-topic-grid,
   .support-contact-grid,
   .support-action-grid {
     grid-template-columns: 1fr;
+  }
+
+  .support-topic-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .support-topic-card {
+    padding: var(--space-4);
+    gap: var(--space-2);
+    overflow-wrap: anywhere;
   }
 
   .support-hero-title {

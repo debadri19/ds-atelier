@@ -119,6 +119,20 @@ Patch release. Alpha / Standalone Frontend.
 
 ---
 
+## 2026-09-28 (Support)
+
+### Support search / FAQ placement
+
+- FAQ section moved directly below the search field and now acts as the search-results area; no duplicate FAQ section
+- Section order: Hero, Search, FAQ, Help Topics, Order Help, Contact options, Contact form, CTA
+- Search logic, result count, FAQ content and accordion behaviour unchanged (`js/support.js` untouched)
+- No-results: the existing note stays under the search field and the empty FAQ block is hidden (CSS `:has()`)
+- Reduced the gap between search and FAQ heading (page-specific `css/support.css` only)
+- Help Topics now 2 columns x 3 rows at 576px and below; tablet (2 columns) and desktop (3 columns) unchanged
+- `#faq` anchor and footer/drawer FAQ links unchanged
+
+---
+
 ## Unreleased / not implemented
 
 - Cart, Checkout, and other inner pages
