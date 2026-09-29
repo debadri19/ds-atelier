@@ -1,4 +1,5 @@
 .site-header {
+  --header-collapse: 0;
   position: sticky;
   top: 0.85rem;
   z-index: 80;
@@ -282,17 +283,40 @@ html[data-theme="dark"] .theme-toggle .icon-moon {
 
 @media (max-width: 768px) {
   .site-header {
-    top: 0.5rem;
+    top: calc(0.5rem - (var(--header-collapse) * 0.12rem));
   }
 
   .header-pill {
-    width: min(100% - 1rem, 80rem);
-    min-height: 3.15rem;
-    padding: 0.22rem 0.8rem;
+    width: min(calc(100% - 1rem - (var(--header-collapse) * 3.25rem)), 80rem);
+    min-height: calc(3.15rem - (var(--header-collapse) * 0.42rem));
+    padding: calc(0.22rem - (var(--header-collapse) * 0.04rem)) calc(0.8rem - (var(--header-collapse) * 0.18rem));
+  }
+
+  .menu-toggle {
+    display: none;
+  }
+
+  .header-pill .brand-lockup {
+    gap: calc(0.5rem * (1 - var(--header-collapse)));
+  }
+
+  .header-pill .brand-tagline {
+    display: none;
   }
 
   .header-pill .brand-word-stack {
-    display: none;
+    display: flex;
+    max-width: calc((1 - var(--header-collapse)) * 7.25rem);
+    opacity: calc(1 - var(--header-collapse));
+    overflow: hidden;
+    transform: translateX(calc(var(--header-collapse) * -0.2rem)) scale(calc(1 - (var(--header-collapse) * 0.12)));
+    transform-origin: left center;
+    pointer-events: none;
+  }
+
+  .header-pill .brand-logo-wordmark {
+    height: 0.62rem;
+    max-width: none;
   }
 
   .header-actions .account-btn,
@@ -361,11 +385,17 @@ html[data-theme="dark"] .theme-toggle .icon-moon {
 
 @media (max-width: 360px) {
   .header-pill {
-    width: min(100% - 0.7rem, 80rem);
+    width: min(calc(100% - 0.7rem - (var(--header-collapse) * 2.6rem)), 80rem);
   }
 
   .mobile-nav {
     left: 0.45rem;
     right: 0.45rem;
+  }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .header-pill .brand-word-stack {
+    transform: none;
   }
 }

@@ -175,6 +175,20 @@
   .about-hero-media img {
     min-height: 14rem;
   }
+
+  .about-hero-actions {
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
+
+  .about-hero-actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+    padding-inline: 0.7rem;
+  }
 }
 
 @media (max-width: 576px) {

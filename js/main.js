@@ -378,4 +378,42 @@
       syncFilled(input.closest(".form-field"));
     });
   });
+
+  var header = document.querySelector(".site-header");
+  var collapseQuery = window.matchMedia("(max-width: 768px)");
+  var collapseRange = 88;
+  var collapseTicking = false;
+
+  function setHeaderCollapse() {
+    if (!header) return;
+    if (!collapseQuery.matches) {
+      header.style.setProperty("--header-collapse", "0");
+      return;
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      header.style.setProperty("--header-collapse", window.scrollY > collapseRange ? "1" : "0");
+      return;
+    }
+    var progress = Math.min(1, Math.max(0, window.scrollY / collapseRange));
+    header.style.setProperty("--header-collapse", progress.toFixed(4));
+  }
+
+  function onHeaderScroll() {
+    if (collapseTicking) return;
+    collapseTicking = true;
+    window.requestAnimationFrame(function () {
+      setHeaderCollapse();
+      collapseTicking = false;
+    });
+  }
+
+  if (header) {
+    window.addEventListener("scroll", onHeaderScroll, { passive: true });
+    if (collapseQuery.addEventListener) {
+      collapseQuery.addEventListener("change", setHeaderCollapse);
+    } else if (collapseQuery.addListener) {
+      collapseQuery.addListener(setHeaderCollapse);
+    }
+    setHeaderCollapse();
+  }
 })();

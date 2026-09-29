@@ -193,6 +193,14 @@
   .support-form-row {
     grid-template-columns: 1fr;
   }
+
+  .promo-panel.promo-dark {
+    padding-bottom: var(--space-4);
+  }
+
+  .support-cta-copy {
+    margin-bottom: 0.75rem;
+  }
 }
 
 @media (max-width: 576px) {

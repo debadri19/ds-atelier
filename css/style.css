@@ -186,21 +186,6 @@ h5 {
   outline-offset: 3px;
 }
 
-.skip-link {
-  position: absolute;
-  left: var(--space-4);
-  top: -4rem;
-  z-index: 200;
-  background: var(--primary);
-  color: #fff;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-sm);
-}
-
-.skip-link:focus {
-  top: var(--space-4);
-}
-
 .container {
   width: min(100% - 2.5rem, var(--container-max));
   margin-inline: auto;

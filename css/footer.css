@@ -97,12 +97,6 @@
   font-size: var(--fs-sm);
 }
 
-.footer-legal {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
 .pay-badges {
   display: flex;
   gap: 0.45rem;
@@ -131,12 +125,36 @@
 
 @media (max-width: 768px) {
   .site-footer {
-    padding-bottom: calc(var(--space-8) + 4.5rem + env(safe-area-inset-bottom));
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-6);
   }
-}
 
-@media (max-width: 576px) {
   .footer-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .footer-brand .brand-lockup {
+    margin-top: 0;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .pay-badges {
+    width: 100%;
+    justify-content: center;
   }
 }

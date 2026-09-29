@@ -180,6 +180,32 @@
   align-items: center;
 }
 
+@media (min-width: 993px) {
+  .cta-print {
+    grid-template-rows: auto auto;
+    column-gap: 2.5rem;
+    row-gap: 0;
+    gap: unset;
+  }
+
+  .cta-print > :first-child {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .cta-print .print-actions {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+  }
+
+  .cta-print .media-frame {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+}
+
 .cta-print-title {
   font-size: clamp(2rem, 5vw, 3.8rem);
   line-height: 0.95;
@@ -235,6 +261,14 @@
   .product-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .cta-print .print-actions {
+    order: 1;
+  }
+
+  .cta-print .media-frame {
+    order: 2;
+  }
 }
 
 @media (max-width: 768px) {
@@ -255,19 +289,94 @@
     top: auto;
     bottom: 1rem;
   }
+
+  .category-grid,
+  .usp-strip,
+  .product-grid,
+  .why-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cta-print {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "copy"
+      "media"
+      "actions";
+    gap: 1.35rem;
+  }
+
+  .cta-print > :first-child {
+    grid-area: copy;
+  }
+
+  .cta-print .media-frame {
+    grid-area: media;
+    order: unset;
+  }
+
+  .cta-print .print-actions {
+    grid-area: actions;
+    order: unset;
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-top: 0;
+    gap: 0.7rem;
+  }
+
+  .cta-print .print-actions .btn,
+  .cta-print .print-actions .btn-lg {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    padding-inline: 0.75rem;
+  }
+
+  #dtf .media-frame {
+    padding: 1.25rem;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #dtf .media-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    object-fit: contain;
+    border-radius: 1.1rem;
+  }
 }
 
 @media (max-width: 576px) {
   .category-grid,
   .usp-strip,
   .product-grid,
-  .why-grid,
+  .why-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .review-grid {
     grid-template-columns: 1fr;
   }
 
   .hero-actions .btn {
     width: 100%;
+  }
+
+  .cta-print .print-actions .btn,
+  .cta-print .print-actions .btn-lg {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    padding-inline: 0.75rem;
   }
 
   .hero-float {
