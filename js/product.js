@@ -49,7 +49,12 @@
   var dropZone = document.querySelector("[data-upload-drop]");
   var lightbox = document.querySelector("[data-lightbox]");
   var lightboxImg = document.querySelector("[data-lightbox-image]");
+  var lightboxCounter = document.querySelector("[data-lightbox-counter]");
   var galleryFrame = document.querySelector(".product-main-frame");
+  var sizeGuide = document.querySelector("[data-size-guide]");
+  var sizeGuideBody = document.querySelector("[data-size-guide-body]");
+  var lastFocus = null;
+  var activeOverlay = null;
 
   function money(value) {
     return "₹" + value.toLocaleString("en-IN");
@@ -121,7 +126,7 @@
     setText("[data-product-price]", money(product.price));
     setText("[data-product-mrp]", money(product.mrp));
     setText("[data-product-off]", discountPercent() + "% off");
-    setText("[data-product-lead]", product.lead);
+    setText("[data-product-lead]", String(product.lead || "").replace(/\s*Configuration is required before Add to Cart\.?/i, "").trim());
 
     var badges = document.querySelector("[data-product-badges]");
     if (badges) {
@@ -136,7 +141,7 @@
         "<li><span>Print</span> " + product.printTypes.join(" / ") + "</li>" +
         "<li><span>Material</span> " + product.material + "</li>" +
         "<li><span>GSM</span> " + product.gsm + "</li>" +
-        "<li><span>Shipping</span> Free above ₹999</li>";
+        "<li><span>Weight</span> " + product.weight + " g</li>";
     }
 
     var printWrap = document.querySelector("[data-print-type-options]");
@@ -149,7 +154,11 @@
 
     var colorWrap = document.querySelector("[data-color-options]");
     if (colorWrap) {
-      colorWrap.innerHTML = product.colors.map(function (color) {
+      var colors = (product.colors || []).slice();
+      if (product.color && colors.indexOf(product.color) === -1) {
+        colors.unshift(product.color);
+      }
+      colorWrap.innerHTML = colors.map(function (color) {
         var cls = "swatch-" + color.toLowerCase();
         return '<button class="swatch" type="button" data-color="' + color + '" aria-pressed="false"><span class="swatch-dot ' + cls + '"></span>' + color + "</button>";
       }).join("");
@@ -166,7 +175,7 @@
     if (details) {
       details.innerHTML =
         "<p>" + product.details + "</p>" +
-        "<p>SKU " + product.sku + ". Weight " + product.weight + " g. Configuration is required before purchase.</p>";
+        "<p>SKU " + product.sku + ". Weight " + product.weight + " g.</p>";
     }
   }
 
@@ -181,8 +190,15 @@
       lightboxImg.src = item.src;
       lightboxImg.alt = item.alt;
     }
+    if (lightboxCounter) {
+      lightboxCounter.textContent = (state.image + 1) + " / " + product.images.length;
+    }
     document.querySelectorAll("[data-thumb]").forEach(function (btn, i) {
-      btn.classList.toggle("is-active", i === state.image);
+      var active = i === state.image;
+      btn.classList.toggle("is-active", active);
+      if (active && btn.scrollIntoView && !(lightbox && lightbox.classList.contains("is-open"))) {
+        btn.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" });
+      }
     });
   }
 
@@ -193,10 +209,10 @@
   function missing() {
     var needs = [];
     if (!state.printType) needs.push("print type");
+    if (!state.printPosition) needs.push("print position");
     if (!state.color) needs.push("color");
     if (!state.size) needs.push("size");
     if (!state.designFile) needs.push("design file");
-    if (!state.printPosition) needs.push("print position");
     return needs;
   }
 
@@ -290,16 +306,50 @@
     updateActions();
   }
 
-  function openLightbox() {
-    if (!lightbox) return;
-    lightbox.classList.add("is-open");
+  function overlayFocusables(overlay) {
+    if (!overlay) return [];
+    return Array.prototype.slice.call(overlay.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")).filter(function (el) {
+      return !el.disabled && el.getAttribute("aria-hidden") !== "true";
+    });
+  }
+
+  function openOverlay(overlay, labelEl) {
+    if (!overlay) return;
+    lastFocus = document.activeElement;
+    activeOverlay = overlay;
+    overlay.classList.add("is-open");
     document.body.style.overflow = "hidden";
+    var focusables = overlayFocusables(overlay);
+    var target = labelEl || focusables[0];
+    if (target && target.focus) target.focus();
+  }
+
+  function closeOverlay(overlay) {
+    if (!overlay || !overlay.classList.contains("is-open")) return;
+    overlay.classList.remove("is-open");
+    if (!document.querySelector(".product-lightbox.is-open, .size-guide-overlay.is-open")) {
+      document.body.style.overflow = "";
+      activeOverlay = null;
+    }
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  function openLightbox() {
+    openOverlay(lightbox, lightbox.querySelector("[data-close-lightbox]"));
   }
 
   function closeLightbox() {
-    if (!lightbox) return;
-    lightbox.classList.remove("is-open");
-    document.body.style.overflow = "";
+    closeOverlay(lightbox);
+  }
+
+  function openSizeGuide() {
+    var source = document.getElementById("panel-size");
+    if (sizeGuideBody && source) sizeGuideBody.innerHTML = source.innerHTML;
+    openOverlay(sizeGuide, sizeGuide.querySelector("[data-close-size-guide]"));
+  }
+
+  function closeSizeGuide() {
+    closeOverlay(sizeGuide);
   }
 
   function setQty(next) {
@@ -312,7 +362,7 @@
 
   if (thumbs) {
     thumbs.innerHTML = product.images.map(function (item, i) {
-      return '<button type="button" data-thumb="' + i + '"' + (i === 0 ? ' class="is-active"' : "") + ' aria-label="Show image ' + (i + 1) + '"><img src="' + item.src + '" alt=""></button>';
+      return '<button type="button" data-thumb="' + i + '"' + (i === 0 ? ' class="is-active"' : "") + ' aria-label="Show image ' + (i + 1) + '"><img src="' + item.src + '" alt="" width="160" height="160"></button>';
     }).join("");
   }
 
@@ -328,6 +378,8 @@
     if (event.target.closest("[data-gallery-next]")) setImage(state.image + 1);
     if (event.target.closest("[data-zoom]")) openLightbox();
     if (event.target.closest("[data-close-lightbox]") || event.target === lightbox) closeLightbox();
+    if (event.target.closest("[data-open-size-guide]")) openSizeGuide();
+    if (event.target.closest("[data-close-size-guide]") || event.target === sizeGuide) closeSizeGuide();
 
     var printType = event.target.closest("[data-print-type]");
     if (printType) {
@@ -395,10 +447,35 @@
   });
 
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape") closeLightbox();
+    if (event.key === "Escape") {
+      closeLightbox();
+      closeSizeGuide();
+    }
     if (lightbox && lightbox.classList.contains("is-open")) {
-      if (event.key === "ArrowLeft") setImage(state.image - 1);
-      if (event.key === "ArrowRight") setImage(state.image + 1);
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        setImage(state.image - 1);
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        setImage(state.image + 1);
+      }
+    }
+    if (event.key === "Tab" && activeOverlay && activeOverlay.classList.contains("is-open")) {
+      var focusables = overlayFocusables(activeOverlay);
+      if (!focusables.length) {
+        event.preventDefault();
+        return;
+      }
+      var first = focusables[0];
+      var last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
   });
 

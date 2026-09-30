@@ -146,10 +146,10 @@
     <section class="container product-stage">
       <div class="product-gallery">
         <div class="product-main-frame">
-          <img data-main-image src="assets/product-oversized.svg" alt="Cream oversized graphic t-shirt front">
-          <button class="gallery-nav gallery-prev" type="button" data-gallery-prev aria-label="Previous image"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
-          <button class="gallery-nav gallery-next" type="button" data-gallery-next aria-label="Next image"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
-          <button class="gallery-zoom" type="button" data-zoom aria-label="Zoom image"><i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i></button>
+          <img data-main-image src="assets/product-oversized.svg" alt="Cream oversized graphic t-shirt front" width="800" height="1000">
+          <button class="btn-icon gallery-nav gallery-prev" type="button" data-gallery-prev aria-label="Previous image"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+          <button class="btn-icon gallery-nav gallery-next" type="button" data-gallery-next aria-label="Next image"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+          <button class="btn-icon gallery-zoom" type="button" data-zoom aria-label="Zoom image"><i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i></button>
         </div>
         <div class="product-thumbs" data-thumbs></div>
       </div>
@@ -162,26 +162,25 @@
         <h1 class="product-name" data-product-name>Oversized Graphic Tee</h1>
         <div class="product-rating-row">
           <div class="rating"><span class="rating-star" aria-hidden="true">★</span><span data-product-rating>4.7</span></div>
-          <span class="product-discount" data-product-reviews>128 reviews</span>
+          <span class="product-reviews" data-product-reviews>128 reviews</span>
         </div>
         <div class="product-price-row">
           <span class="price-now" data-product-price>₹799</span>
           <span class="price-mrp" data-product-mrp>₹1199</span>
           <span class="product-discount" data-product-off>33% off</span>
         </div>
-        <p class="product-lead" data-product-lead>Heavyweight oversized blank, printed in-house. Choose print type, garment color and size, then upload artwork. Configuration is required before Add to Cart.</p>
+        <p class="product-lead" data-product-lead>Heavyweight oversized blank, printed in-house. Choose print type, garment color and size, then upload artwork.</p>
 
         <ul class="product-facts" data-product-facts>
           <li><span>Print</span> DTF / Sublimation</li>
-          <li><span>Material</span> Cotton or polyester</li>
+          <li><span>Material</span> Cotton</li>
           <li><span>GSM</span> 180–220</li>
-          <li><span>Shipping</span> Free above ₹999</li>
+          <li><span>Weight</span> 220 g</li>
         </ul>
 
         <div class="product-notes">
-          <p class="product-note"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> Fast shipping. Free shipping on orders above ₹999.</p>
+          <p class="product-note"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> Free shipping on orders above ₹999.</p>
           <p class="product-note"><i class="fa-solid fa-box-open" aria-hidden="true"></i> No minimum order.</p>
-          <p class="product-note"><i class="fa-solid fa-headset" aria-hidden="true"></i> Support available for print, fit and fulfilment.</p>
         </div>
 
         <fieldset class="option-block">
@@ -193,17 +192,30 @@
         </fieldset>
 
         <fieldset class="option-block">
+          <legend>Print Position</legend>
+          <div class="option-grid option-grid-3">
+            <button class="option-card" type="button" data-position="Front" aria-pressed="false">Front</button>
+            <button class="option-card" type="button" data-position="Back" aria-pressed="false">Back</button>
+            <button class="option-card" type="button" data-position="Front + Back" aria-pressed="false">Front + Back</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="option-block">
           <legend>Color</legend>
           <div class="swatch-row" data-color-options>
             <button class="swatch" type="button" data-color="Black" aria-pressed="false"><span class="swatch-dot swatch-black"></span>Black</button>
             <button class="swatch" type="button" data-color="White" aria-pressed="false"><span class="swatch-dot swatch-white"></span>White</button>
             <button class="swatch" type="button" data-color="Navy" aria-pressed="false"><span class="swatch-dot swatch-navy"></span>Navy</button>
             <button class="swatch" type="button" data-color="Red" aria-pressed="false"><span class="swatch-dot swatch-red"></span>Red</button>
+            <button class="swatch" type="button" data-color="Cream" aria-pressed="false"><span class="swatch-dot swatch-cream"></span>Cream</button>
           </div>
         </fieldset>
 
         <fieldset class="option-block">
-          <legend>Size</legend>
+          <legend class="size-legend">
+            <span>Size</span>
+            <button class="link" type="button" data-open-size-guide>Size Guide</button>
+          </legend>
           <div class="size-row" data-size-options>
             <button class="size-btn" type="button" data-size="S" aria-pressed="false">S</button>
             <button class="size-btn" type="button" data-size="M" aria-pressed="false">M</button>
@@ -239,15 +251,6 @@
           </div>
         </div>
 
-        <fieldset class="option-block">
-          <legend>Print Position</legend>
-          <div class="option-grid">
-            <button class="option-card" type="button" data-position="Front" aria-pressed="false">Front</button>
-            <button class="option-card" type="button" data-position="Back" aria-pressed="false">Back</button>
-            <button class="option-card" type="button" data-position="Front + Back" aria-pressed="false">Front + Back</button>
-          </div>
-        </fieldset>
-
         <div class="option-block form-field">
           <i class="form-icon fa-solid fa-pen" aria-hidden="true"></i>
           <label class="form-label" for="special-instructions">Special Instructions</label>
@@ -263,10 +266,10 @@
         </div>
 
         <div class="product-actions">
-          <button class="btn btn-primary" type="button" data-add-cart disabled>Add to Cart</button>
+          <button class="btn btn-primary btn-lg" type="button" data-add-cart disabled>Add to Cart</button>
           <button class="btn btn-secondary" type="button" data-buy-now disabled>Buy Now</button>
         </div>
-        <p class="product-hint" data-config-hint>Select print type, color, size, design file, print position to continue.</p>
+        <p class="product-hint" data-config-hint>Select print type, print position, color, size, design file to continue.</p>
       </div>
     </section>
 
@@ -283,7 +286,7 @@
       <div class="tab-panel is-active" id="panel-details" data-tab-panel="details" role="tabpanel" aria-labelledby="tab-details">
         <div data-product-details>
         <p>Relaxed oversized tee cut for layering. Printed in-house after you choose print type, color and artwork. Mock product for frontend presentation only.</p>
-        <p>SKU DSA-OGT-001. Weight 220 g. Configuration is required before purchase.</p>
+        <p>SKU DSA-OGT-001. Weight 220 g.</p>
         </div>
       </div>
       <div class="tab-panel" id="panel-material" data-tab-panel="material" role="tabpanel" aria-labelledby="tab-material" hidden>
@@ -337,11 +340,32 @@
     </section>
   </main>
 
-  <div class="product-lightbox" data-lightbox>
-    <button class="gallery-nav lightbox-close" type="button" data-close-lightbox aria-label="Close image">
+  <div class="product-lightbox" data-lightbox role="dialog" aria-modal="true" aria-label="Product image">
+    <button class="btn-icon lightbox-close" type="button" data-close-lightbox aria-label="Close image">
       <i class="fa-solid fa-xmark" aria-hidden="true"></i>
     </button>
-    <img data-lightbox-image src="assets/product-oversized.svg" alt="">
+    <div class="lightbox-stage">
+      <button class="btn-icon lightbox-nav lightbox-prev" type="button" data-gallery-prev aria-label="Previous image">
+        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+      </button>
+      <button class="btn-icon lightbox-nav lightbox-next" type="button" data-gallery-next aria-label="Next image">
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      </button>
+      <img data-lightbox-image src="assets/product-oversized.svg" alt="" width="800" height="1000">
+      <p class="lightbox-counter" data-lightbox-counter aria-live="polite">1 / 4</p>
+    </div>
+  </div>
+
+  <div class="size-guide-overlay" data-size-guide role="dialog" aria-modal="true" aria-labelledby="size-guide-title">
+    <div class="size-guide-panel">
+      <div class="size-guide-head">
+        <h2 class="section-title" id="size-guide-title">Size Guide</h2>
+        <button class="btn-icon" type="button" data-close-size-guide aria-label="Close size guide">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div data-size-guide-body></div>
+    </div>
   </div>
 
   <footer class="site-footer" id="support" data-component="footer">

@@ -226,7 +226,7 @@
   margin-top: 1.75rem;
 }
 
-.shop-mobile-bar {
+.header-actions .shop-tool-btn {
   display: none;
 }
 
@@ -387,11 +387,12 @@
     display: none;
   }
 
-  .shop-mobile-bar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.6rem;
-    margin-bottom: 1rem;
+  .header-actions .shop-tool-btn {
+    display: inline-grid;
+  }
+
+  .header-actions {
+    flex-shrink: 0;
   }
 
   .filter-popover,
@@ -418,5 +419,11 @@
   .shop-hero-media,
   .shop-hero-media img {
     min-height: 10.5rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .header-actions {
+    gap: 0.28rem;
   }
 }
