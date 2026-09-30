@@ -47,6 +47,7 @@ No Node build step. No database in this repo.
 | Policy layout | `css/policy.css` |
 | Support layout | `css/support.css` |
 | Theme | `js/theme.js` |
+| Catalog | `js/catalog.js` |
 | Home behaviour | `js/main.js` |
 | Shop behaviour | `js/shop.js` |
 | Product behaviour | `js/product.js` |
@@ -64,7 +65,7 @@ Details: `docs/FRONTEND_ARCHITECTURE.md`
 |---|---|
 | Home (`index.html`) | Built |
 | Shop (`shop.html`) | Built |
-| Product (`product.html`) | Built |
+| Product (`product.html?id=`) | Built |
 | About (`about.html`) | Built |
 | Policy (`policy.html`) | Built |
 | Support (`support.html`) | Built |

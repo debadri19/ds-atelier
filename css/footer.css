@@ -2,7 +2,7 @@
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
   margin-top: var(--space-8);
-  padding: var(--space-8) 0 var(--space-6);
+  padding: var(--space-5) 0 var(--space-6);
 }
 
 .footer-grid {

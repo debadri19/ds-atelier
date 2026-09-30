@@ -162,7 +162,7 @@ The storefront must support Light and Dark.
 
 Do not implement dark mode as a crude inversion of light mode.
 
-Mechanism: `html[data-theme="light"]` and `html[data-theme="dark"]`. Persistence is handled by `js/theme.js`.
+Mechanism: `html[data-theme="light"]` and `html[data-theme="dark"]`. Persistence is handled by `js/theme.js`. A blocking script in `<head>` applies the saved or system theme before first paint.
 
 ---
 

@@ -133,6 +133,54 @@ Patch release. Alpha / Standalone Frontend.
 
 ---
 
+## 2026-09-29
+
+### DTF card, button contrast, focus polish
+
+- About Quality/DTF media is a light padded card with the existing DTF artwork contained in a rounded inner frame
+- Ghost/secondary buttons on `.promo-dark` use white text so they stay readable in Light theme
+- Mouse/touch no longer leave a residual focus/tap box; keyboard `:focus-visible` remains
+
+### Footer + Custom Printing polish
+
+- Reduced desktop `.site-footer` top padding so the logo sits at the top of the brand block; mobile footer padding unchanged
+- Custom Printing buttons stay side-by-side on mobile with nowrap and equal height, remaining inside the card
+- Custom Printing media uses the existing `print-studio.svg` composition (inset mockup + colour swatches) with internal padding so artwork does not touch the outer frame
+
+### Dark mode initial flash
+
+- HTML still defaults to `data-theme="light"` for no-JS
+- Added a blocking `<head>` script on all 6 pages that applies `ds-atelier-theme` or system preference before first paint
+- `js/theme.js` remains the toggle/persistence owner
+- No Light → Dark flash when Dark is saved
+
+### Frontend product switching
+
+- Added `js/catalog.js` as the canonical frontend catalog (`DSAtelier.catalog`)
+- Home, Shop, and related cards link to `product.html?id=<product-id>`
+- `js/product.js` reads `id`, hydrates the existing PDP, and falls back to Oversized Graphic Tee when `id` is missing or unknown
+- Listing prices used for Oversized Graphic Tee (₹799 / ₹1199); previous PDP-only ₹699 / ₹999 was not carried forward
+- Motivational Hoodie remains Home-only; Shop still lists Minimal Hoodie as a separate id
+
+### Mobile Priority-1 audit
+
+- Kept Home hero floating cards ("48h print", "No MOQ") visible on 360–430px and repositioned them onto the artwork corners
+- Hero artwork uses contain on tablet/mobile so the illustration stays centered without aggressive crop
+- Category captions and media captions use the same rounded-rectangle CTA language as `.btn` (no remaining pill CTAs)
+- Product card View Product matches global button height, radius, padding, and type
+- Home Custom Printing, DTF, Sublimation, and Bulk media contain artwork on mobile instead of cropping it
+- Shop, Product, and About heroes/galleries keep artwork visible; Product tabs scroll horizontally instead of wrapping awkwardly
+
+### Header / footer duplication review
+
+- Audited all 6 pages against `components/header.html` and `components/footer.html`
+- Kept inlined static markup (no runtime `fetch()` loader, no PHP yet)
+- Restored missing footer `id="policies"` on About, Policy, and Support so column markup matches the canonical footer
+- Support footer still omits `id="support"` and newsletter `id="faq"` to avoid duplicate IDs on that page
+- Header copies remain identical except page-specific `is-active` nav state
+
+---
+
 ## Unreleased / not implemented
 
 - Cart, Checkout, and other inner pages

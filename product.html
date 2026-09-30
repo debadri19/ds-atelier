@@ -2,6 +2,14 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
+  <script>
+    (function () {
+      var theme;
+      try { theme = localStorage.getItem("ds-atelier-theme"); } catch (e) {}
+      if (!theme) theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Oversized Graphic Tee — DS ATELIER</title>
   <meta name="description" content="Configure and order the Oversized Graphic Tee. Choose print type, color, size and upload your design.">
@@ -129,9 +137,9 @@
         <span aria-hidden="true">/</span>
         <a href="shop.html">Shop</a>
         <span aria-hidden="true">/</span>
-        <a href="shop.html">T-Shirts</a>
+        <a href="shop.html" data-crumb-category>T-Shirts</a>
         <span aria-hidden="true">/</span>
-        <span>Oversized Graphic Tee</span>
+        <span data-crumb-name>Oversized Graphic Tee</span>
       </nav>
     </div>
 
@@ -147,23 +155,23 @@
       </div>
 
       <div class="product-info">
-        <div class="product-badge-row">
+        <div class="product-badge-row" data-product-badges>
           <span class="badge">New</span>
           <span class="badge">Custom print</span>
         </div>
-        <h1 class="product-name">Oversized Graphic Tee</h1>
+        <h1 class="product-name" data-product-name>Oversized Graphic Tee</h1>
         <div class="product-rating-row">
-          <div class="rating"><span class="rating-star" aria-hidden="true">★</span><span>4.7</span></div>
-          <span class="product-discount">128 reviews</span>
+          <div class="rating"><span class="rating-star" aria-hidden="true">★</span><span data-product-rating>4.7</span></div>
+          <span class="product-discount" data-product-reviews>128 reviews</span>
         </div>
         <div class="product-price-row">
-          <span class="price-now">₹699</span>
-          <span class="price-mrp">₹999</span>
-          <span class="product-discount">30% off</span>
+          <span class="price-now" data-product-price>₹799</span>
+          <span class="price-mrp" data-product-mrp>₹1199</span>
+          <span class="product-discount" data-product-off>33% off</span>
         </div>
-        <p class="product-lead">Heavyweight oversized blank, printed in-house. Choose print type, garment color and size, then upload artwork. Configuration is required before Add to Cart.</p>
+        <p class="product-lead" data-product-lead>Heavyweight oversized blank, printed in-house. Choose print type, garment color and size, then upload artwork. Configuration is required before Add to Cart.</p>
 
-        <ul class="product-facts">
+        <ul class="product-facts" data-product-facts>
           <li><span>Print</span> DTF / Sublimation</li>
           <li><span>Material</span> Cotton or polyester</li>
           <li><span>GSM</span> 180–220</li>
@@ -178,7 +186,7 @@
 
         <fieldset class="option-block">
           <legend>Print Type</legend>
-          <div class="option-grid">
+          <div class="option-grid" data-print-type-options>
             <button class="option-card" type="button" data-print-type="DTF" aria-pressed="false">DTF <small>Opaque transfers on any color</small></button>
             <button class="option-card" type="button" data-print-type="Sublimation" aria-pressed="false">Sublimation <small>All-over dye-infused colour</small></button>
           </div>
@@ -186,7 +194,7 @@
 
         <fieldset class="option-block">
           <legend>Color</legend>
-          <div class="swatch-row">
+          <div class="swatch-row" data-color-options>
             <button class="swatch" type="button" data-color="Black" aria-pressed="false"><span class="swatch-dot swatch-black"></span>Black</button>
             <button class="swatch" type="button" data-color="White" aria-pressed="false"><span class="swatch-dot swatch-white"></span>White</button>
             <button class="swatch" type="button" data-color="Navy" aria-pressed="false"><span class="swatch-dot swatch-navy"></span>Navy</button>
@@ -196,7 +204,7 @@
 
         <fieldset class="option-block">
           <legend>Size</legend>
-          <div class="size-row">
+          <div class="size-row" data-size-options>
             <button class="size-btn" type="button" data-size="S" aria-pressed="false">S</button>
             <button class="size-btn" type="button" data-size="M" aria-pressed="false">M</button>
             <button class="size-btn" type="button" data-size="L" aria-pressed="false">L</button>
@@ -247,11 +255,11 @@
         </div>
 
         <div class="product-summary">
-          <div><span>MRP</span><span data-summary-mrp>₹999</span></div>
-          <div><span>Current Price</span><span data-summary-price>₹699</span></div>
-          <div><span>Discount</span><span data-summary-discount>30%</span></div>
+          <div><span>MRP</span><span data-summary-mrp>₹1,199</span></div>
+          <div><span>Current Price</span><span data-summary-price>₹799</span></div>
+          <div><span>Discount</span><span data-summary-discount>33%</span></div>
           <div><span>Quantity</span><span data-summary-qty>1</span></div>
-          <div class="summary-total"><span>Estimated Total</span><span data-summary-total>₹699</span></div>
+          <div class="summary-total"><span>Estimated Total</span><span data-summary-total>₹799</span></div>
         </div>
 
         <div class="product-actions">
@@ -273,8 +281,10 @@
         <button type="button" id="tab-returns" data-tab="returns" role="tab" aria-selected="false" aria-controls="panel-returns">Returns &amp; Refunds</button>
       </div>
       <div class="tab-panel is-active" id="panel-details" data-tab-panel="details" role="tabpanel" aria-labelledby="tab-details">
+        <div data-product-details>
         <p>Relaxed oversized tee cut for layering. Printed in-house after you choose print type, color and artwork. Mock product for frontend presentation only.</p>
         <p>SKU DSA-OGT-001. Weight 220 g. Configuration is required before purchase.</p>
+        </div>
       </div>
       <div class="tab-panel" id="panel-material" data-tab-panel="material" role="tabpanel" aria-labelledby="tab-material" hidden>
         <ul>
@@ -403,6 +413,7 @@
   </footer>
 
   <script src="js/theme.js"></script>
+  <script src="js/catalog.js"></script>
   <script src="js/main.js"></script>
   <script src="js/product.js"></script>
 </body>

@@ -45,10 +45,10 @@ The standalone frontend is not yet integrated with the Core PHP backend.
 
 - No public preview tunnel is guaranteed in every environment; local static server is `python3 -m http.server 8000`
 - Home listing cards use View Product; Product Details handles configuration and frontend-only Add to Cart / Buy Now
-- Header/footer are duplicated between `index.html` and `components/*.html` (keep in sync until a shared include exists)
+- Header/footer markup is inlined on all 6 pages and mirrored in `components/*.html`. Keep copies identical until PHP includes exist. Do not use a runtime JS loader. Support footer omits colliding `#support` / `#faq` ids.
 - Apparel visuals on Home are SVG placeholders, not photography
 - Cart count is local DOM state only
-- Mock product data in JavaScript only
+- Mock product data in `js/catalog.js` only; Product Details uses `product.html?id=`
 
 ---
 

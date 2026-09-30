@@ -48,22 +48,24 @@
   inset: 1.25rem 0 0 2rem;
   border-radius: 2.2rem;
   overflow: hidden;
-  background: var(--color-surface-2);
+  background: #1a1d21;
 }
 
 .hero-stage img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   min-height: 34rem;
 }
 
 .hero-float {
   position: absolute;
+  z-index: 2;
   background: var(--color-surface);
   backdrop-filter: blur(16px);
   border: 1px solid var(--color-border);
-  border-radius: 1.1rem;
+  border-radius: var(--radius-lg);
   padding: 0.85rem 1rem;
   box-shadow: var(--shadow-md);
 }
@@ -122,14 +124,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 2.75rem;
   background: var(--color-header-bg);
   color: var(--color-header-text);
   backdrop-filter: blur(12px);
-  border-radius: var(--radius-pill);
-  padding: 0.7rem 0.9rem;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.95rem;
+  border: 1px solid var(--color-header-border);
+  border-radius: var(--radius-lg);
+  padding: 0.65rem 1.2rem;
+  font-family: var(--font-body);
+  font-weight: 650;
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
 }
 
 .print-actions {
@@ -202,7 +209,7 @@
   .cta-print .media-frame {
     grid-column: 2;
     grid-row: 1 / span 2;
-    align-self: center;
+    align-self: stretch;
   }
 }
 
@@ -213,6 +220,24 @@
 }
 
 .cta-print-title span {
+  display: block;
+}
+
+.cta-print .media-frame.print-media {
+  min-height: 22rem;
+  overflow: hidden;
+  padding: 0;
+  background: #1a1d21;
+}
+
+.cta-print .media-frame.print-media img {
+  width: 118%;
+  max-width: none;
+  height: 118%;
+  min-height: 22rem;
+  margin: -9%;
+  object-fit: cover;
+  object-position: center;
   display: block;
 }
 
@@ -248,8 +273,29 @@
     min-height: 28rem;
   }
 
+  .hero-stage {
+    inset: 0.85rem 0.4rem;
+  }
+
   .hero-stage img {
     min-height: 26rem;
+    object-fit: contain;
+  }
+
+  .hero-float {
+    max-width: min(12rem, calc(50% - 0.35rem));
+    padding: 0.7rem 0.85rem;
+  }
+
+  .hero-float-1 {
+    left: 0;
+    top: 0.35rem;
+    bottom: auto;
+  }
+
+  .hero-float-2 {
+    right: 0;
+    bottom: 0.65rem;
   }
 
   .category-grid,
@@ -269,6 +315,14 @@
   .cta-print .media-frame {
     order: 2;
   }
+
+  .cta-print .media-frame.print-media {
+    min-height: 20rem;
+  }
+
+  .cta-print .media-frame.print-media img {
+    min-height: 20rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -276,18 +330,42 @@
     padding-top: var(--space-5);
   }
 
-  .hero-visual,
-  .hero-stage img {
-    min-height: 22rem;
+  .hero-visual {
+    min-height: 22.5rem;
   }
 
   .hero-stage {
-    inset: 0;
+    inset: 0.65rem 0.2rem;
+  }
+
+  .hero-stage img {
+    min-height: 21rem;
+  }
+
+  .hero-float {
+    padding: 0.55rem 0.7rem;
+  }
+
+  .hero-float-1,
+  .hero-float-2 {
+    top: 0.45rem;
+    bottom: auto;
   }
 
   .hero-float-1 {
-    top: auto;
-    bottom: 1rem;
+    left: 0.1rem;
+  }
+
+  .hero-float-2 {
+    right: 0.1rem;
+  }
+
+  .hero-float strong {
+    font-size: 0.95rem;
+  }
+
+  .hero-float span {
+    font-size: 0.7rem;
   }
 
   .category-grid,
@@ -313,6 +391,11 @@
   .cta-print .media-frame {
     grid-area: media;
     order: unset;
+    min-height: 16.5rem;
+  }
+
+  .cta-print .media-frame.print-media img {
+    min-height: 16.5rem;
   }
 
   .cta-print .print-actions {
@@ -330,26 +413,52 @@
     width: auto;
     flex: 1 1 0;
     min-width: 0;
-    white-space: normal;
+    min-height: 2.85rem;
+    box-sizing: border-box;
+    white-space: nowrap;
     text-align: center;
-    padding-inline: 0.75rem;
+    padding: 0.7rem 0.55rem;
+    font-size: 0.82rem;
+    line-height: 1.15;
   }
 
-  #dtf .media-frame {
+  #dtf .media-frame,
+  #sublimation .media-frame,
+  #bulk .media-frame {
     padding: 1.25rem;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 0;
   }
 
-  #dtf .media-frame img {
+  #dtf .media-frame img,
+  #sublimation .media-frame img,
+  #bulk .media-frame img {
     display: block;
     width: 100%;
     height: auto;
     min-height: 0;
     object-fit: contain;
     border-radius: 1.1rem;
+  }
+
+  .cta-print .media-frame.print-media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.85rem;
+    box-sizing: border-box;
+  }
+
+  .cta-print .media-frame.print-media img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    object-fit: contain;
   }
 }
 
@@ -369,18 +478,53 @@
     width: 100%;
   }
 
+  .hero-visual {
+    min-height: 20.5rem;
+  }
+
+  .hero-stage img {
+    min-height: 19rem;
+  }
+
+  .hero-float {
+    display: block;
+    max-width: min(10.75rem, calc(50% - 0.25rem));
+    padding: 0.5rem 0.6rem;
+  }
+
+  .hero-float strong {
+    font-size: 0.88rem;
+  }
+
+  .hero-float span {
+    font-size: 0.66rem;
+    line-height: 1.25;
+  }
+
+  .cta-print .print-actions {
+    gap: 0.55rem;
+  }
+
   .cta-print .print-actions .btn,
   .cta-print .print-actions .btn-lg {
     width: auto;
     flex: 1 1 0;
     min-width: 0;
-    white-space: normal;
+    min-height: 2.75rem;
+    box-sizing: border-box;
+    white-space: nowrap;
     text-align: center;
-    padding-inline: 0.75rem;
+    padding: 0.65rem 0.4rem;
+    font-size: 0.78rem;
+    line-height: 1.1;
   }
 
-  .hero-float {
-    display: none;
+  .cta-print .media-frame.print-media {
+    min-height: 0;
+  }
+
+  .cta-print .media-frame.print-media img {
+    min-height: 0;
   }
 }
 
@@ -388,5 +532,62 @@
   .category-card,
   .category-card img {
     min-height: 13rem;
+  }
+
+  .category-caption {
+    inset: auto 0.5rem 0.5rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 0.3rem;
+    box-sizing: border-box;
+    min-height: 3.2rem;
+    height: 3.2rem;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.82rem;
+    line-height: 1.25;
+    white-space: normal;
+    text-align: left;
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .hero-visual {
+    min-height: 19.5rem;
+  }
+
+  .hero-stage {
+    inset: 0.5rem 0.1rem;
+  }
+
+  .hero-stage img {
+    min-height: 18.5rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .cta-print .print-actions .btn,
+  .cta-print .print-actions .btn-lg {
+    font-size: 0.72rem;
+    padding: 0.6rem 0.3rem;
+    letter-spacing: 0;
+  }
+
+  .hero-visual {
+    min-height: 18.75rem;
+  }
+
+  .hero-float {
+    max-width: min(9.6rem, calc(50% - 0.2rem));
+    padding: 0.42rem 0.5rem;
+  }
+
+  .hero-float strong {
+    font-size: 0.8rem;
+  }
+
+  .hero-float span {
+    font-size: 0.62rem;
   }
 }

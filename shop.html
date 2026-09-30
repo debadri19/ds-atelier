@@ -2,6 +2,14 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
+  <script>
+    (function () {
+      var theme;
+      try { theme = localStorage.getItem("ds-atelier-theme"); } catch (e) {}
+      if (!theme) theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Shop — DS ATELIER</title>
   <meta name="description" content="Shop custom printed apparel, DTF and sublimation. No minimum order.">
@@ -404,6 +412,7 @@
   </footer>
 
   <script src="js/theme.js"></script>
+  <script src="js/catalog.js"></script>
   <script src="js/main.js"></script>
   <script src="js/shop.js"></script>
 </body>

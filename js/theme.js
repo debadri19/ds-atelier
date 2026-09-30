@@ -14,8 +14,11 @@
     return root.getAttribute("data-theme") || "light";
   }
 
-  var saved = localStorage.getItem(KEY);
-  apply(saved || systemTheme());
+  try {
+    apply(localStorage.getItem(KEY) || systemTheme());
+  } catch (e) {
+    apply(systemTheme());
+  }
 
   document.addEventListener("click", function (event) {
     var btn = event.target.closest("[data-theme-toggle]");

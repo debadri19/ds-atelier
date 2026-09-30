@@ -106,6 +106,7 @@ html[data-theme="dark"] {
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
   overflow-y: scroll;
   scrollbar-width: thin;
@@ -181,9 +182,25 @@ h5 {
   letter-spacing: -0.03em;
 }
 
+:focus {
+  outline: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 3px;
+}
+
+button,
+a,
+.btn,
+.btn-icon,
+.util-btn,
+.filter-btn,
+.nav-link,
+.mobile-nav a,
+.mobile-nav button {
+  -webkit-tap-highlight-color: transparent;
 }
 
 .container {
@@ -302,6 +319,11 @@ h5 {
 
 .btn-ghost:hover {
   background: var(--color-surface);
+}
+
+.btn:disabled,
+.btn[disabled] {
+  cursor: not-allowed;
 }
 
 .btn-invert {
@@ -925,6 +947,36 @@ form:not(.input-group) > .btn[type="submit"] {
 .product-card .btn {
   margin-top: auto;
   width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 1.2rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.92rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+html[data-theme="light"] .product-card .btn {
+  background: #171A1D;
+  color: #FFFFFF;
+  border-color: #171A1D;
+}
+
+html[data-theme="light"] .product-card .btn:hover {
+  background: #171A1D;
+  color: #FFFFFF;
+  border-color: #171A1D;
+}
+
+html[data-theme="dark"] .product-card .btn {
+  background: #FF6A00;
+  color: #FFFFFF;
+  border-color: #FF6A00;
+}
+
+html[data-theme="dark"] .product-card .btn:hover {
+  background: #E95F00;
+  color: #FFFFFF;
+  border-color: #E95F00;
 }
 
 .pagination {
@@ -1061,12 +1113,13 @@ form:not(.input-group) > .btn[type="submit"] {
   left: 1rem;
   bottom: 1rem;
   background: var(--color-header-bg);
+  color: var(--color-header-text);
   backdrop-filter: blur(12px);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-header-border);
+  border-radius: var(--radius-lg);
   padding: 0.55rem 0.9rem;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 650;
 }
 
 .benefit-list {
@@ -1170,6 +1223,19 @@ html[data-theme="dark"] .promo-dark {
 
 html[data-theme="light"] .promo-dark .chip {
   border-color: rgba(245, 242, 236, 0.22);
+}
+
+.promo-dark .btn-ghost,
+.promo-dark .btn-secondary {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.promo-dark .btn-ghost:hover,
+.promo-dark .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.45);
 }
 
 .brand-block {

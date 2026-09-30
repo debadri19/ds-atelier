@@ -2,6 +2,14 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
+  <script>
+    (function () {
+      var theme;
+      try { theme = localStorage.getItem("ds-atelier-theme"); } catch (e) {}
+      if (!theme) theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Policies — DS ATELIER</title>
   <meta name="description" content="DS ATELIER policies for shipping, returns, custom products, artwork, privacy and terms.">
@@ -313,7 +321,7 @@
         <a href="shop.html">DTF Prints</a>
         <a href="shop.html">Sublimation</a>
       </div>
-      <div class="footer-col">
+      <div class="footer-col" id="policies">
         <h3>Support</h3>
         <a href="support.html">Help Center</a>
         <a href="support.html#faq">FAQ</a>
@@ -354,6 +362,7 @@
   </footer>
 
   <script src="js/theme.js"></script>
+  <script src="js/catalog.js"></script>
   <script src="js/main.js"></script>
   <script src="js/policy.js"></script>
 </body>

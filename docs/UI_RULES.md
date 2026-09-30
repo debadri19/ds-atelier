@@ -21,6 +21,7 @@ Explicit rules for any public page. Read before modifying UI.
 - Reuse `.card`, `.feature-card`, `.product-card`, `.review-card`, `.promo-panel`.
 - Reuse `.form-field`, `.form-label`, `.form-input`, `.form-select`, `.form-textarea`.
 - Reuse header and footer markup/classes from `components/` and `css/header.css` / `css/footer.css`.
+- Edit `components/header.html` and `components/footer.html` first, then copy into all 6 pages. Do not load those files with `fetch()`.
 - Preserve CTA hierarchy: primary orange, then secondary/ghost.
 - Preserve the floating pill header and the approved footer.
 
@@ -54,6 +55,7 @@ Explicit rules for any public page. Read before modifying UI.
 - Light mode keeps a **dark floating header**.
 - Dark mode uses charcoal surfaces, not inverted cream.
 - Theme switching uses `html[data-theme]` via `js/theme.js`.
+- Keep the pre-paint theme script in `<head>` on every page so Dark does not flash Light on load.
 
 ---
 

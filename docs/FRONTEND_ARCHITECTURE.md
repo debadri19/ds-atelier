@@ -26,7 +26,8 @@ Standalone static frontend. No bundler. No backend in this phase.
     support.css              Support-only layout
   js/
     theme.js                 Light/dark persistence
-    main.js                  Home mock products, drawer, newsletter
+    catalog.js               Canonical frontend product catalog
+    main.js                  Home featured products, drawer, newsletter
     shop.js                  Shop filters, sort, pagination
     product.js               Product gallery, configuration, upload UI
     policy.js                Policy section navigation
@@ -43,7 +44,14 @@ Standalone static frontend. No bundler. No backend in this phase.
       logo-wordmark.png
 ```
 
-`index.html` currently inlines header and footer markup (same structure as `components/`). Keep them visually identical when pages are split later.
+All six public pages inline header, mobile nav, drawer, and footer markup. `components/header.html` and `components/footer.html` are the canonical source copies for future PHP includes. They are not loaded at runtime.
+
+Do not introduce a client-side `fetch()` include. This site must work as standalone static HTML (direct page URLs, local static server, no build step). PHP `include` is the later shared mechanism.
+
+Keep inlined copies identical except for these intentional differences:
+
+- Header / mobile nav `is-active` on the current page (Home, Shop, About, Support). Product uses Shop. Policy has no primary-nav active state.
+- Support footer omits `id="support"` and newsletter `id="faq"` because those IDs already exist on the Support page.
 
 ---
 
@@ -99,12 +107,15 @@ Do not add another global override stylesheet.
 
 | File | Role |
 |---|---|
-| `js/theme.js` | Reads/writes `ds-atelier-theme`, sets `html[data-theme]` |
-| `js/main.js` | Mock product grid, cart badge demo, mobile drawer, newsletter preventDefault |
-| `js/shop.js` | Shop filters, sort, pagination, mock catalog |
-| `js/product.js` | Product gallery, required configuration, upload UI, estimated total |
+| `js/theme.js` | Toggle + persistence (`ds-atelier-theme`); reapplies theme if needed |
+| `js/catalog.js` | Canonical mock catalog; `DSAtelier.catalog` lookup, featured, related, `product.html?id=` URLs |
+| `js/main.js` | Home featured grid from catalog, cart badge demo, mobile drawer, newsletter preventDefault |
+| `js/shop.js` | Shop filters, sort, pagination from catalog |
+| `js/product.js` | Reads `?id=`, hydrates PDP from catalog, gallery, required configuration, upload UI, estimated total |
 | `js/policy.js` | Policy sidebar / mobile section navigation |
 | `js/support.js` | Support search, FAQ accordion, frontend contact form |
+
+Load `js/catalog.js` before `js/main.js`, `js/shop.js`, and `js/product.js`.
 
 Future page scripts should be additive and must not fork the theme system.
 
@@ -155,6 +166,8 @@ Home section anchors (`#shop`, `#custom-printing`, `#bulk`, etc.) are in-page li
 `html[data-theme="light"|"dark"]`  
 Storage key: `ds-atelier-theme`
 
+Each page includes a tiny blocking script in `<head>` (immediately after charset) that reads `ds-atelier-theme` or `prefers-color-scheme` and sets `data-theme` before CSS/paint. This prevents a Light flash when Dark is saved. `js/theme.js` at the end of `<body>` owns the toggle. Do not move theme init to the bottom of the page.
+
 ---
 
 ## Responsive
@@ -167,4 +180,6 @@ Below 768px: floating bottom navigation and extra body padding for safe area.
 
 ## Data
 
-Products are a JS array. Markup is generated so it can later be replaced by PHP-rendered cards without changing `.product-card` structure.
+Products live in `js/catalog.js` (`DSAtelier.catalog`). Home, Shop, and Product cards are generated from that catalog so they can later be replaced by PHP-rendered cards without changing `.product-card` structure.
+
+Product Details is `product.html?id=<product-id>`. Missing or unknown `id` falls back to `oversized-graphic-tee`. View Product CTAs use that query. Related cards use the same URL pattern. Direct URLs, refresh, and back/forward are full page loads.

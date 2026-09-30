@@ -2,33 +2,25 @@
   var ALLOWED_TYPES = ["image/png", "image/jpeg", "application/pdf"];
   var ALLOWED_EXT = ["png", "jpg", "jpeg", "pdf"];
   var MAX_FILE_BYTES = 25 * 1024 * 1024;
-
-  var product = {
-    id: "oversized-graphic-tee",
-    sku: "DSA-OGT-001",
-    name: "Oversized Graphic Tee",
-    price: 699,
-    mrp: 999,
-    rating: 4.7,
-    reviews: 128,
-    weight: 220,
-    printTypes: ["DTF", "Sublimation"],
-    colors: ["Black", "White", "Navy", "Red"],
-    sizes: ["S", "M", "L", "XL", "XXL"],
-    images: [
-      { src: "assets/product-oversized.svg", alt: "Cream oversized graphic t-shirt front" },
-      { src: "assets/product-anime.svg", alt: "Black oversized graphic t-shirt" },
-      { src: "assets/print-studio.svg", alt: "Studio rack with custom printed tees" },
-      { src: "assets/cat-oversize.svg", alt: "Oversized t-shirt on a studio backdrop" }
-    ]
+  var PRINT_HINTS = {
+    DTF: "Opaque transfers on any color",
+    Sublimation: "All-over dye-infused colour"
   };
 
-  var related = [
-    { id: "anime-graphic-tee", name: "Anime Graphic T-Shirt", price: 899, mrp: 1299, rating: 4.8, badge: "Bestseller", image: "assets/product-anime.svg", alt: "Black oversized t-shirt with bold anime graphic print" },
-    { id: "minimal-hoodie", name: "Minimal Hoodie", price: 1499, mrp: 1999, rating: 4.9, badge: "Hot", image: "assets/product-hoodie.svg", alt: "Charcoal hoodie with large typography print" },
-    { id: "custom-sports-jersey", name: "Custom Sports Jersey", price: 1299, mrp: 1799, rating: 4.6, badge: "Custom", image: "assets/product-jersey.svg", alt: "Orange and black custom sports jersey" },
-    { id: "polo-tshirt", name: "Polo T-Shirt", price: 999, mrp: 1399, rating: 4.5, badge: "Studio", image: "assets/product-polo.svg", alt: "Navy custom polo t-shirt" }
-  ];
+  var catalog = window.DSAtelier && window.DSAtelier.catalog;
+  var requestedId = "";
+  try {
+    requestedId = new URLSearchParams(window.location.search).get("id") || "";
+  } catch (e) {
+    requestedId = "";
+  }
+
+  var product = catalog && catalog.resolve
+    ? catalog.resolve(requestedId)
+    : null;
+  var related = catalog && product ? catalog.getRelated(product.id, 4) : [];
+
+  if (!product) return;
 
   var state = {
     image: 0,
@@ -103,10 +95,79 @@
             '<div class="price"><span class="price-now">' + money(item.price) + '</span><span class="price-mrp">' + money(item.mrp) + "</span></div>" +
             '<div class="rating"><span class="rating-star" aria-hidden="true">★</span><span>' + item.rating + "</span></div>" +
           "</div>" +
-          '<a class="btn btn-secondary" href="product.html">View Product</a>' +
+          '<a class="btn btn-secondary" href="' + catalog.productUrl(item.id) + '">View Product</a>' +
         "</div>" +
       "</article>"
     );
+  }
+
+  function setText(sel, value) {
+    var el = document.querySelector(sel);
+    if (el) el.textContent = value;
+  }
+
+  function hydrate() {
+    document.title = product.name + " — DS ATELIER";
+    var meta = document.querySelector('meta[name="description"]');
+    if (meta) {
+      meta.setAttribute("content", "Configure and order the " + product.name + ". Choose print type, color, size and upload your design.");
+    }
+
+    setText("[data-crumb-category]", product.category);
+    setText("[data-crumb-name]", product.name);
+    setText("[data-product-name]", product.name);
+    setText("[data-product-rating]", String(product.rating));
+    setText("[data-product-reviews]", product.reviews + " reviews");
+    setText("[data-product-price]", money(product.price));
+    setText("[data-product-mrp]", money(product.mrp));
+    setText("[data-product-off]", discountPercent() + "% off");
+    setText("[data-product-lead]", product.lead);
+
+    var badges = document.querySelector("[data-product-badges]");
+    if (badges) {
+      badges.innerHTML =
+        '<span class="badge">' + product.badge + "</span>" +
+        '<span class="badge">Custom print</span>';
+    }
+
+    var facts = document.querySelector("[data-product-facts]");
+    if (facts) {
+      facts.innerHTML =
+        "<li><span>Print</span> " + product.printTypes.join(" / ") + "</li>" +
+        "<li><span>Material</span> " + product.material + "</li>" +
+        "<li><span>GSM</span> " + product.gsm + "</li>" +
+        "<li><span>Shipping</span> Free above ₹999</li>";
+    }
+
+    var printWrap = document.querySelector("[data-print-type-options]");
+    if (printWrap) {
+      printWrap.innerHTML = product.printTypes.map(function (type) {
+        var hintText = PRINT_HINTS[type] ? " <small>" + PRINT_HINTS[type] + "</small>" : "";
+        return '<button class="option-card" type="button" data-print-type="' + type + '" aria-pressed="false">' + type + hintText + "</button>";
+      }).join("");
+    }
+
+    var colorWrap = document.querySelector("[data-color-options]");
+    if (colorWrap) {
+      colorWrap.innerHTML = product.colors.map(function (color) {
+        var cls = "swatch-" + color.toLowerCase();
+        return '<button class="swatch" type="button" data-color="' + color + '" aria-pressed="false"><span class="swatch-dot ' + cls + '"></span>' + color + "</button>";
+      }).join("");
+    }
+
+    var sizeWrap = document.querySelector("[data-size-options]");
+    if (sizeWrap) {
+      sizeWrap.innerHTML = product.sizes.map(function (size) {
+        return '<button class="size-btn" type="button" data-size="' + size + '" aria-pressed="false">' + size + "</button>";
+      }).join("");
+    }
+
+    var details = document.querySelector("[data-product-details]");
+    if (details) {
+      details.innerHTML =
+        "<p>" + product.details + "</p>" +
+        "<p>SKU " + product.sku + ". Weight " + product.weight + " g. Configuration is required before purchase.</p>";
+    }
   }
 
   function setImage(index) {
@@ -246,6 +307,8 @@
     if (qtyOut) qtyOut.textContent = String(state.quantity);
     updateSummary();
   }
+
+  hydrate();
 
   if (thumbs) {
     thumbs.innerHTML = product.images.map(function (item, i) {

@@ -2,20 +2,8 @@
   var PAGE_SIZE = 8;
   var page = 1;
   var sort = "latest";
-  var products = [
-    { id: "anime-graphic-tee", name: "Anime Graphic T-Shirt", price: 899, mrp: 1299, rating: 4.8, badge: "Bestseller", image: "assets/product-anime.svg", alt: "Black oversized t-shirt with bold anime graphic print", category: "Custom T-Shirts", sizes: ["S", "M", "L", "XL"], color: "Black", material: "Cotton", availability: "In stock", popular: 98 },
-    { id: "oversized-graphic-tee", name: "Oversized Graphic Tee", price: 799, mrp: 1199, rating: 4.7, badge: "New", image: "assets/product-oversized.svg", alt: "Cream oversized graphic t-shirt", category: "Oversized T-Shirts", sizes: ["M", "L", "XL", "XXL"], color: "Cream", material: "Cotton", availability: "In stock", popular: 86 },
-    { id: "minimal-hoodie", name: "Minimal Hoodie", price: 1499, mrp: 1999, rating: 4.9, badge: "Hot", image: "assets/product-hoodie.svg", alt: "Charcoal hoodie with large typography print", category: "Hoodies", sizes: ["S", "M", "L", "XL", "XXL"], color: "Charcoal", material: "Blend", availability: "In stock", popular: 94 },
-    { id: "custom-sports-jersey", name: "Custom Sports Jersey", price: 1299, mrp: 1799, rating: 4.6, badge: "Custom", image: "assets/product-jersey.svg", alt: "Orange and black custom sports jersey", category: "Sports Jerseys", sizes: ["XS", "S", "M", "L", "XL"], color: "Red", material: "Polyester", availability: "Made to order", popular: 81 },
-    { id: "polo-tshirt", name: "Polo T-Shirt", price: 999, mrp: 1399, rating: 4.5, badge: "Studio", image: "assets/product-polo.svg", alt: "Navy custom polo t-shirt", category: "Polo T-Shirts", sizes: ["S", "M", "L", "XL"], color: "Navy", material: "Cotton", availability: "In stock", popular: 72 },
-    { id: "sublimation-tshirt", name: "Sublimation T-Shirt", price: 999, mrp: 1499, rating: 4.8, badge: "All-over", image: "assets/product-sub.svg", alt: "All-over sublimation printed t-shirt", category: "Sublimation", sizes: ["S", "M", "L", "XL"], color: "White", material: "Polyester", availability: "Made to order", popular: 88 },
-    { id: "dtf-print", name: "DTF Print", price: 349, mrp: 499, rating: 4.6, badge: "Transfer", image: "assets/product-dtf.svg", alt: "DTF transfer sheet ready for press", category: "DTF Prints", sizes: ["M"], color: "White", material: "Polyester", availability: "In stock", popular: 76 },
-    { id: "custom-tote-bag", name: "Custom Tote Bag", price: 499, mrp: 799, rating: 4.5, badge: "Gift", image: "assets/product-tote.svg", alt: "Canvas tote bag with custom print", category: "Custom Gifts", sizes: ["M"], color: "Cream", material: "Canvas", availability: "In stock", popular: 69 },
-    { id: "corporate-tshirt", name: "Corporate T-Shirt", price: 849, mrp: 1199, rating: 4.4, badge: "Bulk", image: "assets/product-corporate.svg", alt: "White corporate t-shirt with studio mark", category: "Custom T-Shirts", sizes: ["S", "M", "L", "XL", "XXL"], color: "White", material: "Cotton", availability: "Made to order", popular: 64 },
-    { id: "kids-tshirt", name: "Kids T-Shirt", price: 599, mrp: 899, rating: 4.7, badge: "Kids", image: "assets/product-kids.svg", alt: "Kids t-shirt with custom print", category: "Custom T-Shirts", sizes: ["XS", "S", "M"], color: "Navy", material: "Cotton", availability: "In stock", popular: 71 },
-    { id: "caps", name: "Caps", price: 449, mrp: 699, rating: 4.3, badge: "New", image: "assets/product-cap.svg", alt: "Black custom printed cap", category: "Custom Gifts", sizes: ["M", "L"], color: "Black", material: "Blend", availability: "In stock", popular: 58 },
-    { id: "sublimation-cushion", name: "Sublimation Cushion", price: 699, mrp: 999, rating: 4.6, badge: "Gift", image: "assets/product-cushion.svg", alt: "Sublimation printed cushion", category: "Sublimation", sizes: ["M"], color: "White", material: "Polyester", availability: "In stock", popular: 61 }
-  ];
+  var catalog = window.DSAtelier && window.DSAtelier.catalog;
+  var products = catalog && catalog.getAll ? catalog.getAll() : [];
 
   var grid = document.querySelector("[data-shop-grid]");
   if (!grid) return;
@@ -84,7 +72,7 @@
             '<div class="price"><span class="price-now">' + money(item.price) + '</span><span class="price-mrp">' + money(item.mrp) + "</span></div>" +
             '<div class="rating"><span class="rating-star" aria-hidden="true">★</span><span>' + item.rating + "</span></div>" +
           "</div>" +
-          '<a class="btn btn-secondary" href="product.html">View Product</a>' +
+          '<a class="btn btn-secondary" href="' + (catalog ? catalog.productUrl(item.id) : "product.html") + '">View Product</a>' +
         "</div>" +
       "</article>"
     );

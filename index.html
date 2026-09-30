@@ -2,6 +2,14 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
+  <script>
+    (function () {
+      var theme;
+      try { theme = localStorage.getItem("ds-atelier-theme"); } catch (e) {}
+      if (!theme) theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>DS ATELIER — CREATE. PRINT. WEAR.</title>
   <meta name="description" content="Premium custom apparel, DTF printing, and sublimation for creators, brands, teams and businesses.">
@@ -272,9 +280,8 @@
             </h2>
             <p class="section-copy">Send artwork, pick a garment, and we handle colour matching, placement and finishing. From one tee to a full merch run.</p>
           </div>
-          <div class="media-frame">
-            <img src="assets/print-studio.svg" alt="Print studio with a custom tee and DTF sheets">
-            <span class="media-caption">In-house print desk</span>
+          <div class="media-frame print-media">
+            <img src="assets/print-studio.svg" alt="Print studio with a custom tee and colour swatches">
           </div>
           <div class="hero-actions print-actions">
             <a class="btn btn-primary btn-lg" href="#custom-printing">Upload Design</a>
@@ -554,6 +561,7 @@
   </footer>
 
   <script src="js/theme.js"></script>
+  <script src="js/catalog.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
