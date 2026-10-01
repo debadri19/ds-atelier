@@ -326,6 +326,13 @@
 }
 
 @media (max-width: 768px) {
+  .usp-item.feature-card {
+    min-height: 0;
+    height: auto;
+    padding: 0.95rem 0.95rem 0.8rem;
+    gap: 0.4rem;
+  }
+
   .hero {
     padding-top: var(--space-5);
   }

@@ -4,6 +4,37 @@ Chronological history of changes that actually exist. Dates use the work session
 
 ---
 
+## [0.1.5] - 2026-10-01
+
+Patch release. Alpha / Standalone Frontend. Frontend UI polish for the current six pages is complete. Overall project remains in progress.
+
+### Added
+
+- Shop page: filters, sort, pagination, mobile filter sheet, mobile sort sheet
+- Product image architecture under `assets/images/products/<product-slug>/mockups/default/<color>/`
+- Asset folder architecture: `hero/`, `categories/`, `products/`, `services/`, reserved `icons/` and `miscellaneous/`
+- Dynamic artwork upload on PDP: Front, Back, or Front + Back zones
+- In-box upload preview (filename, size, image thumb)
+
+### Improved
+
+- PDP mobile UX: facts 2×2, print type side-by-side, print position row, size-guide pill
+- PDP CTA hierarchy: Buy Now and Add to Cart on one tighter row
+- PDP upload experience: position-driven zones, preview inside the drop area
+- Footer branding: dual logo lockup (`logo-icon.png` + `logo-wordmark.png`) with extra left breathing room
+- Mobile header spacing and Search icon visibility (Search remains a visual placeholder)
+- Home USP card spacing on mobile (content-driven height)
+
+### Fixed
+
+- Catalog color consistency
+- PDP spacing next to the browser scrollbar
+- Mobile header right-side empty gap
+- Mobile USP card oversized bottom space
+- Mobile print type / print position stacking
+
+---
+
 ## 2026-09-30
 
 ### Product image architecture

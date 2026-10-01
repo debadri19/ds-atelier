@@ -115,9 +115,9 @@ Storefront images use `assets/images/{hero,categories,products,services,icons,mi
 
 | File | Use |
 |---|---|
-| `logo-full.png` | Footer; desktop/tablet brand lockup when a stacked mark is needed |
-| `logo-icon.png` | Header D/DS mark, mobile compact branding, favicon |
-| `logo-wordmark.png` | Header ATELIER wordmark beside the icon |
+| `logo-full.png` | Reserved stacked mark; not the current footer lockup |
+| `logo-icon.png` | Header D/DS mark, mobile compact branding, favicon, footer brand row |
+| `logo-wordmark.png` | Header ATELIER wordmark beside the icon; footer brand row |
 
 Do not redraw, restyle, stretch, or recreate these files.
 
@@ -216,6 +216,18 @@ Menu reveals: Custom Order, Bulk Orders, Dropshipping, About, Support, FAQ, Poli
 Do not replace this with a generic full-width ecommerce header unless explicitly requested.
 
 Respect `env(safe-area-inset-bottom)` so the bottom bar does not overlap content.
+
+Header Search is a visual placeholder only. Do not claim search is implemented.
+
+---
+
+## Footer brand rule
+
+Footer brand row uses official assets only:
+
+`[ logo-icon.png ] [ logo-wordmark.png ]`
+
+Horizontal, vertically centered, no wrap, no stretch. Do not restore `logo-full.png` as the footer lockup unless explicitly instructed.
 
 ---
 

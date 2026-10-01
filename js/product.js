@@ -29,11 +29,12 @@
     size: "",
     quantity: 1,
     designFile: null,
+    designFiles: { front: null, back: null },
     printPosition: "",
     specialInstructions: ""
   };
 
-  var previewUrl = "";
+  var previewUrls = { front: "", back: "" };
   var mainImg = document.querySelector("[data-main-image]");
   var thumbs = document.querySelector("[data-thumbs]");
   var relatedGrid = document.querySelector("[data-related-grid]");
@@ -41,12 +42,6 @@
   var addBtn = document.querySelector("[data-add-cart]");
   var buyBtn = document.querySelector("[data-buy-now]");
   var hint = document.querySelector("[data-config-hint]");
-  var fileInput = document.querySelector("[data-upload-input]");
-  var fileState = document.querySelector("[data-upload-file]");
-  var fileName = document.querySelector("[data-upload-name]");
-  var filePreview = document.querySelector("[data-upload-preview]");
-  var fileError = document.querySelector("[data-upload-error]");
-  var dropZone = document.querySelector("[data-upload-drop]");
   var lightbox = document.querySelector("[data-lightbox]");
   var lightboxImg = document.querySelector("[data-lightbox-image]");
   var lightboxCounter = document.querySelector("[data-lightbox-counter]");
@@ -78,6 +73,10 @@
       size: state.size,
       quantity: state.quantity,
       designFile: state.designFile ? { name: state.designFile.name, type: state.designFile.type, size: state.designFile.size } : null,
+      designFiles: {
+        front: state.designFiles.front ? { name: state.designFiles.front.name, type: state.designFiles.front.type, size: state.designFiles.front.size } : null,
+        back: state.designFiles.back ? { name: state.designFiles.back.name, type: state.designFiles.back.type, size: state.designFiles.back.size } : null
+      },
       printPosition: state.printPosition,
       specialInstructions: state.specialInstructions,
       price: product.price,
@@ -138,7 +137,7 @@
     var facts = document.querySelector("[data-product-facts]");
     if (facts) {
       facts.innerHTML =
-        "<li><span>Print</span> " + product.printTypes.join(" / ") + "</li>" +
+        "<li><span>Print Type</span> " + product.printTypes.join(" / ") + "</li>" +
         "<li><span>Material</span> " + product.material + "</li>" +
         "<li><span>GSM</span> " + product.gsm + "</li>" +
         "<li><span>Weight</span> " + product.weight + " g</li>";
@@ -202,8 +201,28 @@
     });
   }
 
+  function requiredUploadSlots() {
+    if (state.printPosition === "Back") return ["back"];
+    if (state.printPosition === "Front + Back") return ["front", "back"];
+    if (state.printPosition === "Front") return ["front"];
+    return [];
+  }
+
+  function uploadsReady() {
+    var slots = requiredUploadSlots();
+    if (!slots.length) return false;
+    return slots.every(function (slot) {
+      return Boolean(state.designFiles[slot]);
+    });
+  }
+
+  function syncPrimaryFile() {
+    var slots = requiredUploadSlots();
+    state.designFile = slots.length ? (state.designFiles[slots[0]] || null) : null;
+  }
+
   function isComplete() {
-    return Boolean(state.printType && state.color && state.size && state.designFile && state.printPosition && state.quantity >= 1);
+    return Boolean(state.printType && state.color && state.size && uploadsReady() && state.printPosition && state.quantity >= 1);
   }
 
   function missing() {
@@ -212,7 +231,12 @@
     if (!state.printPosition) needs.push("print position");
     if (!state.color) needs.push("color");
     if (!state.size) needs.push("size");
-    if (!state.designFile) needs.push("design file");
+    if (!uploadsReady()) {
+      var slots = requiredUploadSlots();
+      if (slots.length === 2) needs.push("front and back design files");
+      else if (slots[0] === "back") needs.push("back design file");
+      else needs.push("design file");
+    }
     return needs;
   }
 
@@ -248,20 +272,42 @@
     });
   }
 
-  function showUploadError(message) {
-    if (!fileError) return;
-    fileError.hidden = !message;
-    fileError.textContent = message || "";
+  function fileSizeLabel(bytes) {
+    if (!bytes && bytes !== 0) return "";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1).replace(/\.0$/, "") + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1).replace(/\.0$/, "") + " MB";
   }
 
-  function clearPreview() {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      previewUrl = "";
+  function zoneEls(slot) {
+    return {
+      zone: document.querySelector('[data-upload-zone="' + slot + '"]'),
+      drop: document.querySelector('[data-upload-drop="' + slot + '"]'),
+      input: document.querySelector('[data-upload-input="' + slot + '"]'),
+      file: document.querySelector('[data-upload-file="' + slot + '"]'),
+      name: document.querySelector('[data-upload-name="' + slot + '"]'),
+      size: document.querySelector('[data-upload-size="' + slot + '"]'),
+      preview: document.querySelector('[data-upload-preview="' + slot + '"]'),
+      error: document.querySelector('[data-upload-error="' + slot + '"]')
+    };
+  }
+
+  function showUploadError(slot, message) {
+    var els = zoneEls(slot);
+    if (!els.error) return;
+    els.error.hidden = !message;
+    els.error.textContent = message || "";
+  }
+
+  function clearPreview(slot) {
+    if (previewUrls[slot]) {
+      URL.revokeObjectURL(previewUrls[slot]);
+      previewUrls[slot] = "";
     }
-    if (filePreview) {
-      filePreview.hidden = true;
-      filePreview.removeAttribute("src");
+    var els = zoneEls(slot);
+    if (els.preview) {
+      els.preview.hidden = true;
+      els.preview.removeAttribute("src");
     }
   }
 
@@ -273,36 +319,59 @@
     return ALLOWED_EXT.indexOf(ext) !== -1;
   }
 
-  function applyFile(file) {
+  function applyFile(slot, file) {
     if (!file) return;
     if (file.size > MAX_FILE_BYTES) {
-      showUploadError("File must be 25 MB or smaller.");
+      showUploadError(slot, "File must be 25 MB or smaller.");
       return;
     }
     if (!isAllowedFile(file)) {
-      showUploadError("Use PNG, JPG, JPEG or PDF.");
+      showUploadError(slot, "Use PNG, JPG, JPEG or PDF.");
       return;
     }
-    showUploadError("");
-    state.designFile = file;
-    if (fileName) fileName.textContent = file.name;
-    if (fileState) fileState.classList.add("is-visible");
-    clearPreview();
-    if (filePreview && file.type.indexOf("image/") === 0) {
-      previewUrl = URL.createObjectURL(file);
-      filePreview.src = previewUrl;
-      filePreview.hidden = false;
+    showUploadError(slot, "");
+    state.designFiles[slot] = file;
+    syncPrimaryFile();
+    var els = zoneEls(slot);
+    if (els.name) els.name.textContent = file.name;
+    if (els.size) els.size.textContent = fileSizeLabel(file.size);
+    if (els.drop) els.drop.classList.add("has-file");
+    clearPreview(slot);
+    if (els.preview && file.type.indexOf("image/") === 0) {
+      previewUrls[slot] = URL.createObjectURL(file);
+      els.preview.src = previewUrls[slot];
+      els.preview.hidden = false;
     }
     updateActions();
   }
 
-  function removeFile() {
-    state.designFile = null;
-    if (fileInput) fileInput.value = "";
-    if (fileState) fileState.classList.remove("is-visible");
-    if (fileName) fileName.textContent = "";
-    clearPreview();
-    showUploadError("");
+  function removeFile(slot) {
+    state.designFiles[slot] = null;
+    syncPrimaryFile();
+    var els = zoneEls(slot);
+    if (els.input) els.input.value = "";
+    if (els.drop) els.drop.classList.remove("has-file");
+    if (els.name) els.name.textContent = "";
+    if (els.size) els.size.textContent = "";
+    clearPreview(slot);
+    showUploadError(slot, "");
+    updateActions();
+  }
+
+  function syncUploadZones() {
+    var slots = requiredUploadSlots();
+    var wrap = document.querySelector("[data-upload-zones]");
+    var block = document.querySelector("[data-upload-block]");
+    ["front", "back"].forEach(function (slot) {
+      var els = zoneEls(slot);
+      if (!els.zone) return;
+      var visible = slots.indexOf(slot) !== -1;
+      els.zone.hidden = !visible;
+      if (!visible && state.designFiles[slot]) removeFile(slot);
+    });
+    if (wrap) wrap.classList.toggle("is-empty", !slots.length);
+    if (block) block.hidden = !slots.length;
+    syncPrimaryFile();
     updateActions();
   }
 
@@ -406,12 +475,18 @@
     if (position) {
       state.printPosition = position.getAttribute("data-position");
       selectExclusive("position", state.printPosition);
-      updateActions();
+      syncUploadZones();
     }
 
     if (event.target.closest("[data-qty-minus]")) setQty(state.quantity - 1);
     if (event.target.closest("[data-qty-plus]")) setQty(state.quantity + 1);
-    if (event.target.closest("[data-remove-file]")) removeFile();
+    var removeBtn = event.target.closest("[data-remove-file]");
+    if (removeBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      removeFile(removeBtn.getAttribute("data-remove-file") || "front");
+      return;
+    }
 
     var tab = event.target.closest("[data-tab]");
     if (tab) {
@@ -479,29 +554,36 @@
     }
   });
 
-  if (fileInput) {
-    fileInput.addEventListener("change", function () {
-      applyFile(fileInput.files && fileInput.files[0]);
-    });
-  }
-
-  if (dropZone) {
-    ["dragenter", "dragover"].forEach(function (type) {
-      dropZone.addEventListener(type, function (event) {
+  ["front", "back"].forEach(function (slot) {
+    var els = zoneEls(slot);
+    if (els.input) {
+      els.input.addEventListener("change", function () {
+        applyFile(slot, els.input.files && els.input.files[0]);
+      });
+    }
+    if (els.drop) {
+      els.drop.addEventListener("click", function (event) {
+        if (event.target.closest("[data-remove-file]")) event.preventDefault();
+      }, true);
+      ["dragenter", "dragover"].forEach(function (type) {
+        els.drop.addEventListener(type, function (event) {
+          event.preventDefault();
+          els.drop.classList.add("is-dragover");
+        });
+      });
+      ["dragleave", "drop"].forEach(function (type) {
+        els.drop.addEventListener(type, function () {
+          els.drop.classList.remove("is-dragover");
+        });
+      });
+      els.drop.addEventListener("drop", function (event) {
         event.preventDefault();
-        dropZone.classList.add("is-dragover");
+        applyFile(slot, event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]);
       });
-    });
-    ["dragleave", "drop"].forEach(function (type) {
-      dropZone.addEventListener(type, function () {
-        dropZone.classList.remove("is-dragover");
-      });
-    });
-    dropZone.addEventListener("drop", function (event) {
-      event.preventDefault();
-      applyFile(event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]);
-    });
-  }
+    }
+  });
+
+  syncUploadZones();
 
   var notes = document.querySelector("[data-notes]");
   if (notes) {

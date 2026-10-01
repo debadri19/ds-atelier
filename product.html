@@ -172,7 +172,7 @@
         <p class="product-lead" data-product-lead>Heavyweight oversized blank, printed in-house. Choose print type, garment color and size, then upload artwork.</p>
 
         <ul class="product-facts" data-product-facts>
-          <li><span>Print</span> DTF / Sublimation</li>
+          <li><span>Print Type</span> DTF / Sublimation</li>
           <li><span>Material</span> Cotton</li>
           <li><span>GSM</span> 180–220</li>
           <li><span>Weight</span> 220 g</li>
@@ -214,7 +214,7 @@
         <fieldset class="option-block">
           <legend class="size-legend">
             <span>Size</span>
-            <button class="link" type="button" data-open-size-guide>Size Guide</button>
+            <button class="size-guide-btn" type="button" data-open-size-guide>Size Guide</button>
           </legend>
           <div class="size-row" data-size-options>
             <button class="size-btn" type="button" data-size="S" aria-pressed="false">S</button>
@@ -234,20 +234,49 @@
           </div>
         </div>
 
-        <div class="option-block">
-          <label class="option-label" for="design-upload">Upload Your Design</label>
-          <label class="upload-drop" for="design-upload" data-upload-drop>
-            <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
-            <strong>Drop artwork or browse</strong>
-            <p>PNG, JPG, JPEG or PDF. Max 25 MB.</p>
-            <span class="btn btn-ghost btn-sm upload-browse">Upload design</span>
-          </label>
-          <input class="sr-only" id="design-upload" data-upload-input type="file" accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf" name="design">
-          <p class="upload-error" data-upload-error hidden></p>
-          <div class="upload-file" data-upload-file>
-            <img class="upload-preview" data-upload-preview alt="Uploaded design preview" hidden>
-            <span data-upload-name></span>
-            <button class="btn btn-ghost btn-sm" type="button" data-remove-file>Remove</button>
+        <div class="option-block" data-upload-block>
+          <span class="option-label">Upload Your Design</span>
+          <div class="upload-zones" data-upload-zones>
+            <div class="upload-zone" data-upload-zone="front" hidden>
+              <label class="upload-drop" for="design-upload-front" data-upload-drop="front">
+                <span class="upload-prompt">
+                  <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+                  <strong>Drop front artwork or browse</strong>
+                  <p>PNG, JPG, JPEG or PDF. Max 25 MB.</p>
+                  <span class="btn btn-ghost btn-sm upload-browse">Upload design</span>
+                </span>
+                <span class="upload-file" data-upload-file="front">
+                  <img class="upload-preview" data-upload-preview="front" alt="Front design preview" hidden>
+                  <span class="upload-file-meta">
+                    <span data-upload-name="front"></span>
+                    <span data-upload-size="front"></span>
+                  </span>
+                  <button class="btn btn-ghost btn-sm" type="button" data-remove-file="front">Remove</button>
+                </span>
+              </label>
+              <input class="sr-only" id="design-upload-front" data-upload-input="front" type="file" accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf" name="design-front">
+              <p class="upload-error" data-upload-error="front" hidden></p>
+            </div>
+            <div class="upload-zone" data-upload-zone="back" hidden>
+              <label class="upload-drop" for="design-upload-back" data-upload-drop="back">
+                <span class="upload-prompt">
+                  <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+                  <strong>Drop back artwork or browse</strong>
+                  <p>PNG, JPG, JPEG or PDF. Max 25 MB.</p>
+                  <span class="btn btn-ghost btn-sm upload-browse">Upload design</span>
+                </span>
+                <span class="upload-file" data-upload-file="back">
+                  <img class="upload-preview" data-upload-preview="back" alt="Back design preview" hidden>
+                  <span class="upload-file-meta">
+                    <span data-upload-name="back"></span>
+                    <span data-upload-size="back"></span>
+                  </span>
+                  <button class="btn btn-ghost btn-sm" type="button" data-remove-file="back">Remove</button>
+                </span>
+              </label>
+              <input class="sr-only" id="design-upload-back" data-upload-input="back" type="file" accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf" name="design-back">
+              <p class="upload-error" data-upload-error="back" hidden></p>
+            </div>
           </div>
         </div>
 
@@ -266,8 +295,8 @@
         </div>
 
         <div class="product-actions">
-          <button class="btn btn-primary btn-lg" type="button" data-add-cart disabled>Add to Cart</button>
-          <button class="btn btn-secondary" type="button" data-buy-now disabled>Buy Now</button>
+          <button class="btn btn-primary btn-lg" type="button" data-buy-now disabled>Buy Now</button>
+          <button class="btn btn-secondary" type="button" data-add-cart disabled>Add to Cart</button>
         </div>
         <p class="product-hint" data-config-hint>Select print type, print position, color, size, design file to continue.</p>
       </div>
@@ -372,7 +401,8 @@
     <div class="container footer-grid">
       <div class="footer-brand">
         <a class="brand-lockup" href="index.html" aria-label="DS ATELIER home">
-          <img class="brand-logo-full" src="assets/images/brand/logo-full.png" alt="DS ATELIER">
+          <img class="brand-logo-icon" src="assets/images/brand/logo-icon.png" alt="">
+          <img class="brand-logo-wordmark" src="assets/images/brand/logo-wordmark.png" alt="ATELIER">
         </a>
         <p>Premium custom apparel, DTF printing, and sublimation for creators, brands, teams and businesses.</p>
         <div class="footer-social">

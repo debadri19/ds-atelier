@@ -11,8 +11,31 @@
   gap: var(--space-6);
 }
 
+.footer-brand {
+  padding-left: 0.35rem;
+}
+
 .footer-brand .brand-lockup {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.7rem;
   margin-bottom: var(--space-4);
+}
+
+.footer-brand .brand-logo-icon {
+  height: 2.55rem;
+  width: auto;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.footer-brand .brand-logo-wordmark {
+  height: 1.05rem;
+  width: auto;
+  flex-shrink: 0;
+  object-fit: contain;
 }
 
 .footer-brand p {
@@ -140,10 +163,20 @@
     grid-column: 1 / -1;
     margin-top: 0;
     padding-top: 0;
+    padding-left: 0.55rem;
   }
 
   .footer-brand .brand-lockup {
     margin-top: 0;
+    gap: 0.6rem;
+  }
+
+  .footer-brand .brand-logo-icon {
+    height: 2.2rem;
+  }
+
+  .footer-brand .brand-logo-wordmark {
+    height: 0.92rem;
   }
 
   .footer-bottom {

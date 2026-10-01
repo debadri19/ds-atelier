@@ -1,10 +1,10 @@
-# DS ATELIER Frontend v0.1.4
+# DS ATELIER Frontend v0.1.5
 
 Premium custom apparel storefront. Tagline: **CREATE. PRINT. WEAR.**
 
 DTF printing, sublimation, custom products, bulk orders, and dropshipping for creators, brands, teams, and businesses.
 
-Current release: **v0.1.4** — Alpha / Standalone Frontend. Home, Shop, Product, About, Policy, and Support pages. This is not a complete ecommerce website.
+Current release: **v0.1.5** — Alpha / Standalone Frontend. Home, Shop, Product, About, Policy, and Support pages. Frontend UI polish for these pages is complete. This is not a complete ecommerce website.
 
 ---
 
@@ -72,6 +72,7 @@ Details: `docs/FRONTEND_ARCHITECTURE.md`
 | Cart, Checkout | Not built |
 | Dedicated FAQ / Contact pages | Not built; Support includes FAQ and a contact form |
 | Custom Order, Bulk Orders, Dropshipping | Home sections only; dedicated pages not built |
+| Header Search | Visual placeholder only; search functionality is not implemented |
 
 ---
 
@@ -160,5 +161,7 @@ See `docs/BACKEND_INTEGRATION.md`. This is not implemented.
 - Mock product data in JavaScript
 - Cart badge is a demo counter
 - Account and Checkout are placeholders or unbuilt
+- Header Search icon is a visual placeholder only; search is not implemented
 - No PHP, no database, no payments
 - Listing cards use View Product; configuration and Add to Cart live on Product
+- Frontend UI polish for the current pages is complete; the overall storefront is still in progress
