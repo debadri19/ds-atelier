@@ -22,6 +22,8 @@ Official assets in `assets/images/brand/`:
 
 Do not recreate logos in HTML, CSS, or SVG.
 
+Storefront images live under `assets/images/`: `hero/`, `categories/`, `products/<product-slug>/mockups/default/<color>/`, `services/`, `icons/`, `miscellaneous/`. Keep original filenames. Product images use catalog slugs; do not invent extra design or color folders without real assets.
+
 ---
 
 ## Color tokens

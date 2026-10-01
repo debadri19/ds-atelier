@@ -111,6 +111,8 @@ Future pages must belong to the same visual family.
 
 Official logos live in `assets/images/brand/` and are immutable.
 
+Storefront images use `assets/images/{hero,categories,products,services,icons,miscellaneous}/`. Keep original filenames. Product images live under `products/<product-slug>/mockups/default/<color>/`. Future artwork belongs in `designs/<design-slug>/`.
+
 | File | Use |
 |---|---|
 | `logo-full.png` | Footer; desktop/tablet brand lockup when a stacked mark is needed |

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1100" role="img" aria-labelledby="t d">
+  <title id="t">Custom printed apparel studio</title>
+  <desc id="d">Editorial still of a printed oversized tee on a studio rack</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a1d21"/>
+      <stop offset="1" stop-color="#2a2420"/>
+    </linearGradient>
+    <linearGradient id="tee" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4efe7"/>
+      <stop offset="1" stop-color="#d9d0c4"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="1100" fill="url(#bg)"/>
+  <circle cx="720" cy="180" r="220" fill="#FF6A00" opacity=".18"/>
+  <rect x="90" y="90" width="720" height="920" rx="48" fill="#111417"/>
+  <path d="M250 330c40-110 90-150 200-150s160 40 200 150l40 20v430c0 28-22 50-50 50H260c-28 0-50-22-50-50V350z" fill="url(#tee)"/>
+  <path d="M250 330c18-18 28-70 8-118 62 18 120 22 192 22s130-4 192-22c-20 48-10 100 8 118" fill="#ece6dc"/>
+  <rect x="360" y="430" width="180" height="180" rx="18" fill="#181818"/>
+  <path d="M390 520h120M450 460v120" stroke="#FF6A00" stroke-width="18" stroke-linecap="square"/>
+  <text x="450" y="680" text-anchor="middle" fill="#181818" font-family="Syne, sans-serif" font-size="34" font-weight="800" letter-spacing="6">ATELIER</text>
+  <rect x="140" y="160" width="180" height="70" rx="35" fill="#FF6A00"/>
+  <text x="230" y="204" text-anchor="middle" fill="#fff" font-family="DM Sans, sans-serif" font-size="22" font-weight="700">DTF READY</text>
+</svg>

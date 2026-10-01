@@ -37,11 +37,22 @@ Standalone static frontend. No bundler. No backend in this phase.
     footer.html              Reusable footer markup
     product-card.html        Product card template
   assets/
-    *.svg                    Home section illustrations
-    images/brand/
-      logo-full.png
-      logo-icon.png
-      logo-wordmark.png
+    images/
+      brand/                 Official logos (immutable)
+        logo-full.png
+        logo-icon.png
+        logo-wordmark.png
+      hero/                  Home/Shop/About hero and studio art
+      categories/            Category cards
+      products/
+        <product-slug>/
+          designs/           Future print artwork
+          mockups/
+            default/
+              <color>/       Current combined mockup SVGs
+      services/              DTF, sublimation, bulk illustrations
+      icons/                 Reserved for UI icons
+      miscellaneous/         Unclassified images
 ```
 
 All six public pages inline header, mobile nav, drawer, and footer markup. `components/header.html` and `components/footer.html` are the canonical source copies for future PHP includes. They are not loaded at runtime.

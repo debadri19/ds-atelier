@@ -30,6 +30,7 @@ Explicit rules for any public page. Read before modifying UI.
 ## Brand
 
 - Use official files in `assets/images/brand/` only.
+- Place new images in `assets/images/{hero,categories,products,services,icons,miscellaneous}/`. Product images use `products/<product-slug>/mockups/default/<color>/`.
 - Header: DS icon + ATELIER wordmark (compact icon on mobile).
 - Footer: full logo.
 - Favicon: DS icon.

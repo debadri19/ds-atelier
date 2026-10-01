@@ -4,6 +4,23 @@ Chronological history of changes that actually exist. Dates use the work session
 
 ---
 
+## 2026-09-30
+
+### Product image architecture
+
+- Moved each catalog product SVG into `assets/images/products/<product-slug>/mockups/default/<color>/`
+- Kept original filenames; reserved empty `designs/` per product
+- `minimal-hoodie` shares `motivational-hoodie` charcoal mockup (no duplicate file)
+- Updated `js/catalog.js`, `product.html`, and docs paths
+
+### Asset folder restructure
+
+- Moved SVG placeholders into `assets/images/{hero,categories,products,services}/`
+- Official logos remain in `assets/images/brand/`
+- Reserved empty `icons/` and `miscellaneous/` folders
+
+---
+
 ## [0.1.1] - 2026-09-24
 
 Patch release. Alpha / Standalone Frontend.

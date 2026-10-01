@@ -19,7 +19,7 @@
       rating: 4.8,
       reviews: 98,
       badge: "Bestseller",
-      image: "assets/product-anime.svg",
+      image: "assets/images/products/anime-graphic-tee/mockups/default/black/product-anime.svg",
       alt: "Black oversized t-shirt with bold anime graphic print",
       category: "Custom T-Shirts",
       sizes: ["S", "M", "L", "XL"],
@@ -34,10 +34,10 @@
       lead: "Bold anime graphic on a heavyweight cotton tee. Choose print type, colour and size, then upload artwork. Configuration is required before Add to Cart.",
       details: "Studio graphic tee cut for everyday wear. Printed in-house after you choose print type, colour and artwork. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-anime.svg", alt: "Black oversized t-shirt with bold anime graphic print" },
-        { src: "assets/product-oversized.svg", alt: "Cream oversized graphic t-shirt" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed tees" },
-        { src: "assets/cat-oversize.svg", alt: "Oversized t-shirt on a studio backdrop" }
+        { src: "assets/images/products/anime-graphic-tee/mockups/default/black/product-anime.svg", alt: "Black oversized t-shirt with bold anime graphic print" },
+        { src: "assets/images/products/oversized-graphic-tee/mockups/default/cream/product-oversized.svg", alt: "Cream oversized graphic t-shirt" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed tees" },
+        { src: "assets/images/categories/cat-oversize.svg", alt: "Oversized t-shirt on a studio backdrop" }
       ]
     },
     {
@@ -49,12 +49,12 @@
       rating: 4.7,
       reviews: 128,
       badge: "New",
-      image: "assets/product-oversized.svg",
+      image: "assets/images/products/oversized-graphic-tee/mockups/default/cream/product-oversized.svg",
       alt: "Cream oversized graphic t-shirt",
       category: "Oversized T-Shirts",
       sizes: ["M", "L", "XL", "XXL"],
       color: "Cream",
-      colors: ["Black", "White", "Navy", "Red"],
+      colors: ["Cream", "Black", "White", "Navy", "Red"],
       material: "Cotton",
       availability: "In stock",
       popular: 86,
@@ -64,10 +64,10 @@
       lead: "Heavyweight oversized blank, printed in-house. Choose print type, garment color and size, then upload artwork. Configuration is required before Add to Cart.",
       details: "Relaxed oversized tee cut for layering. Printed in-house after you choose print type, color and artwork. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-oversized.svg", alt: "Cream oversized graphic t-shirt front" },
-        { src: "assets/product-anime.svg", alt: "Black oversized graphic t-shirt" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed tees" },
-        { src: "assets/cat-oversize.svg", alt: "Oversized t-shirt on a studio backdrop" }
+        { src: "assets/images/products/oversized-graphic-tee/mockups/default/cream/product-oversized.svg", alt: "Cream oversized graphic t-shirt front" },
+        { src: "assets/images/products/anime-graphic-tee/mockups/default/black/product-anime.svg", alt: "Black oversized graphic t-shirt" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed tees" },
+        { src: "assets/images/categories/cat-oversize.svg", alt: "Oversized t-shirt on a studio backdrop" }
       ]
     },
     {
@@ -79,12 +79,12 @@
       rating: 4.9,
       reviews: 90,
       badge: "Hot",
-      image: "assets/product-hoodie.svg",
+      image: "assets/images/products/motivational-hoodie/mockups/default/charcoal/product-hoodie.svg",
       alt: "Charcoal hoodie with large typography print",
       category: "Hoodies",
       sizes: ["S", "M", "L", "XL", "XXL"],
       color: "Charcoal",
-      colors: ["Black", "White", "Navy", "Red"],
+      colors: ["Charcoal", "Black", "White", "Navy", "Red"],
       material: "Blend",
       availability: "In stock",
       popular: 90,
@@ -95,10 +95,10 @@
       lead: "Heavyweight hoodie for large typography prints. Choose print type, colour and size, then upload artwork. Configuration is required before Add to Cart.",
       details: "Relaxed hoodie blank for studio typography and graphic prints. Printed in-house after configuration. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-hoodie.svg", alt: "Charcoal hoodie with large typography print" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed garments" },
-        { src: "assets/product-oversized.svg", alt: "Cream oversized graphic t-shirt" },
-        { src: "assets/cat-oversize.svg", alt: "Studio garment on a backdrop" }
+        { src: "assets/images/products/motivational-hoodie/mockups/default/charcoal/product-hoodie.svg", alt: "Charcoal hoodie with large typography print" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed garments" },
+        { src: "assets/images/products/oversized-graphic-tee/mockups/default/cream/product-oversized.svg", alt: "Cream oversized graphic t-shirt" },
+        { src: "assets/images/categories/cat-oversize.svg", alt: "Studio garment on a backdrop" }
       ]
     },
     {
@@ -110,12 +110,12 @@
       rating: 4.9,
       reviews: 94,
       badge: "Hot",
-      image: "assets/product-hoodie.svg",
+      image: "assets/images/products/motivational-hoodie/mockups/default/charcoal/product-hoodie.svg",
       alt: "Charcoal hoodie with large typography print",
       category: "Hoodies",
       sizes: ["S", "M", "L", "XL", "XXL"],
       color: "Charcoal",
-      colors: ["Black", "White", "Navy", "Red"],
+      colors: ["Charcoal", "Black", "White", "Navy", "Red"],
       material: "Blend",
       availability: "In stock",
       popular: 94,
@@ -125,10 +125,10 @@
       lead: "Clean hoodie blank for studio prints. Choose print type, colour and size, then upload artwork. Configuration is required before Add to Cart.",
       details: "Minimal hoodie cut for everyday wear. Printed in-house after you choose print type, colour and artwork. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-hoodie.svg", alt: "Charcoal hoodie with large typography print" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed garments" },
-        { src: "assets/product-anime.svg", alt: "Black oversized graphic t-shirt" },
-        { src: "assets/cat-oversize.svg", alt: "Studio garment on a backdrop" }
+        { src: "assets/images/products/motivational-hoodie/mockups/default/charcoal/product-hoodie.svg", alt: "Charcoal hoodie with large typography print" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed garments" },
+        { src: "assets/images/products/anime-graphic-tee/mockups/default/black/product-anime.svg", alt: "Black oversized graphic t-shirt" },
+        { src: "assets/images/categories/cat-oversize.svg", alt: "Studio garment on a backdrop" }
       ]
     },
     {
@@ -140,7 +140,7 @@
       rating: 4.6,
       reviews: 81,
       badge: "Custom",
-      image: "assets/product-jersey.svg",
+      image: "assets/images/products/custom-sports-jersey/mockups/default/red/product-jersey.svg",
       alt: "Orange and black custom sports jersey",
       category: "Sports Jerseys",
       sizes: ["XS", "S", "M", "L", "XL"],
@@ -155,10 +155,10 @@
       lead: "Team jersey blank for names, numbers and crests. Choose print type, colour and size, then upload artwork. Configuration is required before Add to Cart.",
       details: "Sports jersey made to order. Printed in-house after you choose print type, colour and artwork. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-jersey.svg", alt: "Orange and black custom sports jersey" },
-        { src: "assets/product-sub.svg", alt: "All-over sublimation printed t-shirt" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed garments" },
-        { src: "assets/product-polo.svg", alt: "Navy custom polo t-shirt" }
+        { src: "assets/images/products/custom-sports-jersey/mockups/default/red/product-jersey.svg", alt: "Orange and black custom sports jersey" },
+        { src: "assets/images/products/sublimation-tshirt/mockups/default/white/product-sub.svg", alt: "All-over sublimation printed t-shirt" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed garments" },
+        { src: "assets/images/products/polo-tshirt/mockups/default/navy/product-polo.svg", alt: "Navy custom polo t-shirt" }
       ]
     },
     {
@@ -170,7 +170,7 @@
       rating: 4.5,
       reviews: 72,
       badge: "Studio",
-      image: "assets/product-polo.svg",
+      image: "assets/images/products/polo-tshirt/mockups/default/navy/product-polo.svg",
       alt: "Navy custom polo t-shirt",
       category: "Polo T-Shirts",
       sizes: ["S", "M", "L", "XL"],
@@ -185,10 +185,10 @@
       lead: "Cotton polo for logos and small-run branding. Choose print type, colour and size, then upload artwork. Configuration is required before Add to Cart.",
       details: "Studio polo blank for crests and marks. Printed in-house after configuration. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-polo.svg", alt: "Navy custom polo t-shirt" },
-        { src: "assets/product-corporate.svg", alt: "White corporate t-shirt with studio mark" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed tees" },
-        { src: "assets/product-oversized.svg", alt: "Cream oversized graphic t-shirt" }
+        { src: "assets/images/products/polo-tshirt/mockups/default/navy/product-polo.svg", alt: "Navy custom polo t-shirt" },
+        { src: "assets/images/products/corporate-tshirt/mockups/default/white/product-corporate.svg", alt: "White corporate t-shirt with studio mark" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed tees" },
+        { src: "assets/images/products/oversized-graphic-tee/mockups/default/cream/product-oversized.svg", alt: "Cream oversized graphic t-shirt" }
       ]
     },
     {
@@ -200,7 +200,7 @@
       rating: 4.8,
       reviews: 88,
       badge: "All-over",
-      image: "assets/product-sub.svg",
+      image: "assets/images/products/sublimation-tshirt/mockups/default/white/product-sub.svg",
       alt: "All-over sublimation printed t-shirt",
       category: "Sublimation",
       sizes: ["S", "M", "L", "XL"],
@@ -215,10 +215,10 @@
       lead: "Polyester tee for all-over dye-infused colour. Choose colour and size, then upload artwork. Configuration is required before Add to Cart.",
       details: "Sublimation-ready blank for edge-to-edge colour. Printed in-house after you choose colour and artwork. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-sub.svg", alt: "All-over sublimation printed t-shirt" },
-        { src: "assets/product-cushion.svg", alt: "Sublimation printed cushion" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed tees" },
-        { src: "assets/product-jersey.svg", alt: "Orange and black custom sports jersey" }
+        { src: "assets/images/products/sublimation-tshirt/mockups/default/white/product-sub.svg", alt: "All-over sublimation printed t-shirt" },
+        { src: "assets/images/products/sublimation-cushion/mockups/default/white/product-cushion.svg", alt: "Sublimation printed cushion" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed tees" },
+        { src: "assets/images/products/custom-sports-jersey/mockups/default/red/product-jersey.svg", alt: "Orange and black custom sports jersey" }
       ]
     },
     {
@@ -230,7 +230,7 @@
       rating: 4.6,
       reviews: 76,
       badge: "Transfer",
-      image: "assets/product-dtf.svg",
+      image: "assets/images/products/dtf-print/mockups/default/white/product-dtf.svg",
       alt: "DTF transfer sheet ready for press",
       category: "DTF Prints",
       sizes: ["M"],
@@ -245,10 +245,10 @@
       lead: "Ready-to-press DTF transfer. Choose colour, then upload artwork. Configuration is required before Add to Cart.",
       details: "DTF transfer sheet for studio press work. Artwork is reviewed before print. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-dtf.svg", alt: "DTF transfer sheet ready for press" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed tees" },
-        { src: "assets/product-anime.svg", alt: "Black oversized t-shirt with bold anime graphic print" },
-        { src: "assets/product-oversized.svg", alt: "Cream oversized graphic t-shirt" }
+        { src: "assets/images/products/dtf-print/mockups/default/white/product-dtf.svg", alt: "DTF transfer sheet ready for press" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed tees" },
+        { src: "assets/images/products/anime-graphic-tee/mockups/default/black/product-anime.svg", alt: "Black oversized t-shirt with bold anime graphic print" },
+        { src: "assets/images/products/oversized-graphic-tee/mockups/default/cream/product-oversized.svg", alt: "Cream oversized graphic t-shirt" }
       ]
     },
     {
@@ -260,12 +260,12 @@
       rating: 4.5,
       reviews: 69,
       badge: "Gift",
-      image: "assets/product-tote.svg",
+      image: "assets/images/products/custom-tote-bag/mockups/default/cream/product-tote.svg",
       alt: "Canvas tote bag with custom print",
       category: "Custom Gifts",
       sizes: ["M"],
       color: "Cream",
-      colors: ["Black", "White", "Navy", "Red"],
+      colors: ["Cream", "Black", "White", "Navy", "Red"],
       material: "Canvas",
       availability: "In stock",
       popular: 69,
@@ -275,10 +275,10 @@
       lead: "Canvas tote for marks, art and gifting. Choose print type and colour, then upload artwork. Configuration is required before Add to Cart.",
       details: "Studio tote blank for custom print. Printed in-house after configuration. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-tote.svg", alt: "Canvas tote bag with custom print" },
-        { src: "assets/product-cushion.svg", alt: "Sublimation printed cushion" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed goods" },
-        { src: "assets/product-cap.svg", alt: "Black custom printed cap" }
+        { src: "assets/images/products/custom-tote-bag/mockups/default/cream/product-tote.svg", alt: "Canvas tote bag with custom print" },
+        { src: "assets/images/products/sublimation-cushion/mockups/default/white/product-cushion.svg", alt: "Sublimation printed cushion" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed goods" },
+        { src: "assets/images/products/caps/mockups/default/black/product-cap.svg", alt: "Black custom printed cap" }
       ]
     },
     {
@@ -290,7 +290,7 @@
       rating: 4.4,
       reviews: 64,
       badge: "Bulk",
-      image: "assets/product-corporate.svg",
+      image: "assets/images/products/corporate-tshirt/mockups/default/white/product-corporate.svg",
       alt: "White corporate t-shirt with studio mark",
       category: "Custom T-Shirts",
       sizes: ["S", "M", "L", "XL", "XXL"],
@@ -305,10 +305,10 @@
       lead: "Uniform tee for teams and brands. Choose print type, colour and size, then upload artwork. Configuration is required before Add to Cart.",
       details: "Corporate tee made to order. Printed in-house after you choose print type, colour and artwork. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-corporate.svg", alt: "White corporate t-shirt with studio mark" },
-        { src: "assets/product-polo.svg", alt: "Navy custom polo t-shirt" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed tees" },
-        { src: "assets/product-oversized.svg", alt: "Cream oversized graphic t-shirt" }
+        { src: "assets/images/products/corporate-tshirt/mockups/default/white/product-corporate.svg", alt: "White corporate t-shirt with studio mark" },
+        { src: "assets/images/products/polo-tshirt/mockups/default/navy/product-polo.svg", alt: "Navy custom polo t-shirt" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed tees" },
+        { src: "assets/images/products/oversized-graphic-tee/mockups/default/cream/product-oversized.svg", alt: "Cream oversized graphic t-shirt" }
       ]
     },
     {
@@ -320,7 +320,7 @@
       rating: 4.7,
       reviews: 71,
       badge: "Kids",
-      image: "assets/product-kids.svg",
+      image: "assets/images/products/kids-tshirt/mockups/default/navy/product-kids.svg",
       alt: "Kids t-shirt with custom print",
       category: "Custom T-Shirts",
       sizes: ["XS", "S", "M"],
@@ -335,10 +335,10 @@
       lead: "Kids cotton tee for small-run prints. Choose print type, colour and size, then upload artwork. Configuration is required before Add to Cart.",
       details: "Kids tee printed in-house after configuration. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-kids.svg", alt: "Kids t-shirt with custom print" },
-        { src: "assets/product-anime.svg", alt: "Black oversized t-shirt with bold anime graphic print" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed tees" },
-        { src: "assets/product-tote.svg", alt: "Canvas tote bag with custom print" }
+        { src: "assets/images/products/kids-tshirt/mockups/default/navy/product-kids.svg", alt: "Kids t-shirt with custom print" },
+        { src: "assets/images/products/anime-graphic-tee/mockups/default/black/product-anime.svg", alt: "Black oversized t-shirt with bold anime graphic print" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed tees" },
+        { src: "assets/images/products/custom-tote-bag/mockups/default/cream/product-tote.svg", alt: "Canvas tote bag with custom print" }
       ]
     },
     {
@@ -350,7 +350,7 @@
       rating: 4.3,
       reviews: 58,
       badge: "New",
-      image: "assets/product-cap.svg",
+      image: "assets/images/products/caps/mockups/default/black/product-cap.svg",
       alt: "Black custom printed cap",
       category: "Custom Gifts",
       sizes: ["M", "L"],
@@ -365,10 +365,10 @@
       lead: "Custom cap for marks and short runs. Choose colour and size, then upload artwork. Configuration is required before Add to Cart.",
       details: "Studio cap blank for DTF marks. Printed in-house after configuration. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-cap.svg", alt: "Black custom printed cap" },
-        { src: "assets/product-tote.svg", alt: "Canvas tote bag with custom print" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed goods" },
-        { src: "assets/product-hoodie.svg", alt: "Charcoal hoodie with large typography print" }
+        { src: "assets/images/products/caps/mockups/default/black/product-cap.svg", alt: "Black custom printed cap" },
+        { src: "assets/images/products/custom-tote-bag/mockups/default/cream/product-tote.svg", alt: "Canvas tote bag with custom print" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed goods" },
+        { src: "assets/images/products/motivational-hoodie/mockups/default/charcoal/product-hoodie.svg", alt: "Charcoal hoodie with large typography print" }
       ]
     },
     {
@@ -380,7 +380,7 @@
       rating: 4.6,
       reviews: 61,
       badge: "Gift",
-      image: "assets/product-cushion.svg",
+      image: "assets/images/products/sublimation-cushion/mockups/default/white/product-cushion.svg",
       alt: "Sublimation printed cushion",
       category: "Sublimation",
       sizes: ["M"],
@@ -395,10 +395,10 @@
       lead: "Cushion cover for dye-infused artwork. Choose colour, then upload artwork. Configuration is required before Add to Cart.",
       details: "Sublimation cushion blank for gifts and short runs. Printed in-house after configuration. Mock product for frontend presentation only.",
       images: [
-        { src: "assets/product-cushion.svg", alt: "Sublimation printed cushion" },
-        { src: "assets/product-sub.svg", alt: "All-over sublimation printed t-shirt" },
-        { src: "assets/product-tote.svg", alt: "Canvas tote bag with custom print" },
-        { src: "assets/print-studio.svg", alt: "Studio rack with custom printed goods" }
+        { src: "assets/images/products/sublimation-cushion/mockups/default/white/product-cushion.svg", alt: "Sublimation printed cushion" },
+        { src: "assets/images/products/sublimation-tshirt/mockups/default/white/product-sub.svg", alt: "All-over sublimation printed t-shirt" },
+        { src: "assets/images/products/custom-tote-bag/mockups/default/cream/product-tote.svg", alt: "Canvas tote bag with custom print" },
+        { src: "assets/images/hero/print-studio.svg", alt: "Studio rack with custom printed goods" }
       ]
     }
   ];

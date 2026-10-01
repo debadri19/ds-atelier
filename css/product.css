@@ -191,7 +191,10 @@
 }
 
 .option-block {
-  margin-bottom: 1.15rem;
+  border: 0;
+  padding: 0;
+  margin: 0 0 1.15rem;
+  min-inline-size: 0;
 }
 
 .option-block legend,
@@ -199,6 +202,7 @@
   font-size: var(--fs-sm);
   font-weight: 700;
   margin-bottom: 0.55rem;
+  padding: 0;
   display: block;
 }
 
@@ -329,6 +333,9 @@
 }
 
 .upload-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   border: 1px dashed var(--color-border);
   border-radius: var(--radius-xl);
   background: var(--color-surface);

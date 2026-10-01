@@ -118,7 +118,14 @@ Official logos (do not redraw):
 - `assets/images/brand/logo-icon.png`
 - `assets/images/brand/logo-wordmark.png`
 
-Home illustrations are SVG placeholders in `assets/`.
+SVG placeholders live under `assets/images/`:
+
+- `hero/` — Home, Shop, and About studio art
+- `categories/` — category cards
+- `products/<product-slug>/mockups/default/<color>/` — catalog and PDP mockups (original filenames)
+- `services/` — DTF, sublimation, bulk illustrations
+- `icons/` — reserved
+- `miscellaneous/` — unclassified images
 
 ---
 
