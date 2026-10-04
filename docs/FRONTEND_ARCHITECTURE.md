@@ -14,6 +14,7 @@ Standalone static frontend. No bundler. No backend in this phase.
   about.html                 About page
   policy.html                Policy page
   support.html               Support page
+  account.html               Customer account dashboard
   css/
     style.css                GLOBAL design system
     header.css               Header structure
@@ -24,6 +25,7 @@ Standalone static frontend. No bundler. No backend in this phase.
     about.css                About-only layout
     policy.css               Policy-only layout
     support.css              Support-only layout
+    account.css              Account dashboard layout
   js/
     theme.js                 Light/dark persistence
     catalog.js               Canonical frontend product catalog
@@ -32,6 +34,7 @@ Standalone static frontend. No bundler. No backend in this phase.
     product.js               Product gallery, configuration, upload UI
     policy.js                Policy section navigation
     support.js               Support search, FAQ accordion, contact form
+    account.js               Account dashboard sections, demo orders, addresses, profile
   components/
     header.html              Reusable header markup
     footer.html              Reusable footer markup
@@ -104,6 +107,7 @@ Page files may contain only layout unique to that page:
 | `about.css` | About | exists |
 | `support.css` | Support | exists |
 | `policy.css` | Policy | exists |
+| `account.css` | Account | exists |
 
 Load order on every page:
 
@@ -125,6 +129,7 @@ Do not add another global override stylesheet.
 | `js/product.js` | Reads `?id=`, hydrates PDP from catalog, gallery, required configuration, upload UI, estimated total |
 | `js/policy.js` | Policy sidebar / mobile section navigation |
 | `js/support.js` | Support search, FAQ accordion, frontend contact form |
+| `js/account.js` | Account dashboard: overview, demo orders, addresses, profile, password UI |
 
 Load `js/catalog.js` before `js/main.js`, `js/shop.js`, and `js/product.js`.
 
@@ -160,6 +165,7 @@ Future page scripts should be additive and must not fork the theme system.
 | About | `about.html` | built |
 | Policy | `policy.html` | built |
 | Support | `support.html` | built |
+| Account | `account.html` | built |
 | Cart | — | pending |
 | Checkout | — | pending |
 | Custom Order | — | pending |

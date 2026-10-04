@@ -19,6 +19,7 @@ The standalone frontend is not yet integrated with the Core PHP backend.
 - About page
 - Policy page
 - Support page
+- Customer account dashboard
 - Responsive header
 - Mobile bottom navigation
 - Official logo integration

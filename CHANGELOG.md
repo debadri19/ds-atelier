@@ -4,6 +4,18 @@ Chronological history of changes that actually exist. Dates use the work session
 
 ---
 
+## 2026-10-04
+
+### Customer account dashboard
+
+- Added `account.html`, `css/account.css`, and `js/account.js`
+- Overview, orders, order details, saved addresses, profile settings, and change-password UI
+- Header and mobile Account controls now open `account.html`
+- Wishlist remains on `wishlist.html`; account shows the current saved-item count
+- Frontend-only demo data; passwords are not stored
+
+---
+
 ## [0.1.5] - 2026-10-01
 
 Patch release. Alpha / Standalone Frontend. Frontend UI polish for the current six pages is complete. Overall project remains in progress.
