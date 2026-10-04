@@ -11,7 +11,7 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Shop — DS ATELIER</title>
+  <title>Shop - DS ATELIER</title>
   <meta name="description" content="Shop custom printed apparel, DTF and sublimation. No minimum order.">
   <link rel="icon" href="assets/images/brand/logo-icon.png">
   <link rel="apple-touch-icon" href="assets/images/brand/logo-icon.png">
@@ -66,11 +66,15 @@
           <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
           <span class="util-tooltip">Search</span>
         </button>
-        <a class="util-btn account-btn" href="#account" aria-label="Account">
+        <a class="util-btn wishlist-btn" href="wishlist.html" aria-label="Wishlist">
+          <i class="fa-regular fa-heart" aria-hidden="true"></i>
+          <span class="util-tooltip">Wishlist</span>
+        </a>
+        <a class="util-btn account-btn" href="login.html" aria-label="Account">
           <i class="fa-regular fa-user" aria-hidden="true"></i>
           <span class="util-tooltip">Account</span>
         </a>
-        <a class="util-btn cart-btn" href="#cart" aria-label="Cart">
+        <a class="util-btn cart-btn" href="cart.html" aria-label="Cart">
           <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
           <span class="cart-count">0</span>
           <span class="util-tooltip">Cart</span>
@@ -101,8 +105,8 @@
     <a href="index.html"><i class="fa-solid fa-house" aria-hidden="true"></i>Home</a>
     <a class="is-active" href="shop.html"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Shop</a>
     <button type="button" data-menu-open><i class="fa-solid fa-bars" aria-hidden="true"></i>Menu</button>
-    <a href="#account"><i class="fa-regular fa-user" aria-hidden="true"></i>Account</a>
-    <a href="#cart" class="cart-btn"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Cart<span class="cart-count">0</span></a>
+    <a href="login.html"><i class="fa-regular fa-user" aria-hidden="true"></i>Account</a>
+    <a href="cart.html" class="cart-btn"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Cart<span class="cart-count">0</span></a>
   </nav>
 
   <div class="mobile-drawer" data-drawer>
@@ -362,6 +366,8 @@
       <div class="footer-col">
         <h3>Quick Links</h3>
         <a href="index.html">Home</a>
+        <a href="wishlist.html">Wishlist</a>
+        <a href="cart.html">Cart</a>
         <a href="index.html#custom-printing">Custom Order</a>
         <a href="index.html#bulk">Bulk Orders</a>
         <a href="index.html#dropshipping">Dropshipping</a>
@@ -392,7 +398,7 @@
     </div>
     <div class="container footer-newsletter" id="faq">
       <div>
-        <h3>Join the studio list</h3>
+        <h3>Join the Studio List</h3>
         <p>Product drops, print tips and wholesale notes.</p>
       </div>
       <form class="input-group" data-newsletter>
@@ -417,6 +423,7 @@
 
   <script src="js/theme.js"></script>
   <script src="js/catalog.js"></script>
+  <script src="js/commerce.js"></script>
   <script src="js/main.js"></script>
   <script src="js/shop.js"></script>
 </body>

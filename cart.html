@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    (function () {
+      var theme;
+      try { theme = localStorage.getItem("ds-atelier-theme"); } catch (e) {}
+      if (!theme) theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cart - DS ATELIER</title>
+  <meta name="description" content="Review your configured prints before checkout at DS ATELIER.">
+  <link rel="icon" href="assets/images/brand/logo-icon.png">
+  <link rel="apple-touch-icon" href="assets/images/brand/logo-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
+  <link rel="stylesheet" href="css/commerce.css">
+</head>
+<body>
+
+<div class="announce" role="region" aria-label="Announcement">
+    <div class="announce-inner">
+      <div class="announce-group">
+        <span>Free shipping on orders above ₹999</span>
+        <span>No minimum order</span>
+        <span>Custom DTF &amp; sublimation</span>
+      </div>
+      <div class="announce-group announce-group-clone" aria-hidden="true">
+        <span>Free shipping on orders above ₹999</span>
+        <span>No minimum order</span>
+        <span>Custom DTF &amp; sublimation</span>
+      </div>
+    </div>
+  </div>
+
+  <header class="site-header" data-component="header">
+    <div class="header-pill">
+      <div class="brand-block">
+        <a class="brand-lockup" href="index.html" aria-label="DS ATELIER home">
+          <img class="brand-logo-icon" src="assets/images/brand/logo-icon.png" alt="">
+          <span class="brand-word-stack">
+            <img class="brand-logo-wordmark" src="assets/images/brand/logo-wordmark.png" alt="ATELIER">
+            <span class="brand-tagline">CREATE. PRINT. WEAR.</span>
+          </span>
+        </a>
+      </div>
+      <nav class="header-nav" aria-label="Primary">
+        <a class="nav-link" href="index.html"><i class="fa-solid fa-house" aria-hidden="true"></i>Home</a>
+        <a class="nav-link" href="shop.html"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Shop</a>
+        <a class="nav-link" href="index.html#custom-printing"><i class="fa-solid fa-pen-ruler" aria-hidden="true"></i>Custom Order</a>
+        <a class="nav-link" href="index.html#bulk"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>Bulk Orders</a>
+        <a class="nav-link" href="index.html#dropshipping"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i>Dropshipping</a>
+        <a class="nav-link" href="about.html"><i class="fa-solid fa-circle-info" aria-hidden="true"></i>About</a>
+        <a class="nav-link" href="support.html"><i class="fa-solid fa-headset" aria-hidden="true"></i>Support</a>
+      </nav>
+      <div class="header-actions">
+        <button class="util-btn search-btn" type="button" aria-label="Search">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <span class="util-tooltip">Search</span>
+        </button>
+        <a class="util-btn wishlist-btn" href="wishlist.html" aria-label="Wishlist">
+          <i class="fa-regular fa-heart" aria-hidden="true"></i>
+          <span class="util-tooltip">Wishlist</span>
+        </a>
+        <a class="util-btn account-btn" href="login.html" aria-label="Account">
+          <i class="fa-regular fa-user" aria-hidden="true"></i>
+          <span class="util-tooltip">Account</span>
+        </a>
+        <a class="util-btn cart-btn" href="cart.html" aria-label="Cart">
+          <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+          <span class="cart-count">0</span>
+          <span class="util-tooltip">Cart</span>
+        </a>
+        <button class="util-btn theme-toggle" type="button" data-theme-toggle aria-label="Toggle theme">
+          <i class="fa-regular fa-sun icon-sun" aria-hidden="true"></i>
+          <i class="fa-regular fa-moon icon-moon" aria-hidden="true"></i>
+          <span class="util-tooltip tooltip-light">Dark mode</span>
+          <span class="util-tooltip tooltip-dark">Light mode</span>
+        </button>
+        <button class="util-btn menu-toggle" type="button" data-menu-open aria-label="Open menu">
+          <i class="fa-solid fa-bars" aria-hidden="true"></i>
+          <span class="util-tooltip">Menu</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="mobile-nav" aria-label="Mobile">
+    <a href="index.html"><i class="fa-solid fa-house" aria-hidden="true"></i>Home</a>
+    <a href="shop.html"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Shop</a>
+    <button type="button" data-menu-open><i class="fa-solid fa-bars" aria-hidden="true"></i>Menu</button>
+    <a href="login.html"><i class="fa-regular fa-user" aria-hidden="true"></i>Account</a>
+    <a href="cart.html" class="cart-btn is-active"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Cart<span class="cart-count">0</span></a>
+  </nav>
+
+  <div class="mobile-drawer" data-drawer>
+    <div class="drawer-backdrop" data-menu-close></div>
+    <aside class="drawer-panel" role="dialog" aria-modal="true" aria-label="Menu">
+      <div class="drawer-head">
+        <span class="brand-block">
+          <span class="brand-lockup">
+            <img class="brand-logo-icon" src="assets/images/brand/logo-icon.png" alt="">
+            <span class="brand-word-stack">
+              <img class="brand-logo-wordmark" src="assets/images/brand/logo-wordmark.png" alt="ATELIER">
+              <span class="brand-tagline">CREATE. PRINT. WEAR.</span>
+            </span>
+          </span>
+        </span>
+        <button class="btn-icon" type="button" data-menu-close aria-label="Close menu">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <nav class="drawer-links">
+        <a href="index.html#custom-printing"><i class="fa-solid fa-pen-ruler" aria-hidden="true"></i>Custom Order</a>
+        <a href="index.html#bulk"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>Bulk Orders</a>
+        <a href="index.html#dropshipping"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i>Dropshipping</a>
+        <a href="about.html"><i class="fa-solid fa-circle-info" aria-hidden="true"></i>About</a>
+        <a href="support.html"><i class="fa-solid fa-headset" aria-hidden="true"></i>Support</a>
+        <a href="support.html#faq"><i class="fa-solid fa-circle-question" aria-hidden="true"></i>FAQ</a>
+        <a href="policy.html"><i class="fa-solid fa-file-lines" aria-hidden="true"></i>Policies</a>
+        <a href="support.html#contact-form"><i class="fa-solid fa-envelope" aria-hidden="true"></i>Contact</a>
+      </nav>
+    </aside>
+  </div>
+
+  <div id="account" hidden></div>
+
+    <main id="main">
+    <section class="commerce-hero" aria-labelledby="cart-title">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="index.html">Home</a>
+          <span aria-hidden="true">/</span>
+          <span>Cart</span>
+        </nav>
+        <h1 class="commerce-hero-title" id="cart-title">Cart</h1>
+        <p class="commerce-hero-copy">Review your configured prints before checkout.</p>
+      </div>
+    </section>
+
+    <section class="commerce-section" aria-label="Shopping cart">
+      <div class="container">
+        <div class="cart-layout" data-cart-filled>
+          <div class="cart-list" data-cart-list></div>
+          <aside class="cart-summary">
+            <h2>Order Summary</h2>
+            <form class="cart-coupon" data-coupon-form>
+              <div class="form-field">
+                <label class="form-label" for="coupon-code">Enter Coupon</label>
+                <input class="form-input" id="coupon-code" name="coupon" type="text" placeholder=" " autocomplete="off">
+              </div>
+              <button class="btn btn-ghost" type="submit">Apply</button>
+            </form>
+            <p class="cart-note" data-coupon-note hidden></p>
+            <div class="cart-rows">
+              <div><span>MRP</span><span data-summary-mrp>₹0</span></div>
+              <div><span>Discount</span><span data-summary-discount>₹0</span></div>
+              <div><span>Shipping</span><span data-summary-shipping>Free</span></div>
+              <div class="cart-total"><span>Estimated Total</span><span data-summary-total>₹0</span></div>
+            </div>
+            <div class="cart-summary-actions">
+              <button class="btn btn-primary" type="button" data-checkout>Proceed To Checkout</button>
+              <a class="btn btn-secondary" href="shop.html">Continue Shopping</a>
+            </div>
+            <p class="cart-note" data-checkout-note hidden></p>
+          </aside>
+        </div>
+        <div class="empty-state" data-cart-empty hidden>
+          <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+          <h2>Your Cart Is Empty</h2>
+          <p>Looks like you haven't added anything yet.</p>
+          <a class="btn btn-primary" href="shop.html">Browse Products</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="also-title">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Cross-sell</p>
+            <h2 class="section-title" id="also-title">You May Also Like</h2>
+            <p class="section-copy">Add a matching piece before checkout.</p>
+          </div>
+        </div>
+        <div class="product-rail" data-also-like></div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="collection-title">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Artwork series</p>
+            <h2 class="section-title" id="collection-title">Complete The Collection</h2>
+            <p class="section-copy">Same artwork, different product types.</p>
+          </div>
+        </div>
+        <div class="product-rail" data-collection></div>
+      </div>
+    </section>
+  </main>
+
+<footer class="site-footer" id="support" data-component="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand-lockup" href="index.html" aria-label="DS ATELIER home">
+          <img class="brand-logo-icon" src="assets/images/brand/logo-icon.png" alt="">
+          <img class="brand-logo-wordmark" src="assets/images/brand/logo-wordmark.png" alt="ATELIER">
+        </a>
+        <p>Premium custom apparel, DTF printing, and sublimation for creators, brands, teams and businesses.</p>
+        <div class="footer-social">
+          <a href="support.html" aria-label="Instagram"><i class="fa-brands fa-instagram" aria-hidden="true"></i></a>
+          <a href="support.html#contact-form" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h3>Quick Links</h3>
+        <a href="index.html">Home</a>
+        <a href="wishlist.html">Wishlist</a>
+        <a href="cart.html">Cart</a>
+        <a href="index.html#custom-printing">Custom Order</a>
+        <a href="index.html#bulk">Bulk Orders</a>
+        <a href="index.html#dropshipping">Dropshipping</a>
+        <a href="about.html">About</a>
+      </div>
+      <div class="footer-col">
+        <h3>Shop</h3>
+        <a href="shop.html">Custom T-Shirts</a>
+        <a href="shop.html">Hoodies</a>
+        <a href="shop.html">Sports Jerseys</a>
+        <a href="shop.html">DTF Prints</a>
+        <a href="shop.html">Sublimation</a>
+      </div>
+      <div class="footer-col" id="policies">
+        <h3>Support</h3>
+        <a href="support.html">Help Center</a>
+        <a href="support.html#faq">FAQ</a>
+        <a href="policy.html#shipping">Shipping</a>
+        <a href="policy.html#returns">Returns</a>
+        <a href="support.html#contact-form">Contact</a>
+      </div>
+      <div class="footer-col" id="contact">
+        <h3>Policies</h3>
+        <a href="policy.html#privacy">Privacy</a>
+        <a href="policy.html#terms">Terms</a>
+        <a href="policy.html#returns">Refunds</a>
+      </div>
+    </div>
+    <div class="container footer-newsletter" id="faq">
+      <div>
+        <h3>Join the Studio List</h3>
+        <p>Product drops, print tips and wholesale notes.</p>
+      </div>
+      <form class="input-group" data-newsletter>
+        <div class="form-field">
+          <i class="form-icon fa-solid fa-envelope" aria-hidden="true"></i>
+          <label class="form-label" for="footer-email">Email address</label>
+          <input class="form-input" id="footer-email" type="email" name="email" placeholder=" " required autocomplete="email">
+        </div>
+        <button class="btn btn-primary" type="submit">Subscribe</button>
+      </form>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; 2026 DS ATELIER. All rights reserved.</p>
+      <div class="pay-badges" aria-label="Payment methods">
+        <span class="pay-badge">UPI</span>
+        <span class="pay-badge">Visa</span>
+        <span class="pay-badge">Mastercard</span>
+        <span class="pay-badge">Razorpay</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/theme.js"></script>
+  <script src="js/catalog.js"></script>
+  <script src="js/commerce.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/cart.js"></script>
+</body>
+</html>

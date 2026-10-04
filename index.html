@@ -11,7 +11,7 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>DS ATELIER — CREATE. PRINT. WEAR.</title>
+  <title>DS ATELIER - CREATE. PRINT. WEAR.</title>
   <meta name="description" content="Premium custom apparel, DTF printing, and sublimation for creators, brands, teams and businesses.">
   <link rel="icon" href="assets/images/brand/logo-icon.png">
   <link rel="apple-touch-icon" href="assets/images/brand/logo-icon.png">
@@ -65,11 +65,15 @@
           <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
           <span class="util-tooltip">Search</span>
         </button>
-        <a class="util-btn account-btn" href="#account" aria-label="Account">
+        <a class="util-btn wishlist-btn" href="wishlist.html" aria-label="Wishlist">
+          <i class="fa-regular fa-heart" aria-hidden="true"></i>
+          <span class="util-tooltip">Wishlist</span>
+        </a>
+        <a class="util-btn account-btn" href="login.html" aria-label="Account">
           <i class="fa-regular fa-user" aria-hidden="true"></i>
           <span class="util-tooltip">Account</span>
         </a>
-        <a class="util-btn cart-btn" href="#cart" aria-label="Cart">
+        <a class="util-btn cart-btn" href="cart.html" aria-label="Cart">
           <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
           <span class="cart-count">0</span>
           <span class="util-tooltip">Cart</span>
@@ -92,8 +96,8 @@
     <a class="is-active" href="index.html"><i class="fa-solid fa-house" aria-hidden="true"></i>Home</a>
     <a href="shop.html"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Shop</a>
     <button type="button" data-menu-open><i class="fa-solid fa-bars" aria-hidden="true"></i>Menu</button>
-    <a href="#account"><i class="fa-regular fa-user" aria-hidden="true"></i>Account</a>
-    <a href="#cart" class="cart-btn"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Cart<span class="cart-count">0</span></a>
+    <a href="login.html"><i class="fa-regular fa-user" aria-hidden="true"></i>Account</a>
+    <a href="cart.html" class="cart-btn"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Cart<span class="cart-count">0</span></a>
   </nav>
 
   <div class="mobile-drawer" data-drawer>
@@ -169,7 +173,7 @@
             <p class="section-kicker">Collections</p>
             <h2 class="section-title" id="cat-title">Shop by Category</h2>
           </div>
-          <a class="link" href="#bestsellers">View bestsellers</a>
+          <a class="link" href="#bestsellers">View Bestsellers</a>
         </div>
         <div class="category-grid">
           <a class="category-card card" href="#bestsellers">
@@ -263,7 +267,7 @@
             <h2 class="section-title" id="best-title">Best Selling Products</h2>
             <p class="section-copy">Ready-to-wear drops and custom-ready blanks, printed in-house.</p>
           </div>
-          <a class="btn btn-ghost" href="shop.html">Shop all</a>
+          <a class="btn btn-ghost" href="shop.html">Shop All</a>
         </div>
         <div class="product-grid" data-product-grid></div>
       </div>
@@ -275,8 +279,8 @@
           <div>
             <p class="section-kicker">Custom Printing</p>
             <h2 class="cta-print-title" id="print-title">
-              <span>UPLOAD YOUR DESIGN</span>
-              <span>WE'LL PRINT IT.</span>
+              <span>Upload Your Design</span>
+              <span>We'll Print It.</span>
             </h2>
             <p class="section-copy">Send artwork, pick a garment, and we handle colour matching, placement and finishing. From one tee to a full merch run.</p>
           </div>
@@ -394,7 +398,7 @@
         <div class="split">
           <div>
             <p class="section-kicker">Wholesale</p>
-            <h2 class="cta-print-title" id="bulk-title">BULK ORDERS FOR BUSINESSES</h2>
+            <h2 class="cta-print-title" id="bulk-title">Bulk Orders for Businesses</h2>
             <p class="section-copy">Uniforms, events, teams, brands and resellers — printed at volume with consistent colour and fit.</p>
             <div class="chips bulk-chips">
               <span class="chip">Uniforms</span>
@@ -416,7 +420,7 @@
       <div class="container split">
         <div>
           <p class="section-kicker">Dropshipping</p>
-          <h2 class="section-title" id="drop-title">START YOUR OWN MERCH BUSINESS</h2>
+          <h2 class="section-title" id="drop-title">Start Your Own Merch Business</h2>
           <p class="section-copy">We print, pack and ship under your brand. You sell. No warehouse, no leftover stock.</p>
           <ul class="benefit-list">
             <li><span class="check" aria-hidden="true">✓</span><span><strong>No inventory</strong> — we hold blanks</span></li>
@@ -508,6 +512,8 @@
       <div class="footer-col">
         <h3>Quick Links</h3>
         <a href="index.html">Home</a>
+        <a href="wishlist.html">Wishlist</a>
+        <a href="cart.html">Cart</a>
         <a href="index.html#custom-printing">Custom Order</a>
         <a href="index.html#bulk">Bulk Orders</a>
         <a href="index.html#dropshipping">Dropshipping</a>
@@ -538,7 +544,7 @@
     </div>
     <div class="container footer-newsletter" id="faq">
       <div>
-        <h3>Join the studio list</h3>
+        <h3>Join the Studio List</h3>
         <p>Product drops, print tips and wholesale notes.</p>
       </div>
       <form class="input-group" data-newsletter>
@@ -563,6 +569,7 @@
 
   <script src="js/theme.js"></script>
   <script src="js/catalog.js"></script>
+  <script src="js/commerce.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

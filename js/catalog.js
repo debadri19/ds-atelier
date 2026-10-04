@@ -446,6 +446,47 @@
     return getById(id) || getById(DEFAULT_ID);
   }
 
+  function searchTags(item) {
+    if (!item) return "";
+    var parts = [item.name, item.category, item.color, item.material, item.availability, item.badge, item.sku];
+    if (item.colors) parts = parts.concat(item.colors);
+    if (item.printTypes) parts = parts.concat(item.printTypes);
+    return parts.filter(Boolean).join(" ").toLowerCase();
+  }
+
+  function search(query, limit) {
+    var q = String(query || "").trim().toLowerCase();
+    if (!q) return [];
+    var terms = q.split(/\s+/).filter(Boolean);
+    var max = typeof limit === "number" ? limit : 8;
+    var results = [];
+
+    getAll().forEach(function (item) {
+      var haystack = searchTags(item);
+      var name = item.name.toLowerCase();
+      var matched = terms.every(function (term) {
+        return haystack.indexOf(term) !== -1;
+      });
+      if (!matched) return;
+      var score = 0;
+      if (name.indexOf(q) === 0) score += 4;
+      else if (name.indexOf(q) !== -1) score += 2;
+      terms.forEach(function (term) {
+        if (name.indexOf(term) !== -1) score += 1;
+      });
+      results.push({ item: item, score: score });
+    });
+
+    results.sort(function (a, b) {
+      if (b.score !== a.score) return b.score - a.score;
+      return (b.item.popular || 0) - (a.item.popular || 0);
+    });
+
+    return results.slice(0, max).map(function (entry) {
+      return entry.item;
+    });
+  }
+
   global.DSAtelier = global.DSAtelier || {};
   global.DSAtelier.catalog = {
     DEFAULT_ID: DEFAULT_ID,
@@ -455,6 +496,8 @@
     getFeatured: getFeatured,
     getRelated: getRelated,
     productUrl: productUrl,
-    resolve: resolve
+    resolve: resolve,
+    searchTags: searchTags,
+    search: search
   };
 })(window);

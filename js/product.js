@@ -111,7 +111,7 @@
   }
 
   function hydrate() {
-    document.title = product.name + " — DS ATELIER";
+    document.title = product.name + " - DS ATELIER";
     var meta = document.querySelector('meta[name="description"]');
     if (meta) {
       meta.setAttribute("content", "Configure and order the " + product.name + ". Choose print type, color, size and upload your design.");
@@ -282,14 +282,30 @@
   function zoneEls(slot) {
     return {
       zone: document.querySelector('[data-upload-zone="' + slot + '"]'),
-      drop: document.querySelector('[data-upload-drop="' + slot + '"]'),
+      trigger: document.querySelector('[data-upload-trigger="' + slot + '"]'),
       input: document.querySelector('[data-upload-input="' + slot + '"]'),
-      file: document.querySelector('[data-upload-file="' + slot + '"]'),
       name: document.querySelector('[data-upload-name="' + slot + '"]'),
       size: document.querySelector('[data-upload-size="' + slot + '"]'),
       preview: document.querySelector('[data-upload-preview="' + slot + '"]'),
       error: document.querySelector('[data-upload-error="' + slot + '"]')
     };
+  }
+
+  function syncUploadVisibility() {
+    var slots = requiredUploadSlots();
+    var previews = document.querySelector("[data-upload-previews]");
+    var block = document.querySelector("[data-upload-block]");
+    var visible = 0;
+    ["front", "back"].forEach(function (slot) {
+      var els = zoneEls(slot);
+      var required = slots.indexOf(slot) !== -1;
+      var hasFile = Boolean(state.designFiles[slot]);
+      if (els.trigger) els.trigger.hidden = !required;
+      if (els.zone) els.zone.hidden = !(required && hasFile);
+      if (required && hasFile) visible++;
+    });
+    if (previews) previews.classList.toggle("is-dual", visible === 2);
+    if (block) block.hidden = !slots.length;
   }
 
   function showUploadError(slot, message) {
@@ -335,13 +351,13 @@
     var els = zoneEls(slot);
     if (els.name) els.name.textContent = file.name;
     if (els.size) els.size.textContent = fileSizeLabel(file.size);
-    if (els.drop) els.drop.classList.add("has-file");
     clearPreview(slot);
     if (els.preview && file.type.indexOf("image/") === 0) {
       previewUrls[slot] = URL.createObjectURL(file);
       els.preview.src = previewUrls[slot];
       els.preview.hidden = false;
     }
+    syncUploadVisibility();
     updateActions();
   }
 
@@ -350,27 +366,20 @@
     syncPrimaryFile();
     var els = zoneEls(slot);
     if (els.input) els.input.value = "";
-    if (els.drop) els.drop.classList.remove("has-file");
     if (els.name) els.name.textContent = "";
     if (els.size) els.size.textContent = "";
     clearPreview(slot);
     showUploadError(slot, "");
+    syncUploadVisibility();
     updateActions();
   }
 
   function syncUploadZones() {
     var slots = requiredUploadSlots();
-    var wrap = document.querySelector("[data-upload-zones]");
-    var block = document.querySelector("[data-upload-block]");
     ["front", "back"].forEach(function (slot) {
-      var els = zoneEls(slot);
-      if (!els.zone) return;
-      var visible = slots.indexOf(slot) !== -1;
-      els.zone.hidden = !visible;
-      if (!visible && state.designFiles[slot]) removeFile(slot);
+      if (slots.indexOf(slot) === -1 && state.designFiles[slot]) removeFile(slot);
     });
-    if (wrap) wrap.classList.toggle("is-empty", !slots.length);
-    if (block) block.hidden = !slots.length;
+    syncUploadVisibility();
     syncPrimaryFile();
     updateActions();
   }
@@ -480,6 +489,13 @@
 
     if (event.target.closest("[data-qty-minus]")) setQty(state.quantity - 1);
     if (event.target.closest("[data-qty-plus]")) setQty(state.quantity + 1);
+    var trigger = event.target.closest("[data-upload-trigger]");
+    if (trigger) {
+      var triggerSlot = trigger.getAttribute("data-upload-trigger");
+      var triggerInput = zoneEls(triggerSlot).input;
+      if (triggerInput) triggerInput.click();
+    }
+
     var removeBtn = event.target.closest("[data-remove-file]");
     if (removeBtn) {
       event.preventDefault();
@@ -504,10 +520,21 @@
     }
 
     if (event.target.closest("[data-add-cart]") && isComplete()) {
-      configuredLine();
-      document.querySelectorAll(".cart-count").forEach(function (el) {
-        el.textContent = String(Number(el.textContent || 0) + state.quantity);
-      });
+      var line = configuredLine();
+      var commerce = window.DSAtelier && window.DSAtelier.commerce;
+      if (commerce && commerce.addToCart) {
+        commerce.addToCart(line.productId, {
+          color: line.color,
+          size: line.size,
+          printType: line.printType,
+          printPosition: line.printPosition,
+          qty: line.quantity
+        });
+      } else {
+        document.querySelectorAll(".cart-count").forEach(function (el) {
+          el.textContent = String(Number(el.textContent || 0) + state.quantity);
+        });
+      }
       if (hint) {
         hint.hidden = false;
         hint.textContent = "Added to cart (demo). Checkout is not connected yet.";
@@ -561,27 +588,34 @@
         applyFile(slot, els.input.files && els.input.files[0]);
       });
     }
-    if (els.drop) {
-      els.drop.addEventListener("click", function (event) {
-        if (event.target.closest("[data-remove-file]")) event.preventDefault();
-      }, true);
-      ["dragenter", "dragover"].forEach(function (type) {
-        els.drop.addEventListener(type, function (event) {
-          event.preventDefault();
-          els.drop.classList.add("is-dragover");
-        });
-      });
-      ["dragleave", "drop"].forEach(function (type) {
-        els.drop.addEventListener(type, function () {
-          els.drop.classList.remove("is-dragover");
-        });
-      });
-      els.drop.addEventListener("drop", function (event) {
-        event.preventDefault();
-        applyFile(slot, event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]);
-      });
-    }
   });
+
+  var uploadCard = document.querySelector("[data-upload-card]");
+  if (uploadCard) {
+    var dropTargetSlot = function () {
+      var slots = requiredUploadSlots();
+      for (var i = 0; i < slots.length; i++) {
+        if (!state.designFiles[slots[i]]) return slots[i];
+      }
+      return slots[0] || "";
+    };
+    ["dragenter", "dragover"].forEach(function (type) {
+      uploadCard.addEventListener(type, function (event) {
+        event.preventDefault();
+        uploadCard.classList.add("is-dragover");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (type) {
+      uploadCard.addEventListener(type, function () {
+        uploadCard.classList.remove("is-dragover");
+      });
+    });
+    uploadCard.addEventListener("drop", function (event) {
+      event.preventDefault();
+      var slot = dropTargetSlot();
+      if (slot) applyFile(slot, event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]);
+    });
+  }
 
   syncUploadZones();
 

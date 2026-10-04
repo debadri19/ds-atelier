@@ -53,6 +53,135 @@
     if (event.key === "Escape") closeDrawer();
   });
 
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  var searchModal = null;
+  var searchInput = null;
+  var searchResults = null;
+  var searchStatus = null;
+  var searchLastFocus = null;
+
+  function buildSearchModal() {
+    if (searchModal) return searchModal;
+    var wrap = document.createElement("div");
+    wrap.className = "search-modal";
+    wrap.setAttribute("data-search-modal", "");
+    wrap.setAttribute("role", "dialog");
+    wrap.setAttribute("aria-modal", "true");
+    wrap.setAttribute("aria-label", "Search products");
+    wrap.innerHTML =
+      '<div class="search-modal-backdrop" data-search-close></div>' +
+      '<div class="search-modal-panel">' +
+        '<div class="search-modal-field">' +
+          '<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>' +
+          '<input class="search-modal-input" data-search-input type="search" name="q" placeholder="Search products" aria-label="Search products" autocomplete="off">' +
+          '<button class="btn-icon search-modal-close" type="button" data-search-close aria-label="Close search"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>' +
+        "</div>" +
+        '<p class="search-modal-status" data-search-status aria-live="polite"></p>' +
+        '<ul class="search-results" data-search-results></ul>' +
+      "</div>";
+    document.body.appendChild(wrap);
+
+    searchModal = wrap;
+    searchInput = wrap.querySelector("[data-search-input]");
+    searchResults = wrap.querySelector("[data-search-results]");
+    searchStatus = wrap.querySelector("[data-search-status]");
+
+    if (searchInput) searchInput.addEventListener("input", renderSearchResults);
+    return searchModal;
+  }
+
+  function renderSearchResults() {
+    if (!searchResults) return;
+    var query = searchInput ? searchInput.value : "";
+    var trimmed = query.trim();
+    searchResults.innerHTML = "";
+
+    if (!trimmed) {
+      if (searchStatus) searchStatus.textContent = "Start typing to search products.";
+      searchResults.hidden = true;
+      return;
+    }
+
+    var results = catalog && catalog.search ? catalog.search(trimmed, 8) : [];
+    searchResults.hidden = false;
+
+    if (!results.length) {
+      if (searchStatus) searchStatus.textContent = "No products found";
+      return;
+    }
+
+    if (searchStatus) searchStatus.textContent = results.length + (results.length === 1 ? " product" : " products");
+    searchResults.innerHTML = results.map(function (item) {
+      return (
+        '<li class="search-result">' +
+          '<a class="search-result-link" href="' + escapeHtml(catalog.productUrl(item.id)) + '">' +
+            '<span class="search-result-media"><img src="' + escapeHtml(item.image) + '" alt="' + escapeHtml(item.alt) + '" loading="lazy"></span>' +
+            '<span class="search-result-body">' +
+              '<span class="search-result-name">' + escapeHtml(item.name) + "</span>" +
+              '<span class="search-result-category">' + escapeHtml(item.category) + "</span>" +
+            "</span>" +
+            '<span class="search-result-price">' + money(item.price) + "</span>" +
+          "</a>" +
+        "</li>"
+      );
+    }).join("");
+  }
+
+  function setSearchExpanded(open) {
+    document.querySelectorAll(".search-btn").forEach(function (btn) {
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  }
+
+  function openSearch() {
+    buildSearchModal();
+    searchLastFocus = document.activeElement;
+    searchModal.classList.add("is-open");
+    document.body.style.overflow = "hidden";
+    setSearchExpanded(true);
+    renderSearchResults();
+    if (searchInput) {
+      searchInput.focus();
+      searchInput.select();
+    }
+  }
+
+  function closeSearch() {
+    if (!searchModal || !searchModal.classList.contains("is-open")) return;
+    searchModal.classList.remove("is-open");
+    document.body.style.overflow = "";
+    setSearchExpanded(false);
+    if (searchLastFocus && searchLastFocus.focus) searchLastFocus.focus();
+  }
+
+  document.querySelectorAll(".search-btn").forEach(function (btn) {
+    btn.setAttribute("aria-haspopup", "dialog");
+    btn.setAttribute("aria-expanded", "false");
+  });
+
+  document.addEventListener("click", function (event) {
+    if (event.target.closest(".search-btn")) {
+      event.preventDefault();
+      openSearch();
+      return;
+    }
+    if (event.target.closest("[data-search-close]")) {
+      closeSearch();
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") closeSearch();
+  });
+
   function syncFilled(field) {
     if (!field) return;
     var control = field.querySelector(".form-input, .form-textarea, .input, .textarea, select");
