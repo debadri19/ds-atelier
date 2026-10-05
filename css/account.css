@@ -490,12 +490,41 @@ html[data-theme="dark"] .account-status.is-cancelled {
   gap: 0.5rem;
 }
 
+.account-form .form-error:empty {
+  display: none;
+}
+
+.account-form .form-input {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .account-form .form-field:has(> .form-toggle) .form-input {
   padding-right: 2.85rem;
 }
 
+.account-form .form-field > .form-icon,
 .account-form .form-field > .form-toggle {
   top: 1.625rem;
+  margin: 0;
+}
+
+.account-form .form-field > .form-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1rem;
+}
+
+.account-form .form-field > .form-label {
+  top: 1.625rem;
+}
+
+.account-form .form-field:focus-within > .form-label,
+.account-form .form-field.is-filled > .form-label,
+.account-form .form-field:has(.form-input:not(:placeholder-shown)) > .form-label,
+.account-form .form-field:has(.form-input:-webkit-autofill) > .form-label {
+  top: 0;
 }
 
 .form-toggle {
@@ -629,6 +658,7 @@ html[data-theme="dark"] .account-status.is-cancelled {
     grid-auto-flow: column;
     grid-auto-columns: max-content;
     overflow-x: auto;
+    overflow-y: hidden;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
@@ -669,7 +699,7 @@ html[data-theme="dark"] .account-status.is-cancelled {
 
 @media (max-width: 767px) {
   #main {
-    padding-right: 0.45rem;
+    padding-right: 0;
   }
 
   .account-hero {
@@ -751,7 +781,7 @@ html[data-theme="dark"] .account-status.is-cancelled {
 
 @media (max-width: 480px) {
   #main {
-    padding-right: 0.35rem;
+    padding-right: 0;
   }
 
   .account-identity-meta {
