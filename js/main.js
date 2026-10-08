@@ -856,7 +856,9 @@
   var PAGE_ASSETS = {
     "index.html": { css: ["css/home.css"], scripts: [] },
     "shop.html": { css: ["css/shop.css"], scripts: ["js/shop.js"] },
-    "product.html": { css: ["css/product.css"], scripts: ["js/product.js"] },
+    "designs.html": { css: ["css/designs.css"], scripts: ["js/artworks.js", "js/designs.js"] },
+    "design.html": { css: ["css/design.css"], scripts: ["js/artworks.js", "js/design.js"] },
+    "product.html": { css: ["css/product.css"], scripts: ["js/artworks.js", "js/product.js"] },
     "cart.html": { css: ["css/commerce.css"], scripts: ["js/cart.js"] },
     "checkout.html": { css: ["css/commerce.css", "css/account.css", "css/checkout.css"], scripts: ["js/account.js", "js/checkout.js"] },
     "order-success.html": { css: ["css/commerce.css", "css/account.css", "css/order-success.css"], scripts: ["js/account.js", "js/order-success.js"] },
@@ -1000,7 +1002,7 @@
     refreshChrome();
     var pages = window.DSAtelier && window.DSAtelier.pages;
     if (!pages) return;
-    ["home", "shop", "product", "cart", "checkout", "orderSuccess", "wishlist", "account", "support", "policy", "auth"].forEach(function (name) {
+    ["home", "shop", "designs", "design", "product", "cart", "checkout", "orderSuccess", "wishlist", "account", "support", "policy", "auth"].forEach(function (name) {
       if (pages[name] && typeof pages[name].init === "function") pages[name].init();
     });
   }

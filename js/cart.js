@@ -34,6 +34,7 @@
             "<span>Size: " + row.size + "</span>" +
             "<span>Print: " + row.printType + "</span>" +
             "<span>Position: " + row.printPosition + "</span>" +
+            (row.artworkName ? "<span>Artwork: " + row.artworkName + "</span>" : "") +
           "</div>" +
         "</div>" +
         '<div class="cart-item-tools">' +

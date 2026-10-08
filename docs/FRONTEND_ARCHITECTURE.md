@@ -10,6 +10,8 @@ Standalone static frontend. No bundler. No backend in this phase.
 /
   index.html                 Home page
   shop.html                  Shop page
+  designs.html               Artwork discovery
+  design.html                Artwork detail
   product.html               Product page
   about.html                 About page
   policy.html                Policy page
@@ -21,6 +23,8 @@ Standalone static frontend. No bundler. No backend in this phase.
     footer.css               Footer structure
     home.css                 Home-only layout
     shop.css                 Shop-only layout
+    designs.css              Designs / artwork layout
+    design.css               Artwork detail layout
     product.css              Product-only layout
     about.css                About-only layout
     policy.css               Policy-only layout
@@ -29,7 +33,10 @@ Standalone static frontend. No bundler. No backend in this phase.
   js/
     theme.js                 Light/dark persistence
     catalog.js               Canonical frontend product catalog
+    artworks.js              Canonical frontend artwork dataset
     main.js                  Home featured products, drawer, newsletter
+    designs.js               Designs category filter and artwork grid
+    design.js                Artwork detail hydration, available products, PDP handoff
     shop.js                  Shop filters, sort, pagination
     product.js               Product gallery, configuration, upload UI
     policy.js                Policy section navigation
@@ -124,7 +131,10 @@ Do not add another global override stylesheet.
 |---|---|
 | `js/theme.js` | Toggle + persistence (`ds-atelier-theme`); reapplies theme if needed |
 | `js/catalog.js` | Canonical mock catalog; `DSAtelier.catalog` lookup, featured, related, `product.html?id=` URLs |
+| `js/artworks.js` | Canonical mock artwork dataset; `DSAtelier.artworks` lookup, category filter, `design.html?id=` URLs |
 | `js/main.js` | Home featured grid from catalog, cart badge demo, mobile drawer, newsletter preventDefault |
+| `js/designs.js` | Designs category filter, URL state, artwork grid |
+| `js/design.js` | Reads `?id=`, hydrates artwork detail from artworks |
 | `js/shop.js` | Shop filters, sort, pagination from catalog |
 | `js/product.js` | Reads `?id=`, hydrates PDP from catalog, gallery, required configuration, upload UI, estimated total |
 | `js/policy.js` | Policy sidebar / mobile section navigation |
@@ -132,6 +142,7 @@ Do not add another global override stylesheet.
 | `js/account.js` | Account dashboard: overview, demo orders, addresses, profile, password UI |
 
 Load `js/catalog.js` before `js/main.js`, `js/shop.js`, and `js/product.js`.
+Load `js/artworks.js` before `js/designs.js` and `js/design.js`.
 
 Future page scripts should be additive and must not fork the theme system.
 
@@ -161,6 +172,8 @@ Future page scripts should be additive and must not fork the theme system.
 |---|---|---|
 | Home | `index.html` | built |
 | Shop | `shop.html` | built |
+| Designs | `designs.html` | built |
+| Artwork detail | `design.html` | foundation |
 | Product | `product.html` | built |
 | About | `about.html` | built |
 | Policy | `policy.html` | built |

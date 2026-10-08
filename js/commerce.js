@@ -119,7 +119,7 @@
   }
 
   function cartLineId(row) {
-    return [row.id, row.color, row.size, row.printType, row.printPosition].join("|");
+    return [row.id, row.color, row.size, row.printType, row.printPosition, row.artworkId || ""].join("|");
   }
 
   function defaultConfig(product) {

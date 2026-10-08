@@ -8,6 +8,7 @@
   };
   var bound = false;
   var catalog = null;
+  var artwork = null;
   var product = null;
   var related = [];
   var state = null;
@@ -64,6 +65,8 @@
       },
       printPosition: state.printPosition,
       specialInstructions: state.specialInstructions,
+      artworkId: artwork ? artwork.id : "",
+      artworkName: artwork ? artwork.name : "",
       price: product.price,
       mrp: product.mrp,
       weight: product.weight,
@@ -95,6 +98,40 @@
     if (el) el.textContent = value;
   }
 
+  function queryParam(name) {
+    var value = "";
+    try {
+      value = new URLSearchParams(global.location.search).get(name) || "";
+    } catch (e) {
+      value = "";
+    }
+    try {
+      value = decodeURIComponent(value);
+    } catch (err) {}
+    return String(value || "").trim();
+  }
+
+  function hydrateArtworkContext() {
+    var note = document.querySelector("[data-artwork-context]");
+    var text = document.querySelector("[data-artwork-context-text]");
+    if (!note) return;
+    if (!artwork) {
+      note.hidden = true;
+      if (text) text.textContent = "";
+      return;
+    }
+    note.hidden = false;
+    if (text) {
+      var href = global.DSAtelier.artworks.artworkUrl(artwork.id);
+      var name = String(artwork.name || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+      text.innerHTML = 'Selected artwork: <a href="' + href + '">' + name + "</a>";
+    }
+  }
+
   function hydrate() {
     document.title = product.name + " - DS ATELIER";
     var meta = document.querySelector('meta[name="description"]');
@@ -111,6 +148,7 @@
     setText("[data-product-mrp]", money(product.mrp));
     setText("[data-product-off]", discountPercent() + "% off");
     setText("[data-product-lead]", String(product.lead || "").replace(/\s*Configuration is required before Add to Cart\.?/i, "").trim());
+    hydrateArtworkContext();
 
     var badges = document.querySelector("[data-product-badges]");
     if (badges) {
@@ -503,7 +541,9 @@
           size: line.size,
           printType: line.printType,
           printPosition: line.printPosition,
-          qty: line.quantity
+          qty: line.quantity,
+          artworkId: line.artworkId,
+          artworkName: line.artworkName
         });
       } else {
         document.querySelectorAll(".cart-count").forEach(function (el) {
@@ -622,12 +662,10 @@
 
   function init() {
     catalog = global.DSAtelier && global.DSAtelier.catalog;
-    var requestedId = "";
-    try {
-      requestedId = new URLSearchParams(global.location.search).get("id") || "";
-    } catch (e) {
-      requestedId = "";
-    }
+    var requestedId = queryParam("id");
+    var artworkId = queryParam("design");
+    var artworks = global.DSAtelier && global.DSAtelier.artworks;
+    artwork = artworks && artworks.getById ? artworks.getById(artworkId) : null;
     product = catalog && catalog.resolve ? catalog.resolve(requestedId) : null;
     related = catalog && product ? catalog.getRelated(product.id, 4) : [];
     mainImg = document.querySelector("[data-main-image]");

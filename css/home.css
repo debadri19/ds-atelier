@@ -32,7 +32,8 @@
   margin-bottom: 1.85rem;
 }
 
-.hero-actions {
+.hero-actions,
+.section-head-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.7rem;
