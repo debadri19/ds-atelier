@@ -1,0 +1,146 @@
+.success-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(17.5rem, 0.8fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.success-layout[hidden],
+.empty-state[hidden] {
+  display: none;
+}
+
+.success-card,
+.success-summary {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 1.35rem;
+}
+
+.success-mark {
+  width: 3.2rem;
+  height: 3.2rem;
+  display: grid;
+  place-items: center;
+  margin-bottom: 0.9rem;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.success-card h2 {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  letter-spacing: -0.04em;
+  margin-bottom: 0.45rem;
+}
+
+.success-id {
+  color: var(--color-text-muted);
+  margin-bottom: 1.1rem;
+}
+
+.success-id strong {
+  color: var(--color-text);
+}
+
+.success-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.2rem;
+}
+
+.success-meta p {
+  margin: 0;
+}
+
+.success-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.success-actions .btn {
+  min-width: 10.5rem;
+}
+
+.success-summary {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.success-summary h2 {
+  font-size: 1.2rem;
+  letter-spacing: -0.03em;
+}
+
+.success-items {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.success-line {
+  display: grid;
+  grid-template-columns: 3.6rem minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.success-line-media {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface-2);
+}
+
+.success-line-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.success-line-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.success-line-meta,
+.success-line-price {
+  font-size: var(--fs-sm);
+}
+
+.success-line-meta {
+  color: var(--color-text-muted);
+}
+
+.success-line-price {
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+@media (max-width: 992px) {
+  .success-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .success-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .success-actions,
+  .success-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .success-card,
+  .success-summary {
+    padding: 1rem;
+  }
+}

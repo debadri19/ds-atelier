@@ -161,6 +161,12 @@
     persist();
   }
 
+  function clearCart() {
+    state.cart = [];
+    state.coupon = "";
+    persist();
+  }
+
   function cartItems() {
     return state.cart.map(function (row, index) {
       var product = getProduct(row.id);
@@ -184,6 +190,11 @@
     state.coupon = next === "WELCOME10" ? "WELCOME10" : next;
     persist();
     return state.coupon === "WELCOME10";
+  }
+
+  function clearCoupon() {
+    state.coupon = "";
+    persist();
   }
 
   function totals() {
@@ -407,9 +418,11 @@
     moveToCart: moveToCart,
     setQty: setQty,
     removeCart: removeCart,
+    clearCart: clearCart,
     cartItems: cartItems,
     cartCount: cartCount,
     applyCoupon: applyCoupon,
+    clearCoupon: clearCoupon,
     totals: totals,
     recommended: recommended,
     collection: collection,

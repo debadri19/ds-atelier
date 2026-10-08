@@ -146,6 +146,19 @@
     }).join("");
   }
 
+  function applyQueryFilters() {
+    var category = "";
+    try {
+      category = new URLSearchParams(global.location.search).get("category") || "";
+    } catch (e) {
+      category = "";
+    }
+    if (!category) return;
+    document.querySelectorAll('input[name="category"]').forEach(function (input) {
+      input.checked = input.value === category;
+    });
+  }
+
   function onClick(event) {
     if (!live()) return;
     var filterBtn = event.target.closest("[data-filter]");
@@ -232,6 +245,7 @@
     sort = "latest";
     if (!grid) return;
     fillMobileFilters();
+    applyQueryFilters();
     if (!bound) {
       document.addEventListener("click", onClick);
       document.addEventListener("keydown", onKey);

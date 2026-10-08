@@ -450,6 +450,7 @@
     if (!item) return "";
     var parts = [item.name, item.category, item.color, item.material, item.availability, item.badge, item.sku];
     if (item.colors) parts = parts.concat(item.colors);
+    if (item.sizes) parts = parts.concat(item.sizes);
     if (item.printTypes) parts = parts.concat(item.printTypes);
     return parts.filter(Boolean).join(" ").toLowerCase();
   }
@@ -468,11 +469,15 @@
         return haystack.indexOf(term) !== -1;
       });
       if (!matched) return;
+      var category = String(item.category || "").toLowerCase();
       var score = 0;
       if (name.indexOf(q) === 0) score += 4;
       else if (name.indexOf(q) !== -1) score += 2;
+      if (category.indexOf(q) === 0) score += 3;
+      else if (category.indexOf(q) !== -1) score += 2;
       terms.forEach(function (term) {
         if (name.indexOf(term) !== -1) score += 1;
+        else if (category.indexOf(term) !== -1) score += 1;
       });
       results.push({ item: item, score: score });
     });
@@ -487,6 +492,76 @@
     });
   }
 
+  function categories() {
+    var seen = {};
+    var list = [];
+    getAll().forEach(function (item) {
+      var name = item && item.category;
+      if (!name || seen[name]) return;
+      seen[name] = true;
+      list.push(name);
+    });
+    return list;
+  }
+
+  function searchCategories(query, limit) {
+    var q = String(query || "").trim().toLowerCase();
+    if (!q) return [];
+    var terms = q.split(/\s+/).filter(Boolean);
+    var max = typeof limit === "number" ? limit : 3;
+    var results = [];
+
+    categories().forEach(function (name) {
+      var haystack = String(name).toLowerCase();
+      var matched = terms.every(function (term) {
+        return haystack.indexOf(term) !== -1;
+      });
+      if (!matched) return;
+      var score = 0;
+      if (haystack.indexOf(q) === 0) score += 4;
+      else if (haystack.indexOf(q) !== -1) score += 2;
+      terms.forEach(function (term) {
+        if (haystack.indexOf(term) !== -1) score += 1;
+      });
+      results.push({ name: name, score: score });
+    });
+
+    results.sort(function (a, b) {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.name.localeCompare(b.name);
+    });
+
+    return results.slice(0, max).map(function (entry) {
+      return entry.name;
+    });
+  }
+
+  function suggest(query, limits) {
+    limits = limits || {};
+    var productLimit = limits.products || 5;
+    var categoryLimit = limits.categories || 3;
+    var productsFound = search(query, productLimit);
+    var categoryNames = searchCategories(query, categoryLimit);
+    var seen = {};
+    var q = String(query || "").trim().toLowerCase();
+    categoryNames.forEach(function (name) { seen[name] = true; });
+    productsFound.forEach(function (item) {
+      if (!item.category || seen[item.category] || categoryNames.length >= categoryLimit) return;
+      var name = String(item.name || "").toLowerCase();
+      if (name.indexOf(q) === -1) return;
+      seen[item.category] = true;
+      categoryNames.push(item.category);
+    });
+    return {
+      products: productsFound,
+      categories: categoryNames
+    };
+  }
+
+  function shopCategoryUrl(name) {
+    return "shop.html?category=" + encodeURIComponent(name);
+  }
+
   global.DSAtelier = global.DSAtelier || {};
   global.DSAtelier.catalog = {
     DEFAULT_ID: DEFAULT_ID,
@@ -498,6 +573,10 @@
     productUrl: productUrl,
     resolve: resolve,
     searchTags: searchTags,
-    search: search
+    search: search,
+    categories: categories,
+    searchCategories: searchCategories,
+    suggest: suggest,
+    shopCategoryUrl: shopCategoryUrl
   };
 })(window);

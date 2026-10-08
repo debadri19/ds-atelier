@@ -11,8 +11,8 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Cart - DS ATELIER</title>
-  <meta name="description" content="Review your configured prints before checkout at DS ATELIER.">
+  <title>Order Placed - DS ATELIER</title>
+  <meta name="description" content="Your DS ATELIER order has been placed successfully.">
   <link rel="icon" href="assets/images/brand/logo-icon.png">
   <link rel="apple-touch-icon" href="assets/images/brand/logo-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,6 +23,8 @@
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/commerce.css">
+  <link rel="stylesheet" href="css/account.css">
+  <link rel="stylesheet" href="css/order-success.css">
 </head>
 <body>
 
@@ -96,9 +98,9 @@
   <nav class="mobile-nav" aria-label="Mobile">
     <a href="index.html"><i class="fa-solid fa-house" aria-hidden="true"></i>Home</a>
     <a href="shop.html"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Shop</a>
-    <button type="button" data-menu-open><i class="fa-solid fa-bars" aria-hidden="true"></i>Menu</button>
+    <button type="button" data-menu-open"><i class="fa-solid fa-bars" aria-hidden="true"></i>Menu</button>
     <a href="account.html"><i class="fa-regular fa-user" aria-hidden="true"></i>Account</a>
-    <a href="cart.html" class="cart-btn is-active"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Cart<span class="cart-count">0</span></a>
+    <a href="cart.html" class="cart-btn"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Cart<span class="cart-count">0</span></a>
   </nav>
 
   <div class="mobile-drawer" data-drawer>
@@ -134,77 +136,67 @@
   <div id="account" hidden></div>
 
     <main id="main">
-    <section class="commerce-hero" aria-labelledby="cart-title">
+    <section class="commerce-hero" aria-labelledby="success-title">
       <div class="container">
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <a href="index.html">Home</a>
           <span aria-hidden="true">/</span>
-          <span>Cart</span>
+          <span>Order placed</span>
         </nav>
-        <h1 class="commerce-hero-title" id="cart-title">Cart</h1>
-        <p class="commerce-hero-copy">Review your configured prints before checkout.</p>
+        <h1 class="commerce-hero-title" id="success-title">Order placed successfully</h1>
+        <p class="commerce-hero-copy">Thank you. Your print order is now in processing.</p>
       </div>
     </section>
 
-    <section class="commerce-section" aria-label="Shopping cart">
+    <section class="commerce-section" aria-label="Order confirmation">
       <div class="container">
-        <div class="cart-layout" data-cart-filled>
-          <div class="cart-list" data-cart-list></div>
-          <aside class="cart-summary">
-            <h2>Order Summary</h2>
-            <form class="cart-coupon" data-coupon-form>
-              <div class="form-field">
-                <label class="form-label" for="coupon-code">Enter Coupon</label>
-                <input class="form-input" id="coupon-code" name="coupon" type="text" placeholder=" " autocomplete="off">
+        <div class="success-layout" data-success-filled hidden>
+          <article class="success-card">
+            <div class="success-mark" aria-hidden="true"><i class="fa-solid fa-check"></i></div>
+            <p class="section-kicker">Confirmation</p>
+            <h2>Order placed successfully</h2>
+            <p class="success-id">Order ID: <strong data-order-id></strong></p>
+            <div class="success-meta">
+              <div>
+                <p class="account-stat-label">Order date</p>
+                <p data-order-date></p>
               </div>
-              <button class="btn btn-ghost" type="submit">Apply</button>
-            </form>
-            <p class="cart-note" data-coupon-note hidden></p>
-            <div class="cart-rows">
-              <div><span>MRP</span><span data-summary-mrp>₹0</span></div>
-              <div><span>Discount</span><span data-summary-discount>₹0</span></div>
-              <div><span>Shipping</span><span data-summary-shipping>Free</span></div>
-              <div class="cart-total"><span>Estimated Total</span><span data-summary-total>₹0</span></div>
+              <div>
+                <p class="account-stat-label">Payment status</p>
+                <p data-payment-status></p>
+              </div>
+              <div>
+                <p class="account-stat-label">Payment method</p>
+                <p data-payment-method></p>
+              </div>
             </div>
-            <div class="cart-summary-actions">
-              <a class="btn btn-primary" href="checkout.html" data-checkout>Proceed To Checkout</a>
+            <div class="success-actions">
+              <a class="btn btn-primary" data-view-order-link href="account.html#orders">View Order</a>
               <a class="btn btn-secondary" href="shop.html">Continue Shopping</a>
             </div>
-            <p class="cart-note" data-checkout-note hidden></p>
+          </article>
+
+          <aside class="success-summary">
+            <h2>Order Summary</h2>
+            <div class="success-items" data-order-items></div>
+            <div class="account-detail-block">
+              <p class="account-stat-label">Shipping address</p>
+              <p class="account-muted" data-shipping-summary></p>
+            </div>
+            <div class="cart-rows">
+              <div><span>Subtotal</span><span data-order-subtotal>₹0</span></div>
+              <div><span>Shipping</span><span data-order-shipping>Free</span></div>
+              <div><span>Discount</span><span data-order-discount>₹0</span></div>
+              <div class="cart-total"><span>Total</span><span data-order-total>₹0</span></div>
+            </div>
           </aside>
         </div>
-        <div class="empty-state" data-cart-empty hidden>
-          <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
-          <h2>Your Cart Is Empty</h2>
-          <p>Looks like you haven't added anything yet.</p>
-          <a class="btn btn-primary" href="shop.html">Browse Products</a>
+        <div class="empty-state" data-success-empty hidden>
+          <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+          <h2>No recent order</h2>
+          <p>Place an order from checkout to see confirmation details here.</p>
+          <a class="btn btn-primary" href="shop.html">Continue Shopping</a>
         </div>
-      </div>
-    </section>
-
-    <section class="section" aria-labelledby="also-title">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <p class="section-kicker">Cross-sell</p>
-            <h2 class="section-title" id="also-title">You May Also Like</h2>
-            <p class="section-copy">Add a matching piece before checkout.</p>
-          </div>
-        </div>
-        <div class="product-rail" data-also-like></div>
-      </div>
-    </section>
-
-    <section class="section" aria-labelledby="collection-title">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <p class="section-kicker">Artwork series</p>
-            <h2 class="section-title" id="collection-title">Complete The Collection</h2>
-            <p class="section-copy">Same artwork, different product types.</p>
-          </div>
-        </div>
-        <div class="product-rail" data-collection></div>
       </div>
     </section>
   </main>
@@ -284,6 +276,7 @@
   <script src="js/catalog.js"></script>
   <script src="js/commerce.js"></script>
   <script src="js/main.js"></script>
-  <script src="js/cart.js"></script>
+  <script src="js/account.js"></script>
+  <script src="js/order-success.js"></script>
 </body>
 </html>

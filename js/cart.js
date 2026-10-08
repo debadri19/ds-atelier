@@ -97,10 +97,19 @@
     if (remove) commerce.removeCart(Number(remove.getAttribute("data-remove-cart")));
     var checkout = event.target.closest("[data-checkout]");
     if (checkout) {
-      busy(checkout);
-      if (checkoutNote) {
-        checkoutNote.hidden = false;
-        checkoutNote.textContent = "Checkout is presentation-only in this frontend phase.";
+      if (!commerce.cartItems().length) {
+        event.preventDefault();
+        if (checkoutNote) {
+          checkoutNote.hidden = false;
+          checkoutNote.textContent = "Your cart is empty.";
+          checkoutNote.classList.add("is-error");
+        }
+        return;
+      }
+      if (checkout.tagName !== "A") {
+        event.preventDefault();
+        busy(checkout);
+        window.location.href = "checkout.html";
       }
     }
   }

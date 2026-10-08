@@ -2,6 +2,8 @@
   var PROFILE_KEY = "ds-atelier-profile";
   var ADDRESS_KEY = "ds-atelier-addresses";
   var SESSION_KEY = "ds-atelier-demo-session";
+  var ORDERS_KEY = "ds-atelier-orders";
+  var LAST_ORDER_KEY = "ds-atelier-last-order";
   var DEFAULT_PROFILE = {
     name: "Ananya Rao",
     email: "ananya.rao@email.com",
@@ -33,7 +35,7 @@
       isDefault: false
     }
   ];
-  var ORDERS = [
+  var DEFAULT_ORDERS = [
     {
       id: "DSA-261002-7721",
       date: "2 Oct 2026",
@@ -88,8 +90,11 @@
       ]
     }
   ];
+  var ORDERS = [];
 
   var bound = false;
+  var addressesLoaded = false;
+  var ordersLoaded = false;
   var state = {
     profile: null,
     addresses: [],
@@ -228,6 +233,7 @@
   }
 
   function orderTotal(order) {
+    if (order && order.total != null && order.total !== "") return Number(order.total) || 0;
     return Math.max(0, orderSubtotal(order) - Number(order.discount || 0) + Number(order.shipping || 0));
   }
 
@@ -249,7 +255,47 @@
     return html;
   }
 
+  function loadOrders() {
+    var extra = readJson(ORDERS_KEY, []);
+    if (!Array.isArray(extra)) extra = [];
+    var seen = {};
+    var merged = [];
+    extra.concat(DEFAULT_ORDERS).forEach(function (order) {
+      if (!order || !order.id || seen[order.id]) return;
+      seen[order.id] = true;
+      merged.push(order);
+    });
+    return merged;
+  }
+
+  function persistOrders() {
+    var seeded = {};
+    DEFAULT_ORDERS.forEach(function (order) { seeded[order.id] = true; });
+    writeJson(ORDERS_KEY, ORDERS.filter(function (order) { return order && order.id && !seeded[order.id]; }));
+  }
+
+  function addOrder(order) {
+    if (!order || !order.id) return null;
+    if (!ordersLoaded) {
+      ORDERS = loadOrders();
+      ordersLoaded = true;
+    }
+    ORDERS = [order].concat(ORDERS.filter(function (row) { return row.id !== order.id; }));
+    persistOrders();
+    writeJson(LAST_ORDER_KEY, order);
+    emitAccount();
+    if (live()) {
+      renderOverview();
+      renderOrders();
+    }
+    return order;
+  }
+
   function findOrder(id) {
+    if (!ordersLoaded) {
+      ORDERS = loadOrders();
+      ordersLoaded = true;
+    }
     return ORDERS.filter(function (order) { return order.id === id; })[0] || null;
   }
 
@@ -325,12 +371,75 @@
     });
   }
 
+  function emitAccount() {
+    try {
+      document.dispatchEvent(new CustomEvent("ds-atelier-account"));
+    } catch (e) {}
+  }
+
   function persistProfile() {
     writeJson(PROFILE_KEY, state.profile);
+    emitAccount();
   }
 
   function persistAddresses() {
     writeJson(ADDRESS_KEY, state.addresses);
+    emitAccount();
+  }
+
+  function ensureStore() {
+    if (!state.profile) state.profile = loadProfile();
+    if (!addressesLoaded) {
+      state.addresses = loadAddresses();
+      addressesLoaded = true;
+    }
+    if (!ordersLoaded) {
+      ORDERS = loadOrders();
+      ordersLoaded = true;
+    }
+  }
+
+  function saveAddressRecord(data, editingId) {
+    ensureStore();
+    var next = {
+      label: String(data.label || "Address").trim(),
+      name: String(data.name || "").trim(),
+      phone: mobileDigits(data.phone || ""),
+      line1: String(data.line1 || "").trim(),
+      line2: String(data.line2 || "").trim(),
+      city: String(data.city || "").trim(),
+      state: String(data.state || "").trim(),
+      pincode: String(data.pincode || "").replace(/\D/g, "")
+    };
+    var saved;
+    if (editingId && findAddress(editingId)) {
+      state.addresses = state.addresses.map(function (row) {
+        if (row.id !== editingId) return row;
+        saved = Object.assign({}, row, next);
+        return saved;
+      });
+    } else {
+      saved = Object.assign({
+        id: uniqueId("addr"),
+        isDefault: state.addresses.length === 0
+      }, next);
+      state.addresses.push(saved);
+    }
+    persistAddresses();
+    if (live()) renderAddresses();
+    return saved;
+  }
+
+  function setDefaultAddress(id) {
+    ensureStore();
+    var found = findAddress(id);
+    if (!found) return null;
+    state.addresses.forEach(function (row) {
+      row.isDefault = row.id === id;
+    });
+    persistAddresses();
+    if (live()) renderAddresses();
+    return found;
   }
 
   function uniqueId(prefix) {
@@ -946,12 +1055,15 @@
   }
 
   function init() {
-    if (!qs("[data-account-panel]")) return;
     state.profile = loadProfile();
     state.addresses = loadAddresses();
-    fillProfileForm();
+    ORDERS = loadOrders();
+    addressesLoaded = true;
+    ordersLoaded = true;
     persistProfile();
     persistAddresses();
+    if (!qs("[data-account-panel]")) return;
+    fillProfileForm();
     renderOverview();
     renderOrders();
     renderAddresses();
@@ -978,5 +1090,38 @@
   global.DSAtelier = global.DSAtelier || {};
   global.DSAtelier.pages = global.DSAtelier.pages || {};
   global.DSAtelier.pages.account = { init: init };
+  global.DSAtelier.account = {
+    getProfile: function () {
+      ensureStore();
+      return Object.assign({}, state.profile);
+    },
+    getAddresses: function () {
+      ensureStore();
+      return state.addresses.map(function (row) { return Object.assign({}, row); });
+    },
+    getAddress: function (id) {
+      ensureStore();
+      var row = findAddress(id);
+      return row ? Object.assign({}, row) : null;
+    },
+    defaultAddress: function () {
+      ensureStore();
+      var row = defaultAddress();
+      return row ? Object.assign({}, row) : null;
+    },
+    saveAddress: saveAddressRecord,
+    setDefaultAddress: setDefaultAddress,
+    formatAddress: formatAddress,
+    formatMobile: formatMobile,
+    addOrder: addOrder,
+    getOrder: findOrder,
+    getOrders: function () {
+      ensureStore();
+      return ORDERS.slice();
+    },
+    getLastOrder: function () {
+      return readJson(LAST_ORDER_KEY, null);
+    }
+  };
   init();
 })(window);

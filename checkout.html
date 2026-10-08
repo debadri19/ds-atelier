@@ -11,8 +11,8 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Cart - DS ATELIER</title>
-  <meta name="description" content="Review your configured prints before checkout at DS ATELIER.">
+  <title>Checkout - DS ATELIER</title>
+  <meta name="description" content="Complete your DS ATELIER order with shipping, billing and payment details.">
   <link rel="icon" href="assets/images/brand/logo-icon.png">
   <link rel="apple-touch-icon" href="assets/images/brand/logo-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,6 +23,8 @@
   <link rel="stylesheet" href="css/header.css">
   <link rel="stylesheet" href="css/footer.css">
   <link rel="stylesheet" href="css/commerce.css">
+  <link rel="stylesheet" href="css/account.css">
+  <link rel="stylesheet" href="css/checkout.css">
 </head>
 <body>
 
@@ -96,9 +98,9 @@
   <nav class="mobile-nav" aria-label="Mobile">
     <a href="index.html"><i class="fa-solid fa-house" aria-hidden="true"></i>Home</a>
     <a href="shop.html"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Shop</a>
-    <button type="button" data-menu-open><i class="fa-solid fa-bars" aria-hidden="true"></i>Menu</button>
+    <button type="button" data-menu-open"><i class="fa-solid fa-bars" aria-hidden="true"></i>Menu</button>
     <a href="account.html"><i class="fa-regular fa-user" aria-hidden="true"></i>Account</a>
-    <a href="cart.html" class="cart-btn is-active"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Cart<span class="cart-count">0</span></a>
+    <a href="cart.html" class="cart-btn"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Cart<span class="cart-count">0</span></a>
   </nav>
 
   <div class="mobile-drawer" data-drawer>
@@ -134,80 +136,192 @@
   <div id="account" hidden></div>
 
     <main id="main">
-    <section class="commerce-hero" aria-labelledby="cart-title">
+    <section class="commerce-hero" aria-labelledby="checkout-title">
       <div class="container">
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <a href="index.html">Home</a>
           <span aria-hidden="true">/</span>
-          <span>Cart</span>
+          <a href="cart.html">Cart</a>
+          <span aria-hidden="true">/</span>
+          <span>Checkout</span>
         </nav>
-        <h1 class="commerce-hero-title" id="cart-title">Cart</h1>
-        <p class="commerce-hero-copy">Review your configured prints before checkout.</p>
+        <h1 class="commerce-hero-title" id="checkout-title">Checkout</h1>
+        <p class="commerce-hero-copy">Confirm shipping, billing and payment to place your order.</p>
       </div>
     </section>
 
-    <section class="commerce-section" aria-label="Shopping cart">
+    <section class="commerce-section" aria-label="Checkout">
       <div class="container">
-        <div class="cart-layout" data-cart-filled>
-          <div class="cart-list" data-cart-list></div>
-          <aside class="cart-summary">
-            <h2>Order Summary</h2>
+        <div class="checkout-layout" data-checkout-filled>
+          <div class="checkout-main">
+            <section class="checkout-card" aria-labelledby="shipping-heading">
+              <div class="checkout-card-head">
+                <div>
+                  <p class="section-kicker">Step 1</p>
+                  <h2 id="shipping-heading">Shipping Address</h2>
+                </div>
+                <button class="btn btn-secondary btn-sm" type="button" data-add-shipping>Add New Address</button>
+              </div>
+              <div class="checkout-address-list" data-shipping-list></div>
+              <p class="checkout-note" data-shipping-note role="status"></p>
+            </section>
+
+            <section class="checkout-card" aria-labelledby="billing-heading">
+              <div class="checkout-card-head">
+                <div>
+                  <p class="section-kicker">Step 2</p>
+                  <h2 id="billing-heading">Billing Address</h2>
+                </div>
+              </div>
+              <label class="checkout-check">
+                <input type="checkbox" data-billing-same checked>
+                <span>Billing address same as shipping address</span>
+              </label>
+              <div class="checkout-billing" data-billing-fields hidden>
+                <div class="checkout-card-head checkout-card-head-sub">
+                  <p class="account-muted">Choose a billing address</p>
+                  <button class="btn btn-ghost btn-sm" type="button" data-add-billing>Add Billing Address</button>
+                </div>
+                <div class="checkout-address-list" data-billing-list></div>
+              </div>
+              <p class="checkout-note" data-billing-note role="status"></p>
+            </section>
+
+            <section class="checkout-card" aria-labelledby="payment-heading">
+              <div class="checkout-card-head">
+                <div>
+                  <p class="section-kicker">Step 3</p>
+                  <h2 id="payment-heading">Payment Method</h2>
+                </div>
+              </div>
+              <fieldset class="checkout-pay-list" data-payment-list>
+                <legend class="visually-hidden">Select a payment method</legend>
+                <label class="checkout-pay">
+                  <input type="radio" name="checkout-payment" value="UPI">
+                  <span class="checkout-pay-body">
+                    <span class="checkout-pay-title">UPI</span>
+                    <span class="checkout-pay-copy">Pay with any UPI app</span>
+                  </span>
+                  <i class="fa-solid fa-mobile-screen" aria-hidden="true"></i>
+                </label>
+                <label class="checkout-pay">
+                  <input type="radio" name="checkout-payment" value="Razorpay">
+                  <span class="checkout-pay-body">
+                    <span class="checkout-pay-title">Razorpay</span>
+                    <span class="checkout-pay-copy">Cards, netbanking and wallets</span>
+                  </span>
+                  <i class="fa-solid fa-wallet" aria-hidden="true"></i>
+                </label>
+                <label class="checkout-pay">
+                  <input type="radio" name="checkout-payment" value="Card">
+                  <span class="checkout-pay-body">
+                    <span class="checkout-pay-title">Debit / Credit Card</span>
+                    <span class="checkout-pay-copy">Visa and Mastercard</span>
+                  </span>
+                  <i class="fa-regular fa-credit-card" aria-hidden="true"></i>
+                </label>
+              </fieldset>
+              <p class="checkout-note" data-payment-note role="status"></p>
+            </section>
+          </div>
+
+          <aside class="checkout-summary" aria-labelledby="summary-heading">
+            <h2 id="summary-heading">Order Summary</h2>
+            <div class="checkout-summary-items" data-summary-items></div>
             <form class="cart-coupon" data-coupon-form>
               <div class="form-field">
-                <label class="form-label" for="coupon-code">Enter Coupon</label>
-                <input class="form-input" id="coupon-code" name="coupon" type="text" placeholder=" " autocomplete="off">
+                <label class="form-label" for="checkout-coupon">Enter Coupon</label>
+                <input class="form-input" id="checkout-coupon" name="coupon" type="text" placeholder=" " autocomplete="off">
               </div>
-              <button class="btn btn-ghost" type="submit">Apply</button>
+              <button class="btn btn-ghost" type="submit" data-coupon-submit>Apply</button>
             </form>
+            <div class="checkout-coupon-applied" data-coupon-applied hidden>
+              <span data-coupon-code></span>
+              <button class="btn btn-ghost btn-sm" type="button" data-coupon-remove>Remove</button>
+            </div>
             <p class="cart-note" data-coupon-note hidden></p>
             <div class="cart-rows">
-              <div><span>MRP</span><span data-summary-mrp>₹0</span></div>
-              <div><span>Discount</span><span data-summary-discount>₹0</span></div>
+              <div><span>Subtotal</span><span data-summary-subtotal>₹0</span></div>
               <div><span>Shipping</span><span data-summary-shipping>Free</span></div>
-              <div class="cart-total"><span>Estimated Total</span><span data-summary-total>₹0</span></div>
+              <div><span>Discount</span><span data-summary-discount>₹0</span></div>
+              <div class="cart-total"><span>Total</span><span data-summary-total>₹0</span></div>
             </div>
-            <div class="cart-summary-actions">
-              <a class="btn btn-primary" href="checkout.html" data-checkout>Proceed To Checkout</a>
-              <a class="btn btn-secondary" href="shop.html">Continue Shopping</a>
-            </div>
-            <p class="cart-note" data-checkout-note hidden></p>
+            <p class="checkout-note" data-checkout-note role="status"></p>
+            <button class="btn btn-primary" type="button" data-place-order>Place Order</button>
+            <a class="btn btn-secondary" href="cart.html">Back To Cart</a>
           </aside>
         </div>
-        <div class="empty-state" data-cart-empty hidden>
+        <div class="empty-state" data-checkout-empty hidden>
           <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
           <h2>Your Cart Is Empty</h2>
-          <p>Looks like you haven't added anything yet.</p>
+          <p>Add a print to your cart before checking out.</p>
           <a class="btn btn-primary" href="shop.html">Browse Products</a>
         </div>
       </div>
     </section>
-
-    <section class="section" aria-labelledby="also-title">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <p class="section-kicker">Cross-sell</p>
-            <h2 class="section-title" id="also-title">You May Also Like</h2>
-            <p class="section-copy">Add a matching piece before checkout.</p>
-          </div>
-        </div>
-        <div class="product-rail" data-also-like></div>
-      </div>
-    </section>
-
-    <section class="section" aria-labelledby="collection-title">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <p class="section-kicker">Artwork series</p>
-            <h2 class="section-title" id="collection-title">Complete The Collection</h2>
-            <p class="section-copy">Same artwork, different product types.</p>
-          </div>
-        </div>
-        <div class="product-rail" data-collection></div>
-      </div>
-    </section>
   </main>
+
+  <div class="account-modal" data-checkout-address-modal hidden>
+    <div class="account-modal-backdrop" data-checkout-address-close></div>
+    <div class="account-modal-panel" role="dialog" aria-modal="true" aria-labelledby="checkout-address-title">
+      <div class="account-modal-head">
+        <h2 id="checkout-address-title" data-checkout-address-title>Add New Address</h2>
+        <button class="btn-icon" type="button" data-checkout-address-close aria-label="Close address form">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <form class="account-form" data-checkout-address-form novalidate>
+        <div class="form-field" data-field="label">
+          <label class="form-label" for="checkout-address-label">Address Label</label>
+          <input class="form-input" id="checkout-address-label" name="label" type="text" placeholder=" " required aria-describedby="checkout-address-label-error">
+          <p class="form-error" id="checkout-address-label-error"></p>
+        </div>
+        <div class="account-form-row">
+          <div class="form-field" data-field="name">
+            <label class="form-label" for="checkout-address-name">Full Name</label>
+            <input class="form-input" id="checkout-address-name" name="name" type="text" placeholder=" " autocomplete="name" required aria-describedby="checkout-address-name-error">
+            <p class="form-error" id="checkout-address-name-error"></p>
+          </div>
+          <div class="form-field" data-field="phone">
+            <label class="form-label" for="checkout-address-phone">Mobile Number</label>
+            <input class="form-input" id="checkout-address-phone" name="phone" type="tel" placeholder=" " inputmode="numeric" autocomplete="tel" maxlength="15" required aria-describedby="checkout-address-phone-error">
+            <p class="form-error" id="checkout-address-phone-error"></p>
+          </div>
+        </div>
+        <div class="form-field" data-field="line1">
+          <label class="form-label" for="checkout-address-line1">Address Line 1</label>
+          <input class="form-input" id="checkout-address-line1" name="line1" type="text" placeholder=" " autocomplete="address-line1" required aria-describedby="checkout-address-line1-error">
+          <p class="form-error" id="checkout-address-line1-error"></p>
+        </div>
+        <div class="form-field" data-field="line2">
+          <label class="form-label" for="checkout-address-line2">Address Line 2</label>
+          <input class="form-input" id="checkout-address-line2" name="line2" type="text" placeholder=" " autocomplete="address-line2">
+        </div>
+        <div class="account-form-row">
+          <div class="form-field" data-field="city">
+            <label class="form-label" for="checkout-address-city">City</label>
+            <input class="form-input" id="checkout-address-city" name="city" type="text" placeholder=" " autocomplete="address-level2" required aria-describedby="checkout-address-city-error">
+            <p class="form-error" id="checkout-address-city-error"></p>
+          </div>
+          <div class="form-field" data-field="state">
+            <label class="form-label" for="checkout-address-state">State</label>
+            <input class="form-input" id="checkout-address-state" name="state" type="text" placeholder=" " autocomplete="address-level1" required aria-describedby="checkout-address-state-error">
+            <p class="form-error" id="checkout-address-state-error"></p>
+          </div>
+        </div>
+        <div class="form-field" data-field="pincode">
+          <label class="form-label" for="checkout-address-pincode">PIN Code</label>
+          <input class="form-input" id="checkout-address-pincode" name="pincode" type="text" placeholder=" " inputmode="numeric" autocomplete="postal-code" maxlength="6" required aria-describedby="checkout-address-pincode-error">
+          <p class="form-error" id="checkout-address-pincode-error"></p>
+        </div>
+        <p class="account-note" data-checkout-address-note role="status"></p>
+        <div class="account-form-actions">
+          <button class="btn btn-primary" type="submit">Save Address</button>
+          <button class="btn btn-secondary" type="button" data-checkout-address-close>Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
 <footer class="site-footer" id="support" data-component="footer">
     <div class="container footer-grid">
@@ -284,6 +398,7 @@
   <script src="js/catalog.js"></script>
   <script src="js/commerce.js"></script>
   <script src="js/main.js"></script>
-  <script src="js/cart.js"></script>
+  <script src="js/account.js"></script>
+  <script src="js/checkout.js"></script>
 </body>
 </html>
