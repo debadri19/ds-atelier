@@ -1,22 +1,23 @@
-(function () {
+(function (global) {
   var PAGE_SIZE = 8;
+  var bound = false;
   var page = 1;
   var sort = "latest";
-  var catalog = window.DSAtelier && window.DSAtelier.catalog;
+  var catalog = global.DSAtelier && global.DSAtelier.catalog;
   var products = catalog && catalog.getAll ? catalog.getAll() : [];
-
-  var grid = document.querySelector("[data-shop-grid]");
-  if (!grid) return;
-
-  var countEl = document.querySelector("[data-shop-count]");
-  var paginationEl = document.querySelector("[data-shop-pagination]");
-  var sortSelect = document.querySelector("[data-shop-sort]");
-  var filterSheet = document.querySelector("[data-filter-sheet]");
-  var sortSheet = document.querySelector("[data-sort-sheet]");
-  var mobileFilters = document.querySelector("[data-mobile-filters]");
+  var grid = null;
+  var countEl = null;
+  var paginationEl = null;
+  var sortSelect = null;
+  var filterSheet = null;
+  var sortSheet = null;
 
   function money(value) {
     return "₹" + value.toLocaleString("en-IN");
+  }
+
+  function live() {
+    return Boolean(grid && document.body.contains(grid));
   }
 
   function checked(name) {
@@ -110,6 +111,7 @@
   }
 
   function render() {
+    if (!live()) return;
     var filtered = sortItems(products.filter(matches));
     var totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     if (page > totalPages) page = totalPages;
@@ -134,21 +136,18 @@
     document.body.style.overflow = "";
   }
 
-  if (mobileFilters) {
-    var groups = [
-      { title: "Categories", html: document.getElementById("filter-category").innerHTML },
-      { title: "Price", html: document.getElementById("filter-price").innerHTML },
-      { title: "Size", html: document.getElementById("filter-size").innerHTML },
-      { title: "Color", html: document.getElementById("filter-color").innerHTML },
-      { title: "Material", html: document.getElementById("filter-material").innerHTML },
-      { title: "Availability", html: document.getElementById("filter-availability").innerHTML }
-    ];
-    mobileFilters.innerHTML = groups.map(function (group) {
-      return '<div class="shop-sheet-group">' + group.html + "</div>";
+  function fillMobileFilters() {
+    var mobileFilters = document.querySelector("[data-mobile-filters]");
+    if (!mobileFilters || mobileFilters.children.length) return;
+    var ids = ["filter-category", "filter-price", "filter-size", "filter-color", "filter-material", "filter-availability"];
+    mobileFilters.innerHTML = ids.map(function (id) {
+      var source = document.getElementById(id);
+      return source ? '<div class="shop-sheet-group">' + source.innerHTML + "</div>" : "";
     }).join("");
   }
 
-  document.addEventListener("click", function (event) {
+  function onClick(event) {
+    if (!live()) return;
     var filterBtn = event.target.closest("[data-filter]");
     if (filterBtn && window.matchMedia("(min-width: 769px)").matches) {
       var popover = document.getElementById(filterBtn.getAttribute("aria-controls"));
@@ -180,16 +179,18 @@
     }
 
     if (!event.target.closest(".filter-rail")) closePopovers();
-  });
+  }
 
-  document.addEventListener("keydown", function (event) {
+  function onKey(event) {
+    if (!live()) return;
     if (event.key === "Escape") {
       closePopovers();
       closeSheets();
     }
-  });
+  }
 
-  document.addEventListener("change", function (event) {
+  function onChange(event) {
+    if (!live()) return;
     if (event.target.matches('input[type="checkbox"][name]')) {
       var name = event.target.name;
       var value = event.target.value;
@@ -216,7 +217,32 @@
       page = 1;
       render();
     }
-  });
+  }
 
-  render();
-})();
+  function init() {
+    catalog = global.DSAtelier && global.DSAtelier.catalog;
+    products = catalog && catalog.getAll ? catalog.getAll() : [];
+    grid = document.querySelector("[data-shop-grid]");
+    countEl = document.querySelector("[data-shop-count]");
+    paginationEl = document.querySelector("[data-shop-pagination]");
+    sortSelect = document.querySelector("[data-shop-sort]");
+    filterSheet = document.querySelector("[data-filter-sheet]");
+    sortSheet = document.querySelector("[data-sort-sheet]");
+    page = 1;
+    sort = "latest";
+    if (!grid) return;
+    fillMobileFilters();
+    if (!bound) {
+      document.addEventListener("click", onClick);
+      document.addEventListener("keydown", onKey);
+      document.addEventListener("change", onChange);
+      bound = true;
+    }
+    render();
+  }
+
+  global.DSAtelier = global.DSAtelier || {};
+  global.DSAtelier.pages = global.DSAtelier.pages || {};
+  global.DSAtelier.pages.shop = { init: init };
+  init();
+})(window);

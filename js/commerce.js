@@ -263,9 +263,9 @@
     var actions = "";
     if (opts.variant === "wishlist") {
       actions =
-        '<div class="product-card-actions">' +
-          '<button class="btn btn-ghost btn-sm" type="button" data-quick-view="' + escapeHtml(item.id) + '">Quick View</button>' +
-          '<button class="btn btn-secondary btn-sm" type="button" data-move-cart="' + escapeHtml(item.id) + '">Move To Cart</button>' +
+        '<div class="product-card-actions product-card-actions-wishlist">' +
+          '<button class="btn btn-secondary btn-sm" type="button" data-quick-view="' + escapeHtml(item.id) + '">Quick View</button>' +
+          '<button class="btn btn-primary btn-sm" type="button" data-move-cart="' + escapeHtml(item.id) + '">Move To Cart</button>' +
         "</div>";
     } else if (opts.variant === "recommend") {
       actions =
@@ -371,6 +371,7 @@
     var add = event.target.closest("[data-add-cart]");
     if (add && add.getAttribute("data-add-cart")) {
       event.preventDefault();
+      if (global.DSAtelier && global.DSAtelier.ui && global.DSAtelier.ui.busy) global.DSAtelier.ui.busy(add);
       addToCart(add.getAttribute("data-add-cart"));
       closeQuickView();
       return;
@@ -378,6 +379,7 @@
     var move = event.target.closest("[data-move-cart]");
     if (move) {
       event.preventDefault();
+      if (global.DSAtelier && global.DSAtelier.ui && global.DSAtelier.ui.busy) global.DSAtelier.ui.busy(move);
       moveToCart(move.getAttribute("data-move-cart"));
     }
   });

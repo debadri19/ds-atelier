@@ -1,4 +1,4 @@
-(function () {
+(function (global) {
   var PROFILE_KEY = "ds-atelier-profile";
   var ADDRESS_KEY = "ds-atelier-addresses";
   var SESSION_KEY = "ds-atelier-demo-session";
@@ -89,6 +89,7 @@
     }
   ];
 
+  var bound = false;
   var state = {
     profile: null,
     addresses: [],
@@ -96,6 +97,14 @@
     orderId: "",
     editingAddressId: ""
   };
+
+  function live() {
+    return Boolean(qs("[data-account-panel]"));
+  }
+
+  function busy(el) {
+    if (global.DSAtelier && global.DSAtelier.ui && global.DSAtelier.ui.busy) global.DSAtelier.ui.busy(el);
+  }
 
   function qs(sel, root) {
     return (root || document).querySelector(sel);
@@ -222,10 +231,22 @@
     return Math.max(0, orderSubtotal(order) - Number(order.discount || 0) + Number(order.shipping || 0));
   }
 
-  function orderSummary(order) {
-    return orderItems(order).map(function (item) {
-      return item.name + (item.qty > 1 ? " × " + item.qty : "");
-    }).join(", ");
+  function orderCountLabel(order) {
+    var count = (order.items || []).length;
+    return count === 1 ? "1 item" : count + " items";
+  }
+
+  function orderProductLines(order) {
+    var items = orderItems(order);
+    var visible = items.slice(0, 2);
+    var extra = items.length - visible.length;
+    var html = visible.map(function (item) {
+      return "<li>" + escapeHtml(item.name) + "</li>";
+    }).join("");
+    if (extra > 0) {
+      html += '<li class="account-order-more">+ ' + extra + " more</li>";
+    }
+    return html;
   }
 
   function findOrder(id) {
@@ -402,15 +423,13 @@
     list.innerHTML = ORDERS.map(function (order) {
       return (
         '<article class="account-order">' +
-          "<div>" +
+          '<div class="account-order-head">' +
             '<p class="account-order-id">' + escapeHtml(order.id) + "</p>" +
-            '<div class="account-order-meta">' +
-              "<span>" + escapeHtml(order.date) + "</span>" +
-              "<span>" + escapeHtml(orderSummary(order)) + "</span>" +
-            "</div>" +
-          "</div>" +
-          '<div class="account-order-aside">' +
             '<span class="account-status ' + statusClass(order.status) + '">' + escapeHtml(order.status) + "</span>" +
+          "</div>" +
+          '<p class="account-order-meta">' + escapeHtml(order.date) + " · " + escapeHtml(orderCountLabel(order)) + "</p>" +
+          '<ul class="account-order-products">' + orderProductLines(order) + "</ul>" +
+          '<div class="account-order-foot">' +
             '<span class="account-order-total">' + money(orderTotal(order)) + "</span>" +
             '<button class="btn btn-secondary btn-sm" type="button" data-view-order="' + escapeHtml(order.id) + '">View Details</button>' +
           "</div>" +
@@ -662,7 +681,8 @@
     } catch (e) {}
   }
 
-  document.addEventListener("click", function (event) {
+  function onClick(event) {
+    if (!live()) return;
     if (event.target.closest("[data-account-logout]")) {
       event.preventDefault();
       clearSession();
@@ -753,14 +773,23 @@
       var icon = toggle.querySelector("i");
       if (icon) icon.className = show ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
     }
-  });
+  }
 
-  document.addEventListener("keydown", function (event) {
+  function onKey(event) {
+    if (!live()) return;
     if (event.key === "Escape") closeAddressModal();
-  });
+  }
 
-  var profileForm = qs("[data-profile-form]");
-  if (profileForm) {
+  function onHashChange() {
+    if (!live()) return;
+    var parsed = parseHash();
+    setSection(parsed.section, parsed.orderId);
+  }
+
+  function bindProfile() {
+    var profileForm = qs("[data-profile-form]");
+    if (!profileForm || profileForm.getAttribute("data-bound") === "true") return;
+    profileForm.setAttribute("data-bound", "true");
     profileForm.addEventListener("submit", function (event) {
       event.preventDefault();
       clearFormErrors(profileForm);
@@ -794,6 +823,7 @@
         if (focusEl) focusEl.focus();
         return;
       }
+      busy(profileForm.querySelector('button[type="submit"]'));
       state.profile = { name: name, email: email, mobile: mobile };
       persistProfile();
       renderOverview();
@@ -809,8 +839,10 @@
     });
   }
 
-  var passwordForm = qs("[data-password-form]");
-  if (passwordForm) {
+  function bindPassword() {
+    var passwordForm = qs("[data-password-form]");
+    if (!passwordForm || passwordForm.getAttribute("data-bound") === "true") return;
+    passwordForm.setAttribute("data-bound", "true");
     passwordForm.addEventListener("submit", function (event) {
       event.preventDefault();
       clearFormErrors(passwordForm);
@@ -848,22 +880,31 @@
         if (focusEl) focusEl.focus();
         return;
       }
+      busy(passwordForm.querySelector('button[type="submit"]'));
       passwordForm.reset();
       syncFilled(passwordForm);
       setNote(note, "Password updated.", "is-success");
     });
   }
 
-  var addressForm = qs("[data-address-form]");
-  if (addressForm) {
-    qs("#address-phone", addressForm).addEventListener("input", function () {
-      var cleaned = String(this.value || "").replace(/[^\d+\s-]/g, "");
-      if (cleaned !== this.value) this.value = cleaned;
-    });
-    qs("#address-pincode", addressForm).addEventListener("input", function () {
-      var cleaned = String(this.value || "").replace(/\D/g, "").slice(0, 6);
-      if (cleaned !== this.value) this.value = cleaned;
-    });
+  function bindAddress() {
+    var addressForm = qs("[data-address-form]");
+    if (!addressForm || addressForm.getAttribute("data-bound") === "true") return;
+    addressForm.setAttribute("data-bound", "true");
+    var phone = qs("#address-phone", addressForm);
+    var pincode = qs("#address-pincode", addressForm);
+    if (phone) {
+      phone.addEventListener("input", function () {
+        var cleaned = String(this.value || "").replace(/[^\d+\s-]/g, "");
+        if (cleaned !== this.value) this.value = cleaned;
+      });
+    }
+    if (pincode) {
+      pincode.addEventListener("input", function () {
+        var cleaned = String(this.value || "").replace(/\D/g, "").slice(0, 6);
+        if (cleaned !== this.value) this.value = cleaned;
+      });
+    }
     addressForm.addEventListener("submit", function (event) {
       event.preventDefault();
       clearFormErrors(addressForm);
@@ -876,6 +917,7 @@
         if (focusEl) focusEl.focus();
         return;
       }
+      busy(addressForm.querySelector('button[type="submit"]'));
       if (state.editingAddressId) {
         state.addresses = state.addresses.map(function (row) {
           if (row.id !== state.editingAddressId) return row;
@@ -893,32 +935,48 @@
     });
   }
 
-  var mobileField = qs("#profile-mobile");
-  if (mobileField) {
+  function bindMobileField() {
+    var mobileField = qs("#profile-mobile");
+    if (!mobileField || mobileField.getAttribute("data-bound") === "true") return;
+    mobileField.setAttribute("data-bound", "true");
     mobileField.addEventListener("input", function () {
       var cleaned = String(mobileField.value || "").replace(/[^\d+\s-]/g, "");
       if (cleaned !== mobileField.value) mobileField.value = cleaned;
     });
   }
 
-  window.addEventListener("hashchange", function () {
-    var parsed = parseHash();
-    setSection(parsed.section, parsed.orderId);
-  });
-
-  document.addEventListener("ds-atelier-commerce", renderOverview);
-
-  state.profile = loadProfile();
-  state.addresses = loadAddresses();
-  fillProfileForm();
-  persistProfile();
-  persistAddresses();
-  renderOverview();
-  renderOrders();
-  renderAddresses();
-  var initial = parseHash();
-  if (currentHash() !== sectionHash(initial.section, initial.orderId)) {
-    history.replaceState(null, "", "#" + sectionHash(initial.section, initial.orderId));
+  function init() {
+    if (!qs("[data-account-panel]")) return;
+    state.profile = loadProfile();
+    state.addresses = loadAddresses();
+    fillProfileForm();
+    persistProfile();
+    persistAddresses();
+    renderOverview();
+    renderOrders();
+    renderAddresses();
+    bindProfile();
+    bindPassword();
+    bindAddress();
+    bindMobileField();
+    if (!bound) {
+      document.addEventListener("click", onClick);
+      document.addEventListener("keydown", onKey);
+      window.addEventListener("hashchange", onHashChange);
+      document.addEventListener("ds-atelier-commerce", function () {
+        if (live()) renderOverview();
+      });
+      bound = true;
+    }
+    var initial = parseHash();
+    if (currentHash() !== sectionHash(initial.section, initial.orderId)) {
+      history.replaceState(null, "", "#" + sectionHash(initial.section, initial.orderId));
+    }
+    setSection(initial.section, initial.orderId);
   }
-  setSection(initial.section, initial.orderId);
-})();
+
+  global.DSAtelier = global.DSAtelier || {};
+  global.DSAtelier.pages = global.DSAtelier.pages || {};
+  global.DSAtelier.pages.account = { init: init };
+  init();
+})(window);

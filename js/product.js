@@ -1,4 +1,4 @@
-(function () {
+(function (global) {
   var ALLOWED_TYPES = ["image/png", "image/jpeg", "application/pdf"];
   var ALLOWED_EXT = ["png", "jpg", "jpeg", "pdf"];
   var MAX_FILE_BYTES = 25 * 1024 * 1024;
@@ -6,50 +6,35 @@
     DTF: "Opaque transfers on any color",
     Sublimation: "All-over dye-infused colour"
   };
-
-  var catalog = window.DSAtelier && window.DSAtelier.catalog;
-  var requestedId = "";
-  try {
-    requestedId = new URLSearchParams(window.location.search).get("id") || "";
-  } catch (e) {
-    requestedId = "";
-  }
-
-  var product = catalog && catalog.resolve
-    ? catalog.resolve(requestedId)
-    : null;
-  var related = catalog && product ? catalog.getRelated(product.id, 4) : [];
-
-  if (!product) return;
-
-  var state = {
-    image: 0,
-    printType: "",
-    color: "",
-    size: "",
-    quantity: 1,
-    designFile: null,
-    designFiles: { front: null, back: null },
-    printPosition: "",
-    specialInstructions: ""
-  };
-
+  var bound = false;
+  var catalog = null;
+  var product = null;
+  var related = [];
+  var state = null;
   var previewUrls = { front: "", back: "" };
-  var mainImg = document.querySelector("[data-main-image]");
-  var thumbs = document.querySelector("[data-thumbs]");
-  var relatedGrid = document.querySelector("[data-related-grid]");
-  var qtyOut = document.querySelector("[data-qty]");
-  var addBtn = document.querySelector("[data-add-cart]");
-  var buyBtn = document.querySelector("[data-buy-now]");
-  var hint = document.querySelector("[data-config-hint]");
-  var lightbox = document.querySelector("[data-lightbox]");
-  var lightboxImg = document.querySelector("[data-lightbox-image]");
-  var lightboxCounter = document.querySelector("[data-lightbox-counter]");
-  var galleryFrame = document.querySelector(".product-main-frame");
-  var sizeGuide = document.querySelector("[data-size-guide]");
-  var sizeGuideBody = document.querySelector("[data-size-guide-body]");
+  var mainImg = null;
+  var thumbs = null;
+  var relatedGrid = null;
+  var qtyOut = null;
+  var addBtn = null;
+  var buyBtn = null;
+  var hint = null;
+  var lightbox = null;
+  var lightboxImg = null;
+  var lightboxCounter = null;
+  var galleryFrame = null;
+  var sizeGuide = null;
+  var sizeGuideBody = null;
   var lastFocus = null;
   var activeOverlay = null;
+
+  function live() {
+    return Boolean(product && mainImg && document.body.contains(mainImg));
+  }
+
+  function busy(el) {
+    if (global.DSAtelier && global.DSAtelier.ui && global.DSAtelier.ui.busy) global.DSAtelier.ui.busy(el);
+  }
 
   function money(value) {
     return "₹" + value.toLocaleString("en-IN");
@@ -436,20 +421,8 @@
     updateSummary();
   }
 
-  hydrate();
-
-  if (thumbs) {
-    thumbs.innerHTML = product.images.map(function (item, i) {
-      return '<button type="button" data-thumb="' + i + '"' + (i === 0 ? ' class="is-active"' : "") + ' aria-label="Show image ' + (i + 1) + '"><img src="' + item.src + '" alt="" width="160" height="160"></button>';
-    }).join("");
-  }
-
-  if (relatedGrid) relatedGrid.innerHTML = related.map(card).join("");
-  setImage(0);
-  updateSummary();
-  updateActions();
-
-  document.addEventListener("click", function (event) {
+  function onClick(event) {
+    if (!live()) return;
     var thumb = event.target.closest("[data-thumb]");
     if (thumb) setImage(Number(thumb.getAttribute("data-thumb")));
     if (event.target.closest("[data-gallery-prev]")) setImage(state.image - 1);
@@ -519,9 +492,11 @@
       });
     }
 
-    if (event.target.closest("[data-add-cart]") && isComplete()) {
+    var addCart = event.target.closest("[data-add-cart]");
+    if (addCart && isComplete()) {
+      busy(addCart);
       var line = configuredLine();
-      var commerce = window.DSAtelier && window.DSAtelier.commerce;
+      var commerce = global.DSAtelier && global.DSAtelier.commerce;
       if (commerce && commerce.addToCart) {
         commerce.addToCart(line.productId, {
           color: line.color,
@@ -541,14 +516,17 @@
       }
     }
 
-    if (event.target.closest("[data-buy-now]") && isComplete() && hint) {
+    var buyNow = event.target.closest("[data-buy-now]");
+    if (buyNow && isComplete() && hint) {
+      busy(buyNow);
       configuredLine();
       hint.hidden = false;
       hint.textContent = "Buy Now is presentation-only until checkout is built.";
     }
-  });
+  }
 
-  document.addEventListener("keydown", function (event) {
+  function onKey(event) {
+    if (!live()) return;
     if (event.key === "Escape") {
       closeLightbox();
       closeSizeGuide();
@@ -579,62 +557,128 @@
         first.focus();
       }
     }
-  });
+  }
 
-  ["front", "back"].forEach(function (slot) {
-    var els = zoneEls(slot);
-    if (els.input) {
-      els.input.addEventListener("change", function () {
-        applyFile(slot, els.input.files && els.input.files[0]);
+  function bindLocal() {
+    ["front", "back"].forEach(function (slot) {
+      var els = zoneEls(slot);
+      if (els.input && els.input.getAttribute("data-bound") !== "true") {
+        els.input.setAttribute("data-bound", "true");
+        els.input.addEventListener("change", function () {
+          applyFile(slot, els.input.files && els.input.files[0]);
+        });
+      }
+    });
+
+    var uploadCard = document.querySelector("[data-upload-card]");
+    if (uploadCard && uploadCard.getAttribute("data-bound") !== "true") {
+      uploadCard.setAttribute("data-bound", "true");
+      var dropTargetSlot = function () {
+        var slots = requiredUploadSlots();
+        for (var i = 0; i < slots.length; i++) {
+          if (!state.designFiles[slots[i]]) return slots[i];
+        }
+        return slots[0] || "";
+      };
+      ["dragenter", "dragover"].forEach(function (type) {
+        uploadCard.addEventListener(type, function (event) {
+          event.preventDefault();
+          uploadCard.classList.add("is-dragover");
+        });
+      });
+      ["dragleave", "drop"].forEach(function (type) {
+        uploadCard.addEventListener(type, function () {
+          uploadCard.classList.remove("is-dragover");
+        });
+      });
+      uploadCard.addEventListener("drop", function (event) {
+        event.preventDefault();
+        var slot = dropTargetSlot();
+        if (slot) applyFile(slot, event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]);
       });
     }
-  });
 
-  var uploadCard = document.querySelector("[data-upload-card]");
-  if (uploadCard) {
-    var dropTargetSlot = function () {
-      var slots = requiredUploadSlots();
-      for (var i = 0; i < slots.length; i++) {
-        if (!state.designFiles[slots[i]]) return slots[i];
-      }
-      return slots[0] || "";
+    var notes = document.querySelector("[data-notes]");
+    if (notes && notes.getAttribute("data-bound") !== "true") {
+      notes.setAttribute("data-bound", "true");
+      notes.addEventListener("input", function () {
+        state.specialInstructions = notes.value;
+      });
+    }
+
+    if (galleryFrame && galleryFrame.getAttribute("data-bound") !== "true") {
+      galleryFrame.setAttribute("data-bound", "true");
+      var touchX = 0;
+      galleryFrame.addEventListener("touchstart", function (event) {
+        touchX = event.changedTouches[0].clientX;
+      }, { passive: true });
+      galleryFrame.addEventListener("touchend", function (event) {
+        var delta = event.changedTouches[0].clientX - touchX;
+        if (delta > 40) setImage(state.image - 1);
+        if (delta < -40) setImage(state.image + 1);
+      }, { passive: true });
+    }
+  }
+
+  function init() {
+    catalog = global.DSAtelier && global.DSAtelier.catalog;
+    var requestedId = "";
+    try {
+      requestedId = new URLSearchParams(global.location.search).get("id") || "";
+    } catch (e) {
+      requestedId = "";
+    }
+    product = catalog && catalog.resolve ? catalog.resolve(requestedId) : null;
+    related = catalog && product ? catalog.getRelated(product.id, 4) : [];
+    mainImg = document.querySelector("[data-main-image]");
+    thumbs = document.querySelector("[data-thumbs]");
+    relatedGrid = document.querySelector("[data-related-grid]");
+    qtyOut = document.querySelector("[data-qty]");
+    addBtn = document.querySelector("[data-add-cart]");
+    buyBtn = document.querySelector("[data-buy-now]");
+    hint = document.querySelector("[data-config-hint]");
+    lightbox = document.querySelector("[data-lightbox]");
+    lightboxImg = document.querySelector("[data-lightbox-image]");
+    lightboxCounter = document.querySelector("[data-lightbox-counter]");
+    galleryFrame = document.querySelector(".product-main-frame");
+    sizeGuide = document.querySelector("[data-size-guide]");
+    sizeGuideBody = document.querySelector("[data-size-guide-body]");
+    lastFocus = null;
+    activeOverlay = null;
+    previewUrls = { front: "", back: "" };
+    if (!product || !mainImg) return;
+    state = {
+      image: 0,
+      printType: "",
+      color: "",
+      size: "",
+      quantity: 1,
+      designFile: null,
+      designFiles: { front: null, back: null },
+      printPosition: "",
+      specialInstructions: ""
     };
-    ["dragenter", "dragover"].forEach(function (type) {
-      uploadCard.addEventListener(type, function (event) {
-        event.preventDefault();
-        uploadCard.classList.add("is-dragover");
-      });
-    });
-    ["dragleave", "drop"].forEach(function (type) {
-      uploadCard.addEventListener(type, function () {
-        uploadCard.classList.remove("is-dragover");
-      });
-    });
-    uploadCard.addEventListener("drop", function (event) {
-      event.preventDefault();
-      var slot = dropTargetSlot();
-      if (slot) applyFile(slot, event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]);
-    });
+    hydrate();
+    if (thumbs) {
+      thumbs.innerHTML = product.images.map(function (item, i) {
+        return '<button type="button" data-thumb="' + i + '"' + (i === 0 ? ' class="is-active"' : "") + ' aria-label="Show image ' + (i + 1) + '"><img src="' + item.src + '" alt="" width="160" height="160"></button>';
+      }).join("");
+    }
+    if (relatedGrid) relatedGrid.innerHTML = related.map(card).join("");
+    setImage(0);
+    updateSummary();
+    updateActions();
+    bindLocal();
+    syncUploadZones();
+    if (!bound) {
+      document.addEventListener("click", onClick);
+      document.addEventListener("keydown", onKey);
+      bound = true;
+    }
   }
 
-  syncUploadZones();
-
-  var notes = document.querySelector("[data-notes]");
-  if (notes) {
-    notes.addEventListener("input", function () {
-      state.specialInstructions = notes.value;
-    });
-  }
-
-  if (galleryFrame) {
-    var touchX = 0;
-    galleryFrame.addEventListener("touchstart", function (event) {
-      touchX = event.changedTouches[0].clientX;
-    }, { passive: true });
-    galleryFrame.addEventListener("touchend", function (event) {
-      var delta = event.changedTouches[0].clientX - touchX;
-      if (delta > 40) setImage(state.image - 1);
-      if (delta < -40) setImage(state.image + 1);
-    }, { passive: true });
-  }
-})();
+  global.DSAtelier = global.DSAtelier || {};
+  global.DSAtelier.pages = global.DSAtelier.pages || {};
+  global.DSAtelier.pages.product = { init: init };
+  init();
+})(window);

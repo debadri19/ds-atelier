@@ -1,16 +1,23 @@
-(function () {
-  var commerce = window.DSAtelier && window.DSAtelier.commerce;
-  if (!commerce) return;
+(function (global) {
+  var bound = false;
+  var commerce = null;
+  var list = null;
+  var filled = null;
+  var empty = null;
+  var also = null;
+  var collection = null;
+  var couponForm = null;
+  var couponInput = null;
+  var couponNote = null;
+  var checkoutNote = null;
 
-  var list = document.querySelector("[data-cart-list]");
-  var filled = document.querySelector("[data-cart-filled]");
-  var empty = document.querySelector("[data-cart-empty]");
-  var also = document.querySelector("[data-also-like]");
-  var collection = document.querySelector("[data-collection]");
-  var couponForm = document.querySelector("[data-coupon-form]");
-  var couponInput = document.querySelector("#coupon-code");
-  var couponNote = document.querySelector("[data-coupon-note]");
-  var checkoutNote = document.querySelector("[data-checkout-note]");
+  function live() {
+    return Boolean(list && document.body.contains(list));
+  }
+
+  function busy(el) {
+    if (global.DSAtelier && global.DSAtelier.ui && global.DSAtelier.ui.busy) global.DSAtelier.ui.busy(el);
+  }
 
   function line(item) {
     var row = item.row;
@@ -43,6 +50,7 @@
   }
 
   function render() {
+    if (!live() || !commerce) return;
     var items = commerce.cartItems();
     var totals = commerce.totals();
     if (list) list.innerHTML = items.map(line).join("");
@@ -71,7 +79,8 @@
     }
   }
 
-  document.addEventListener("click", function (event) {
+  function onClick(event) {
+    if (!live() || !commerce) return;
     var minus = event.target.closest("[data-qty-minus]");
     if (minus) {
       var i = Number(minus.getAttribute("data-qty-minus"));
@@ -86,26 +95,60 @@
     }
     var remove = event.target.closest("[data-remove-cart]");
     if (remove) commerce.removeCart(Number(remove.getAttribute("data-remove-cart")));
-    if (event.target.closest("[data-checkout]")) {
+    var checkout = event.target.closest("[data-checkout]");
+    if (checkout) {
+      busy(checkout);
       if (checkoutNote) {
         checkoutNote.hidden = false;
         checkoutNote.textContent = "Checkout is presentation-only in this frontend phase.";
       }
     }
-  });
-
-  if (couponForm) {
-    couponForm.addEventListener("submit", function (event) {
-      event.preventDefault();
-      var code = couponInput ? couponInput.value : "";
-      var ok = commerce.applyCoupon(code);
-      if (couponNote) {
-        couponNote.hidden = false;
-        couponNote.textContent = ok ? "WELCOME10 applied." : (String(code).trim() ? "Use WELCOME10 for a demo 10% off." : "Enter a coupon code.");
-      }
-    });
   }
 
-  document.addEventListener("ds-atelier-commerce", render);
-  render();
-})();
+  function onCouponSubmit(event) {
+    event.preventDefault();
+    if (!live() || !commerce) return;
+    var submitBtn = couponForm.querySelector('button[type="submit"]');
+    busy(submitBtn);
+    var code = couponInput ? couponInput.value : "";
+    var ok = commerce.applyCoupon(code);
+    if (couponNote) {
+      couponNote.hidden = false;
+      couponNote.textContent = ok ? "WELCOME10 applied." : (String(code).trim() ? "Use WELCOME10 for a demo 10% off." : "Enter a coupon code.");
+      couponNote.classList.toggle("is-success", ok);
+      couponNote.classList.toggle("is-error", !ok);
+    }
+  }
+
+  function bindCoupon() {
+    couponForm = document.querySelector("[data-coupon-form]");
+    if (!couponForm || couponForm.getAttribute("data-bound") === "true") return;
+    couponForm.setAttribute("data-bound", "true");
+    couponForm.addEventListener("submit", onCouponSubmit);
+  }
+
+  function init() {
+    commerce = global.DSAtelier && global.DSAtelier.commerce;
+    list = document.querySelector("[data-cart-list]");
+    filled = document.querySelector("[data-cart-filled]");
+    empty = document.querySelector("[data-cart-empty]");
+    also = document.querySelector("[data-also-like]");
+    collection = document.querySelector("[data-collection]");
+    couponInput = document.querySelector("#coupon-code");
+    couponNote = document.querySelector("[data-coupon-note]");
+    checkoutNote = document.querySelector("[data-checkout-note]");
+    if (!commerce || !list) return;
+    bindCoupon();
+    if (!bound) {
+      document.addEventListener("click", onClick);
+      document.addEventListener("ds-atelier-commerce", render);
+      bound = true;
+    }
+    render();
+  }
+
+  global.DSAtelier = global.DSAtelier || {};
+  global.DSAtelier.pages = global.DSAtelier.pages || {};
+  global.DSAtelier.pages.cart = { init: init };
+  init();
+})(window);

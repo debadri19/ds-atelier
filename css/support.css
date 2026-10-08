@@ -108,6 +108,10 @@
   color: var(--color-text-muted);
 }
 
+.support-form-note.is-success {
+  color: var(--color-text);
+}
+
 .support-faq {
   display: grid;
   gap: 0.7rem;

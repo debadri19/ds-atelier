@@ -1,5 +1,6 @@
-(function () {
+(function (global) {
   var SESSION_KEY = "ds-atelier-demo-session";
+  var bound = false;
 
   function qs(sel, root) {
     return (root || document).querySelector(sel);
@@ -87,6 +88,14 @@
     if (type) el.classList.add(type);
   }
 
+  function live() {
+    return Boolean(qs("[data-auth-login], [data-auth-register], [data-auth-forgot], [data-auth-reset]"));
+  }
+
+  function busy(el) {
+    if (global.DSAtelier && global.DSAtelier.ui && global.DSAtelier.ui.busy) global.DSAtelier.ui.busy(el);
+  }
+
   function nameFromEmail(email) {
     var local = String(email || "").split("@")[0] || "";
     local = local.replace(/[._-]+/g, " ").trim();
@@ -106,14 +115,8 @@
     if (nameEl) nameEl.textContent = session.name || "there";
   }
 
-  qsa("input[name='mobile']").forEach(function (input) {
-    input.addEventListener("input", function () {
-      var cleaned = String(input.value || "").replace(/[^\d+\s-]/g, "");
-      if (cleaned !== input.value) input.value = cleaned;
-    });
-  });
-
-  document.addEventListener("click", function (event) {
+  function onClick(event) {
+    if (!live()) return;
     var toggle = event.target.closest("[data-password-toggle]");
     if (toggle) {
       var field = toggle.closest(".form-field");
@@ -133,10 +136,26 @@
       clearSession();
       window.location.href = "login.html";
     }
-  });
+  }
 
-  var loginForm = qs("[data-auth-login]");
-  if (loginForm) {
+  function bindMobileInputs() {
+    qsa("input[name='mobile']").forEach(function (input) {
+      if (input.getAttribute("data-bound") === "true") return;
+      input.setAttribute("data-bound", "true");
+      input.addEventListener("input", function () {
+        var cleaned = String(input.value || "").replace(/[^\d+\s-]/g, "");
+        if (cleaned !== input.value) input.value = cleaned;
+      });
+    });
+  }
+
+  function bindLogin() {
+    var loginForm = qs("[data-auth-login]");
+    if (!loginForm || loginForm.getAttribute("data-bound") === "true") {
+      if (loginForm && readSession()) showSignedIn(readSession());
+      return;
+    }
+    loginForm.setAttribute("data-bound", "true");
     var session = readSession();
     if (session) showSignedIn(session);
 
@@ -185,6 +204,7 @@
         return;
       }
 
+      busy(loginForm.querySelector('button[type="submit"]'));
       writeSession({
         email: asEmail ? identifier.trim() : "",
         name: asEmail ? nameFromEmail(identifier) : "there",
@@ -194,8 +214,13 @@
     });
   }
 
-  var registerForm = qs("[data-auth-register]");
-  if (registerForm) {
+  function bindRegister() {
+    var registerForm = qs("[data-auth-register]");
+    if (!registerForm || registerForm.getAttribute("data-bound") === "true") {
+      if (registerForm && readSession()) showSignedIn(readSession());
+      return;
+    }
+    registerForm.setAttribute("data-bound", "true");
     var existing = readSession();
     if (existing) showSignedIn(existing);
 
@@ -268,13 +293,16 @@
         return;
       }
 
+      busy(registerForm.querySelector('button[type="submit"]'));
       writeSession({ email: email.trim(), name: String(name).trim(), mobile: mobileDigits(mobile) }, true);
       showSignedIn(readSession());
     });
   }
 
-  var forgotForm = qs("[data-auth-forgot]");
-  if (forgotForm) {
+  function bindForgot() {
+    var forgotForm = qs("[data-auth-forgot]");
+    if (!forgotForm || forgotForm.getAttribute("data-bound") === "true") return;
+    forgotForm.setAttribute("data-bound", "true");
     forgotForm.addEventListener("submit", function (event) {
       event.preventDefault();
       qsa(".form-field", forgotForm).forEach(function (field) {
@@ -298,6 +326,7 @@
         if (invalidEl) invalidEl.focus();
         return;
       }
+      busy(forgotForm.querySelector('button[type="submit"]'));
       var wrap = qs("[data-auth-form-wrap]");
       var done = qs("[data-auth-forgot-done]");
       if (wrap) wrap.hidden = true;
@@ -309,8 +338,10 @@
     });
   }
 
-  var resetForm = qs("[data-auth-reset]");
-  if (resetForm) {
+  function bindReset() {
+    var resetForm = qs("[data-auth-reset]");
+    if (!resetForm || resetForm.getAttribute("data-bound") === "true") return;
+    resetForm.setAttribute("data-bound", "true");
     resetForm.addEventListener("submit", function (event) {
       event.preventDefault();
       qsa(".form-field", resetForm).forEach(function (field) {
@@ -343,10 +374,29 @@
         if (focusEl) focusEl.focus();
         return;
       }
+      busy(resetForm.querySelector('button[type="submit"]'));
       var wrap = qs("[data-auth-form-wrap]");
       var done = qs("[data-auth-reset-done]");
       if (wrap) wrap.hidden = true;
       if (done) done.hidden = false;
     });
   }
-})();
+
+  function init() {
+    if (!live()) return;
+    bindMobileInputs();
+    bindLogin();
+    bindRegister();
+    bindForgot();
+    bindReset();
+    if (!bound) {
+      document.addEventListener("click", onClick);
+      bound = true;
+    }
+  }
+
+  global.DSAtelier = global.DSAtelier || {};
+  global.DSAtelier.pages = global.DSAtelier.pages || {};
+  global.DSAtelier.pages.auth = { init: init };
+  init();
+})(window);
