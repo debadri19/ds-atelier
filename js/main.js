@@ -75,7 +75,204 @@
   var searchInput = null;
   var searchResults = null;
   var searchStatus = null;
+  var searchIdle = null;
+  var searchRecentBlock = null;
+  var searchRecentList = null;
+  var searchPopularList = null;
   var searchLastFocus = null;
+  var searchLastQuery = "";
+  var searchRememberTimer = null;
+  var searchActiveIndex = -1;
+  var RECENT_SEARCHES_KEY = "ds-atelier-recent-searches";
+  var RECENT_SEARCHES_MAX = 5;
+  var POPULAR_SEARCHES = ["Oversized Tee", "Anime", "Hoodie", "Custom T-Shirt", "DTF", "Sublimation"];
+
+  function getSearchSuggestions(query) {
+    catalog = window.DSAtelier && window.DSAtelier.catalog;
+    var trimmed = String(query || "").trim();
+    if (!trimmed) return { products: [], categories: [] };
+    if (catalog && catalog.suggest) return catalog.suggest(trimmed, { products: 5, categories: 3 });
+    return { products: catalog && catalog.search ? catalog.search(trimmed, 5) : [], categories: [] };
+  }
+
+  function readRecentSearches() {
+    try {
+      var raw = window.localStorage.getItem(RECENT_SEARCHES_KEY);
+      if (!raw) return [];
+      var parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      var seen = {};
+      return parsed.map(function (item) {
+        return String(item || "").trim();
+      }).filter(function (item) {
+        if (!item) return false;
+        var key = item.toLowerCase();
+        if (seen[key]) return false;
+        seen[key] = true;
+        return true;
+      }).slice(0, RECENT_SEARCHES_MAX);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function writeRecentSearches(list) {
+    try {
+      window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(list.slice(0, RECENT_SEARCHES_MAX)));
+    } catch (e) {}
+  }
+
+  function queryHasResults(query) {
+    var suggestions = getSearchSuggestions(query);
+    return Boolean((suggestions.products && suggestions.products.length) || (suggestions.categories && suggestions.categories.length));
+  }
+
+  function rememberRecentSearch(query) {
+    var trimmed = String(query || "").trim();
+    if (!trimmed || !queryHasResults(trimmed)) return;
+    var next = [trimmed];
+    var seen = {};
+    seen[trimmed.toLowerCase()] = true;
+    readRecentSearches().forEach(function (item) {
+      var key = item.toLowerCase();
+      if (seen[key]) return;
+      seen[key] = true;
+      next.push(item);
+    });
+    writeRecentSearches(next.slice(0, RECENT_SEARCHES_MAX));
+  }
+
+  function commitRecentSearch(query) {
+    if (searchRememberTimer) {
+      window.clearTimeout(searchRememberTimer);
+      searchRememberTimer = null;
+    }
+    rememberRecentSearch(query);
+    searchLastQuery = String(query || "").trim();
+  }
+
+  function scheduleRememberRecent(query) {
+    if (searchRememberTimer) window.clearTimeout(searchRememberTimer);
+    searchRememberTimer = window.setTimeout(function () {
+      searchRememberTimer = null;
+      commitRecentSearch(query);
+    }, 650);
+  }
+
+  function clearRecentSearches() {
+    if (searchRememberTimer) {
+      window.clearTimeout(searchRememberTimer);
+      searchRememberTimer = null;
+    }
+    try {
+      window.localStorage.removeItem(RECENT_SEARCHES_KEY);
+    } catch (e) {}
+    searchLastQuery = "";
+    renderIdleSearches();
+  }
+
+  function chipButton(term, index, prefix) {
+    var id = "search-opt-" + (prefix || "chip") + "-" + index;
+    return '<button type="button" class="search-chip" id="' + id + '" role="option" aria-selected="false" data-search-term="' + escapeHtml(term) + '">' + escapeHtml(term) + "</button>";
+  }
+
+  function getSearchNavItems() {
+    if (!searchModal || !searchModal.classList.contains("is-open")) return [];
+    if (searchIdle && !searchIdle.hidden) {
+      return Array.prototype.slice.call(searchIdle.querySelectorAll(".search-chip"));
+    }
+    if (searchResults && !searchResults.hidden) {
+      return Array.prototype.slice.call(searchResults.querySelectorAll(".search-result-link"));
+    }
+    return [];
+  }
+
+  function syncSearchAria() {
+    if (!searchInput) return;
+    var idleOpen = searchIdle && !searchIdle.hidden;
+    var resultsOpen = searchResults && !searchResults.hidden;
+    searchInput.setAttribute("role", "combobox");
+    searchInput.setAttribute("aria-autocomplete", "list");
+    searchInput.setAttribute("aria-expanded", idleOpen || resultsOpen ? "true" : "false");
+    if (idleOpen && searchIdle && searchIdle.id) searchInput.setAttribute("aria-controls", searchIdle.id);
+    else if (resultsOpen && searchResults && searchResults.id) searchInput.setAttribute("aria-controls", searchResults.id);
+    else searchInput.removeAttribute("aria-controls");
+  }
+
+  function clearSearchSelection() {
+    searchActiveIndex = -1;
+    if (searchModal) {
+      searchModal.querySelectorAll("[aria-selected]").forEach(function (el) {
+        el.classList.remove("is-active");
+        el.setAttribute("aria-selected", "false");
+      });
+    }
+    if (searchInput) searchInput.removeAttribute("aria-activedescendant");
+  }
+
+  function setSearchActiveIndex(index) {
+    var items = getSearchNavItems();
+    if (!items.length) {
+      clearSearchSelection();
+      syncSearchAria();
+      return;
+    }
+    if (index < 0) index = 0;
+    if (index > items.length - 1) index = items.length - 1;
+    searchActiveIndex = index;
+    items.forEach(function (el, i) {
+      var on = i === index;
+      el.classList.toggle("is-active", on);
+      el.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    var active = items[index];
+    if (searchInput && active && active.id) searchInput.setAttribute("aria-activedescendant", active.id);
+    if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest", inline: "nearest" });
+    syncSearchAria();
+  }
+
+  function moveSearchSelection(step) {
+    var items = getSearchNavItems();
+    if (!items.length) return;
+    var next = searchActiveIndex;
+    if (next < 0) next = step > 0 ? 0 : items.length - 1;
+    else next += step;
+    if (next < 0) next = 0;
+    if (next > items.length - 1) next = items.length - 1;
+    setSearchActiveIndex(next);
+  }
+
+  function activateSearchItem(el) {
+    if (!el) return;
+    if (typeof el.click === "function") el.click();
+  }
+
+  function renderIdleSearches() {
+    if (!searchIdle) return;
+    var recents = readRecentSearches();
+    if (searchRecentList) {
+      searchRecentList.innerHTML = recents.map(function (term, index) {
+        return chipButton(term, index, "recent");
+      }).join("");
+    }
+    if (searchRecentBlock) searchRecentBlock.hidden = !recents.length;
+    if (searchPopularList) {
+      searchPopularList.innerHTML = POPULAR_SEARCHES.map(function (term, index) {
+        return chipButton(term, index, "popular");
+      }).join("");
+    }
+    clearSearchSelection();
+    syncSearchAria();
+  }
+
+  function applySearchTerm(term) {
+    buildSearchModal();
+    if (!searchInput) return;
+    searchInput.value = term;
+    commitRecentSearch(term);
+    renderSearchResults();
+    if (searchInput.focus) searchInput.focus();
+  }
 
   function buildSearchModal() {
     if (searchModal) return searchModal;
@@ -94,7 +291,20 @@
           '<button class="btn-icon search-modal-close" type="button" data-search-close aria-label="Close search"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>' +
         "</div>" +
         '<p class="search-modal-status" data-search-status aria-live="polite"></p>' +
-        '<ul class="search-results" data-search-results></ul>' +
+        '<div class="search-idle" data-search-idle id="search-idle-list" role="listbox" aria-label="Recent and popular searches">' +
+          '<section class="search-idle-block" data-recent-block hidden>' +
+            '<div class="search-idle-head">' +
+              '<p class="search-result-group search-idle-title">Recent Searches</p>' +
+              '<button class="search-idle-clear" type="button" data-search-clear-recent>Clear</button>' +
+            "</div>" +
+            '<div class="search-chips" data-recent-list></div>' +
+          "</section>" +
+          '<section class="search-idle-block" data-popular-block>' +
+            '<p class="search-result-group search-idle-title">Popular Searches</p>' +
+            '<div class="search-chips" data-popular-list></div>' +
+          "</section>" +
+        "</div>" +
+        '<ul class="search-results" data-search-results id="search-results-list" role="listbox" aria-label="Search results"></ul>' +
       "</div>";
     document.body.appendChild(wrap);
 
@@ -102,8 +312,30 @@
     searchInput = wrap.querySelector("[data-search-input]");
     searchResults = wrap.querySelector("[data-search-results]");
     searchStatus = wrap.querySelector("[data-search-status]");
+    searchIdle = wrap.querySelector("[data-search-idle]");
+    searchRecentBlock = wrap.querySelector("[data-recent-block]");
+    searchRecentList = wrap.querySelector("[data-recent-list]");
+    searchPopularList = wrap.querySelector("[data-popular-list]");
 
-    if (searchInput) searchInput.addEventListener("input", renderSearchResults);
+    if (searchPopularList) {
+      searchPopularList.innerHTML = POPULAR_SEARCHES.map(function (term, index) {
+        return chipButton(term, index, "popular");
+      }).join("");
+    }
+    if (searchInput) {
+      searchInput.setAttribute("role", "combobox");
+      searchInput.setAttribute("aria-autocomplete", "list");
+      searchInput.setAttribute("aria-expanded", "false");
+      searchInput.addEventListener("input", renderSearchResults);
+    }
+    wrap.addEventListener("mouseover", function (event) {
+      var item = event.target.closest(".search-result-link, .search-chip");
+      if (!item || !wrap.contains(item)) return;
+      var items = getSearchNavItems();
+      var index = items.indexOf(item);
+      if (index === -1) return;
+      setSearchActiveIndex(index);
+    });
     return searchModal;
   }
 
@@ -115,20 +347,31 @@
     searchResults.innerHTML = "";
 
     if (!trimmed) {
-      if (searchStatus) searchStatus.textContent = "Start typing to search products.";
+      if (searchRememberTimer) {
+        window.clearTimeout(searchRememberTimer);
+        searchRememberTimer = null;
+      }
+      if (searchLastQuery) commitRecentSearch(searchLastQuery);
+      if (searchStatus) searchStatus.textContent = "";
       searchResults.hidden = true;
+      if (searchIdle) searchIdle.hidden = false;
+      renderIdleSearches();
       return;
     }
 
-    var suggestions = catalog && catalog.suggest
-      ? catalog.suggest(trimmed, { products: 5, categories: 3 })
-      : { products: catalog && catalog.search ? catalog.search(trimmed, 5) : [], categories: [] };
+    searchLastQuery = trimmed;
+    scheduleRememberRecent(trimmed);
+
+    var suggestions = getSearchSuggestions(trimmed);
     var productsFound = suggestions.products || [];
     var categoriesFound = suggestions.categories || [];
     searchResults.hidden = false;
 
     if (!productsFound.length && !categoriesFound.length) {
       if (searchStatus) searchStatus.textContent = "No matching results";
+      searchResults.hidden = true;
+      clearSearchSelection();
+      syncSearchAria();
       return;
     }
 
@@ -139,11 +382,11 @@
 
     var html = "";
     if (productsFound.length) {
-      html += '<li class="search-result-group" role="presentation">Products</li>';
-      html += productsFound.map(function (item) {
+      html += '<li class="search-result-group" role="presentation">PRODUCTS</li>';
+      html += productsFound.map(function (item, index) {
         return (
           '<li class="search-result">' +
-            '<a class="search-result-link" href="' + escapeHtml(catalog.productUrl(item.id)) + '">' +
+            '<a class="search-result-link" id="search-opt-product-' + index + '" role="option" aria-selected="false" href="' + escapeHtml(catalog.productUrl(item.id)) + '">' +
               '<span class="search-result-media"><img src="' + escapeHtml(item.image) + '" alt="' + escapeHtml(item.alt) + '" loading="lazy"></span>' +
               '<span class="search-result-body">' +
                 '<span class="search-result-name">' + escapeHtml(item.name) + "</span>" +
@@ -156,12 +399,12 @@
       }).join("");
     }
     if (categoriesFound.length) {
-      html += '<li class="search-result-group" role="presentation">Categories</li>';
-      html += categoriesFound.map(function (name) {
+      html += '<li class="search-result-group search-result-group-categories" role="presentation">CATEGORIES</li>';
+      html += categoriesFound.map(function (name, index) {
         var href = catalog.shopCategoryUrl ? catalog.shopCategoryUrl(name) : "shop.html?category=" + encodeURIComponent(name);
         return (
-          '<li class="search-result">' +
-            '<a class="search-result-link search-result-link-category" href="' + escapeHtml(href) + '">' +
+          '<li class="search-result search-result-category-item">' +
+            '<a class="search-result-link search-result-link-category" id="search-opt-category-' + index + '" role="option" aria-selected="false" href="' + escapeHtml(href) + '">' +
               '<span class="search-result-media search-result-media-icon" aria-hidden="true"><i class="fa-solid fa-tag"></i></span>' +
               '<span class="search-result-body">' +
                 '<span class="search-result-name">' + escapeHtml(name) + "</span>" +
@@ -173,6 +416,8 @@
       }).join("");
     }
     searchResults.innerHTML = html;
+    clearSearchSelection();
+    syncSearchAria();
   }
 
   function setSearchExpanded(open) {
@@ -196,6 +441,9 @@
 
   function closeSearch() {
     if (!searchModal || !searchModal.classList.contains("is-open")) return;
+    if (searchInput) commitRecentSearch(searchInput.value);
+    clearSearchSelection();
+    if (searchInput) searchInput.setAttribute("aria-expanded", "false");
     searchModal.classList.remove("is-open");
     document.body.style.overflow = "";
     setSearchExpanded(false);
@@ -215,11 +463,47 @@
     }
     if (event.target.closest("[data-search-close]")) {
       closeSearch();
+      return;
+    }
+    if (event.target.closest("[data-search-clear-recent]")) {
+      event.preventDefault();
+      clearRecentSearches();
+      return;
+    }
+    var chip = event.target.closest("[data-search-term]");
+    if (chip && searchModal && searchModal.contains(chip)) {
+      event.preventDefault();
+      applySearchTerm(chip.getAttribute("data-search-term") || "");
+      return;
+    }
+    if (event.target.closest(".search-result-link")) {
+      if (searchInput) commitRecentSearch(searchInput.value);
+      closeSearch();
     }
   });
 
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape") closeSearch();
+    if (event.key === "Escape") {
+      closeSearch();
+      return;
+    }
+    if (!searchModal || !searchModal.classList.contains("is-open")) return;
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      if (event.target !== searchInput && !searchModal.contains(event.target)) return;
+      if (!getSearchNavItems().length) return;
+      event.preventDefault();
+      moveSearchSelection(event.key === "ArrowDown" ? 1 : -1);
+      return;
+    }
+    if (event.key === "Enter") {
+      var items = getSearchNavItems();
+      if (searchActiveIndex >= 0 && items[searchActiveIndex]) {
+        event.preventDefault();
+        activateSearchItem(items[searchActiveIndex]);
+        return;
+      }
+      if (searchInput && event.target === searchInput) commitRecentSearch(searchInput.value);
+    }
   });
 
   function syncFilled(field) {

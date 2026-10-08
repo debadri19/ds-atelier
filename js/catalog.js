@@ -504,24 +504,56 @@
     return list;
   }
 
+  function foldSearchToken(token) {
+    var t = String(token || "").toLowerCase();
+    if (t.length > 4 && t.slice(-3) === "ies") return t.slice(0, -3) + "y";
+    if (t.length > 3 && t.charAt(t.length - 1) === "s" && t.slice(-2) !== "ss") return t.slice(0, -1);
+    return t;
+  }
+
+  function searchWords(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(foldSearchToken);
+  }
+
+  function categoryMatches(name, query) {
+    var haystack = String(name || "").toLowerCase();
+    var q = String(query || "").trim().toLowerCase();
+    if (!q) return false;
+    if (haystack.indexOf(q) !== -1) return true;
+    var terms = searchWords(q);
+    var words = searchWords(name);
+    if (!terms.length || !words.length) return false;
+    var foldedHay = words.join(" ");
+    if (foldedHay.indexOf(terms.join(" ")) !== -1) return true;
+    return terms.every(function (term) {
+      return words.some(function (word) {
+        return word === term || (term.length >= 3 && word.indexOf(term) === 0) || (word.length >= 4 && term.indexOf(word) === 0);
+      });
+    });
+  }
+
   function searchCategories(query, limit) {
     var q = String(query || "").trim().toLowerCase();
     if (!q) return [];
-    var terms = q.split(/\s+/).filter(Boolean);
+    var terms = searchWords(q);
     var max = typeof limit === "number" ? limit : 3;
     var results = [];
 
     categories().forEach(function (name) {
+      if (!categoryMatches(name, q)) return;
       var haystack = String(name).toLowerCase();
-      var matched = terms.every(function (term) {
-        return haystack.indexOf(term) !== -1;
-      });
-      if (!matched) return;
+      var foldedHay = searchWords(name).join(" ");
+      var foldedQuery = terms.join(" ");
       var score = 0;
-      if (haystack.indexOf(q) === 0) score += 4;
-      else if (haystack.indexOf(q) !== -1) score += 2;
+      if (haystack.indexOf(q) === 0 || foldedHay.indexOf(foldedQuery) === 0) score += 4;
+      else if (haystack.indexOf(q) !== -1 || foldedHay.indexOf(foldedQuery) !== -1) score += 2;
       terms.forEach(function (term) {
-        if (haystack.indexOf(term) !== -1) score += 1;
+        if (foldedHay.indexOf(term) !== -1) score += 1;
       });
       results.push({ name: name, score: score });
     });
@@ -540,15 +572,28 @@
     limits = limits || {};
     var productLimit = limits.products || 5;
     var categoryLimit = limits.categories || 3;
+    var q = String(query || "").trim().toLowerCase();
+    var terms = q.split(/\s+/).filter(Boolean);
     var productsFound = search(query, productLimit);
+    var direct = productsFound.filter(function (item) {
+      var name = String(item.name || "").toLowerCase();
+      var category = String(item.category || "").toLowerCase();
+      return terms.some(function (term) {
+        return name.indexOf(term) !== -1 || category.indexOf(term) !== -1;
+      });
+    });
+    if (direct.length) productsFound = direct;
+    var seenProducts = {};
+    productsFound = productsFound.filter(function (item) {
+      if (!item || !item.id || seenProducts[item.id]) return false;
+      seenProducts[item.id] = true;
+      return true;
+    });
     var categoryNames = searchCategories(query, categoryLimit);
     var seen = {};
-    var q = String(query || "").trim().toLowerCase();
     categoryNames.forEach(function (name) { seen[name] = true; });
     productsFound.forEach(function (item) {
       if (!item.category || seen[item.category] || categoryNames.length >= categoryLimit) return;
-      var name = String(item.name || "").toLowerCase();
-      if (name.indexOf(q) === -1) return;
       seen[item.category] = true;
       categoryNames.push(item.category);
     });

@@ -153,6 +153,9 @@
     } catch (e) {
       category = "";
     }
+    try {
+      category = decodeURIComponent(category);
+    } catch (err) {}
     if (!category) return;
     document.querySelectorAll('input[name="category"]').forEach(function (input) {
       input.checked = input.value === category;
