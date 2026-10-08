@@ -255,32 +255,93 @@
     var q = String(query || "").trim().toLowerCase();
     if (!q) return [];
     var terms = q.split(/\s+/).filter(Boolean);
-    var max = typeof limit === "number" ? limit : 8;
+    var max = typeof limit === "number" ? limit : 4;
     var results = [];
 
     getAll().forEach(function (item) {
-      var haystack = searchTags(item);
       var name = String(item.name || "").toLowerCase();
+      var slug = String(item.slug || item.id || "").toLowerCase();
+      var categoryId = String(item.category || "").toLowerCase();
+      var categoryName = String(categoryLabel(item.category) || "").toLowerCase();
+      var tags = (item.tags || []).map(function (tag) {
+        return String(tag || "").toLowerCase();
+      });
+      var description = String(item.description || "").toLowerCase();
+      var core = [name, slug, categoryId, categoryName].concat(tags).join(" ");
       var matched = terms.every(function (term) {
-        return haystack.indexOf(term) !== -1;
+        return core.indexOf(term) !== -1;
       });
       if (!matched) return;
+
       var score = 0;
-      if (name.indexOf(q) === 0) score += 4;
-      else if (name.indexOf(q) !== -1) score += 2;
-      if (String(item.category).indexOf(q) === 0) score += 2;
-      terms.forEach(function (term) {
-        if (name.indexOf(term) !== -1) score += 1;
+      var strength = "related";
+      if (name === q || slug === q) {
+        score += 10;
+        strength = "name";
+      } else if (name.indexOf(q) === 0 || slug.indexOf(q) === 0) {
+        score += 8;
+        strength = "name";
+      } else if (name.indexOf(q) !== -1) {
+        score += 6;
+        strength = "name";
+      }
+
+      if (categoryId === q || categoryName === q) {
+        score += 5;
+        if (strength !== "name") strength = "category";
+      } else if (categoryId.indexOf(q) === 0 || categoryName.indexOf(q) === 0) {
+        score += 4;
+        if (strength !== "name") strength = "category";
+      } else if (categoryId.indexOf(q) !== -1 || categoryName.indexOf(q) !== -1) {
+        score += 3;
+        if (strength !== "name") strength = "category";
+      }
+
+      tags.forEach(function (tag) {
+        if (!tag) return;
+        if (tag === q) {
+          score += 4;
+          if (strength === "related") strength = "tag";
+        } else if (tag.indexOf(q) === 0) {
+          score += 3;
+          if (strength === "related") strength = "tag";
+        } else if (tag.indexOf(q) !== -1) {
+          score += 2;
+          if (strength === "related") strength = "tag";
+        }
       });
-      results.push({ item: item, score: score });
+
+      terms.forEach(function (term) {
+        if (name.indexOf(term) !== -1) score += 2;
+        else if (categoryId.indexOf(term) !== -1 || categoryName.indexOf(term) !== -1) score += 1;
+        else if (tags.some(function (tag) { return tag.indexOf(term) !== -1; })) score += 1;
+      });
+
+      if (description.indexOf(q) !== -1) score += 1;
+      results.push({ item: item, score: score, strength: strength });
     });
 
+    var strong = results.filter(function (entry) {
+      return entry.strength !== "related";
+    });
+    if (strong.length) results = strong;
+
     results.sort(function (a, b) {
+      var rank = { name: 0, category: 1, tag: 2, related: 3 };
+      var aRank = rank[a.strength] != null ? rank[a.strength] : 4;
+      var bRank = rank[b.strength] != null ? rank[b.strength] : 4;
+      if (aRank !== bRank) return aRank - bRank;
       if (b.score !== a.score) return b.score - a.score;
       return String(a.item.name).localeCompare(String(b.item.name));
     });
 
-    return results.slice(0, max).map(function (entry) {
+    var seen = {};
+    return results.filter(function (entry) {
+      var id = entry.item && entry.item.id;
+      if (!id || seen[id]) return false;
+      seen[id] = true;
+      return true;
+    }).slice(0, max).map(function (entry) {
       return entry.item;
     });
   }

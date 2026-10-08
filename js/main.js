@@ -87,12 +87,49 @@
   var RECENT_SEARCHES_MAX = 5;
   var POPULAR_SEARCHES = ["Oversized Tee", "Anime", "Hoodie", "Custom T-Shirt", "DTF", "Sublimation"];
 
+  function getArtworksApi() {
+    return window.DSAtelier && window.DSAtelier.artworks;
+  }
+
+  var searchArtworksLoading = null;
+
+  function ensureArtworksReady() {
+    var api = getArtworksApi();
+    if (api && typeof api.search === "function") return Promise.resolve(api);
+    if (searchArtworksLoading) return searchArtworksLoading;
+    searchArtworksLoading = ensureScript("js/artworks.js").then(function () {
+      return getArtworksApi();
+    }).catch(function () {
+      searchArtworksLoading = null;
+      return null;
+    });
+    return searchArtworksLoading;
+  }
+
+  function searchArtworks(query) {
+    var api = getArtworksApi();
+    if (!api || typeof api.search !== "function") return [];
+    var list = api.search(query, 4) || [];
+    var seen = {};
+    return list.filter(function (item) {
+      if (!item || !item.id || seen[item.id]) return false;
+      seen[item.id] = true;
+      return true;
+    });
+  }
+
   function getSearchSuggestions(query) {
     catalog = window.DSAtelier && window.DSAtelier.catalog;
     var trimmed = String(query || "").trim();
-    if (!trimmed) return { products: [], categories: [] };
-    if (catalog && catalog.suggest) return catalog.suggest(trimmed, { products: 5, categories: 3 });
-    return { products: catalog && catalog.search ? catalog.search(trimmed, 5) : [], categories: [] };
+    if (!trimmed) return { products: [], categories: [], artworks: [] };
+    var suggestions;
+    if (catalog && catalog.suggest) suggestions = catalog.suggest(trimmed, { products: 5, categories: 3 });
+    else suggestions = { products: catalog && catalog.search ? catalog.search(trimmed, 5) : [], categories: [] };
+    return {
+      products: (suggestions && suggestions.products) || [],
+      categories: (suggestions && suggestions.categories) || [],
+      artworks: searchArtworks(trimmed)
+    };
   }
 
   function readRecentSearches() {
@@ -124,7 +161,11 @@
 
   function queryHasResults(query) {
     var suggestions = getSearchSuggestions(query);
-    return Boolean((suggestions.products && suggestions.products.length) || (suggestions.categories && suggestions.categories.length));
+    return Boolean(
+      (suggestions.products && suggestions.products.length) ||
+      (suggestions.categories && suggestions.categories.length) ||
+      (suggestions.artworks && suggestions.artworks.length)
+    );
   }
 
   function rememberRecentSearch(query) {
@@ -361,13 +402,24 @@
 
     searchLastQuery = trimmed;
     scheduleRememberRecent(trimmed);
+    if (searchIdle) searchIdle.hidden = true;
+
+    if (!(getArtworksApi() && typeof getArtworksApi().search === "function")) {
+      var pendingQuery = trimmed;
+      ensureArtworksReady().then(function () {
+        if (!searchInput || searchInput.value.trim() !== pendingQuery) return;
+        if (!searchModal || !searchModal.classList.contains("is-open")) return;
+        renderSearchResults();
+      });
+    }
 
     var suggestions = getSearchSuggestions(trimmed);
     var productsFound = suggestions.products || [];
     var categoriesFound = suggestions.categories || [];
+    var artworksFound = suggestions.artworks || [];
     searchResults.hidden = false;
 
-    if (!productsFound.length && !categoriesFound.length) {
+    if (!productsFound.length && !categoriesFound.length && !artworksFound.length) {
       if (searchStatus) searchStatus.textContent = "No matching results";
       searchResults.hidden = true;
       clearSearchSelection();
@@ -378,6 +430,7 @@
     var parts = [];
     if (productsFound.length) parts.push(productsFound.length + (productsFound.length === 1 ? " product" : " products"));
     if (categoriesFound.length) parts.push(categoriesFound.length + (categoriesFound.length === 1 ? " category" : " categories"));
+    if (artworksFound.length) parts.push(artworksFound.length + (artworksFound.length === 1 ? " artwork" : " artworks"));
     if (searchStatus) searchStatus.textContent = parts.join(" · ");
 
     var html = "";
@@ -415,6 +468,26 @@
         );
       }).join("");
     }
+    if (artworksFound.length) {
+      var artworksApi = getArtworksApi();
+      html += '<li class="search-result-group search-result-group-artworks" role="presentation">ARTWORKS</li>';
+      html += artworksFound.map(function (item, index) {
+        var href = artworksApi && artworksApi.artworkUrl ? artworksApi.artworkUrl(item.id) : "design.html?id=" + encodeURIComponent(item.id);
+        var label = artworksApi && artworksApi.categoryLabel ? artworksApi.categoryLabel(item.category) : String(item.category || "");
+        var thumb = item.thumbnail || item.preview || "";
+        return (
+          '<li class="search-result">' +
+            '<a class="search-result-link" id="search-opt-artwork-' + index + '" role="option" aria-selected="false" href="' + escapeHtml(href) + '">' +
+              '<span class="search-result-media"><img src="' + escapeHtml(thumb) + '" alt="' + escapeHtml(item.name) + '" loading="lazy"></span>' +
+              '<span class="search-result-body">' +
+                '<span class="search-result-name">' + escapeHtml(item.name) + "</span>" +
+                '<span class="search-result-category">' + escapeHtml(label) + "</span>" +
+              "</span>" +
+            "</a>" +
+          "</li>"
+        );
+      }).join("");
+    }
     searchResults.innerHTML = html;
     clearSearchSelection();
     syncSearchAria();
@@ -428,6 +501,7 @@
 
   function openSearch() {
     buildSearchModal();
+    ensureArtworksReady();
     searchLastFocus = document.activeElement;
     searchModal.classList.add("is-open");
     document.body.style.overflow = "hidden";
