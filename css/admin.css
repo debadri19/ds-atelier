@@ -450,6 +450,7 @@ html[data-theme="dark"] .admin-icon-btn .icon-moon {
   color: var(--color-text);
   font-weight: 650;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -461,6 +462,11 @@ html[data-theme="dark"] .admin-icon-btn .icon-moon {
   border-radius: var(--radius-md);
   background: var(--primary-soft);
   color: var(--primary);
+}
+
+.admin-action:hover,
+.admin-action:visited {
+  color: var(--color-text);
 }
 
 .admin-action:hover {
@@ -636,7 +642,11 @@ html[data-theme="dark"] .admin-icon-btn .icon-moon {
 .admin-cat-cards[hidden],
 .admin-cat-table-wrap[hidden],
 .admin-cat-form-card[hidden],
-.admin-cat-list[hidden] {
+.admin-cat-list[hidden],
+.admin-prod-cards[hidden],
+.admin-prod-table-wrap[hidden],
+.admin-prod-form-card[hidden],
+.admin-prod-list[hidden] {
   display: none;
 }
 
@@ -800,6 +810,68 @@ html[data-theme="dark"] .admin-icon-btn .icon-moon {
   font-size: var(--fs-xs);
 }
 
+.admin-prod-toolbar {
+  align-items: center;
+}
+
+.admin-prod-count {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 650;
+}
+
+.admin-prod-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.admin-prod-cards {
+  display: none;
+}
+
+.admin-prod-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.admin-prod-form-span {
+  grid-column: 1 / -1;
+}
+
+.admin-prod-form-error {
+  margin-top: 0.75rem;
+  color: var(--primary);
+  font-size: var(--fs-sm);
+  font-weight: 650;
+}
+
+.admin-prod-card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-prod-card:last-child {
+  border-bottom: 0;
+}
+
+.admin-prod-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+}
+
+.admin-prod-table {
+  min-width: 52rem;
+}
+
 @media (max-width: 1100px) {
   .admin-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -856,24 +928,34 @@ html[data-theme="dark"] .admin-icon-btn .icon-moon {
 }
 
 @media (max-width: 768px) {
-  .admin-cat-table-wrap {
+  .admin-cat-table-wrap,
+  .admin-prod-table-wrap {
     display: none;
   }
 
-  .admin-cat-cards {
+  .admin-cat-cards,
+  .admin-prod-cards {
     display: grid;
   }
 
-  .admin-cat-form-grid {
+  .admin-cat-cards[hidden],
+  .admin-prod-cards[hidden] {
+    display: none;
+  }
+
+  .admin-cat-form-grid,
+  .admin-prod-form-grid {
     grid-template-columns: 1fr;
   }
 
-  .admin-cat-toolbar {
+  .admin-cat-toolbar,
+  .admin-prod-toolbar {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .admin-cat-count {
+  .admin-cat-count,
+  .admin-prod-count {
     margin-left: 0;
   }
 }

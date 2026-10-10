@@ -46,6 +46,7 @@ No Node build step. No database in this repo.
 | About layout | `css/about.css` |
 | Policy layout | `css/policy.css` |
 | Support layout | `css/support.css` |
+| Dashboard layout | `css/admin.css` |
 | Theme | `js/theme.js` |
 | Catalog | `js/catalog.js` |
 | Home behaviour | `js/main.js` |
@@ -69,6 +70,9 @@ Details: `docs/FRONTEND_ARCHITECTURE.md`
 | About (`about.html`) | Built |
 | Policy (`policy.html`) | Built |
 | Support (`support.html`) | Built |
+| Dashboard (`dashboard/index.html`) | Built (frontend demo; no auth) |
+| Categories (`dashboard/categories.html`) | Built (frontend demo) |
+| Products (`dashboard/products.html`) | Built (frontend demo) |
 | Cart, Checkout | Not built |
 | Dedicated FAQ / Contact pages | Not built; Support includes FAQ and a contact form |
 | Custom Order, Bulk Orders, Dropshipping | Home sections only; dedicated pages not built |

@@ -17,6 +17,10 @@ Standalone static frontend. No bundler. No backend in this phase.
   policy.html                Policy page
   support.html               Support page
   account.html               Customer account dashboard
+  dashboard/
+    index.html               Dashboard overview
+    categories.html          Category management
+    products.html            Product management
   css/
     style.css                GLOBAL design system
     header.css               Header structure
@@ -30,6 +34,7 @@ Standalone static frontend. No bundler. No backend in this phase.
     policy.css               Policy-only layout
     support.css              Support-only layout
     account.css              Account dashboard layout
+    admin.css                Dashboard layout (internal admin* class names)
   js/
     theme.js                 Light/dark persistence
     catalog.js               Canonical frontend product catalog
@@ -42,6 +47,10 @@ Standalone static frontend. No bundler. No backend in this phase.
     policy.js                Policy section navigation
     support.js               Support search, FAQ accordion, contact form
     account.js               Account dashboard sections, demo orders, addresses, profile
+    admin-data.js            Dashboard session demo data (`ds-atelier-admin-demo`)
+    admin.js                 Dashboard shell, nav, toast, confirm modal
+    admin-categories.js      Category CRUD against the shared demo store
+    admin-products.js        Product CRUD, dashboard totals, Recent Products
   components/
     header.html              Reusable header markup
     footer.html              Reusable footer markup
@@ -115,6 +124,7 @@ Page files may contain only layout unique to that page:
 | `support.css` | Support | exists |
 | `policy.css` | Policy | exists |
 | `account.css` | Account | exists |
+| `admin.css` | Dashboard | exists |
 
 Load order on every page:
 
@@ -140,6 +150,10 @@ Do not add another global override stylesheet.
 | `js/policy.js` | Policy sidebar / mobile section navigation |
 | `js/support.js` | Support search, FAQ accordion, frontend contact form |
 | `js/account.js` | Account dashboard: overview, demo orders, addresses, profile, password UI |
+| `js/admin-data.js` | Dashboard demo catalog in namespaced `sessionStorage`; `DSAtelier.admin.data` |
+| `js/admin.js` | Dashboard shell, sidebar, theme, toast, confirm modal |
+| `js/admin-categories.js` | Category list/add/edit/delete for `dashboard/categories.html` |
+| `js/admin-products.js` | Product list/add/edit/delete for `dashboard/products.html` |
 
 Load `js/catalog.js` before `js/main.js`, `js/shop.js`, and `js/product.js`.
 Load `js/artworks.js` before `js/designs.js` and `js/design.js`.

@@ -1,8 +1,20 @@
 (function () {
-  var VIEWS = ["dashboard", "products", "categories", "designs", "orders", "customers", "discounts", "media", "settings"];
+  var PAGES = {
+    dashboard: "index.html",
+    products: "products.html",
+    categories: "categories.html",
+    designs: "index.html#designs",
+    orders: "index.html#orders",
+    customers: "index.html#customers",
+    discounts: "index.html#discounts",
+    media: "index.html#media",
+    settings: "index.html#settings"
+  };
+  var PLACEHOLDERS = ["designs", "orders", "customers", "discounts", "media", "settings"];
   var app = document.querySelector("[data-admin-app]");
   if (!app) return;
 
+  var page = app.getAttribute("data-admin-page") || "dashboard";
   var navLinks = Array.prototype.slice.call(document.querySelectorAll("[data-admin-nav]"));
   var views = Array.prototype.slice.call(document.querySelectorAll("[data-admin-view]"));
   var openBtn = document.querySelector("[data-admin-open]");
@@ -14,9 +26,9 @@
   var confirmOk = null;
   var toastTimer = null;
 
-  function currentView() {
+  function currentPlaceholder() {
     var hash = String(location.hash || "").replace("#", "");
-    return VIEWS.indexOf(hash) !== -1 ? hash : "dashboard";
+    return PLACEHOLDERS.indexOf(hash) !== -1 ? hash : "";
   }
 
   function setNavOpen(open) {
@@ -25,20 +37,45 @@
     if (openBtn) openBtn.setAttribute("aria-expanded", open ? "true" : "false");
   }
 
-  function showView(name) {
-    var view = VIEWS.indexOf(name) !== -1 ? name : "dashboard";
-    views.forEach(function (el) {
-      el.hidden = el.getAttribute("data-admin-view") !== view;
-    });
+  function markActive(name) {
     document.querySelectorAll(".admin-nav-link").forEach(function (el) {
-      el.classList.toggle("is-active", el.getAttribute("data-admin-nav") === view);
+      el.classList.toggle("is-active", el.getAttribute("data-admin-nav") === name);
     });
-    if (location.hash.replace("#", "") !== view) {
+  }
+
+  function showPlaceholder(name) {
+    var view = PLACEHOLDERS.indexOf(name) !== -1 ? name : "";
+    views.forEach(function (el) {
+      var key = el.getAttribute("data-admin-view");
+      if (key === "dashboard") el.hidden = Boolean(view);
+      else el.hidden = key !== view;
+    });
+    markActive(view || "dashboard");
+    if (view && location.hash.replace("#", "") !== view) {
       history.replaceState(null, "", "#" + view);
+    }
+    if (!view && location.hash && PLACEHOLDERS.indexOf(location.hash.replace("#", "")) !== -1) {
+      history.replaceState(null, "", location.pathname + location.search);
     }
     setNavOpen(false);
     window.scrollTo(0, 0);
-    document.dispatchEvent(new CustomEvent("ds-admin-view", { detail: { view: view } }));
+  }
+
+  function hrefFor(name) {
+    return PAGES[name] || "index.html";
+  }
+
+  function navigate(name) {
+    var dest = hrefFor(name);
+    if (page === "dashboard" && PLACEHOLDERS.indexOf(name) !== -1) {
+      showPlaceholder(name);
+      return;
+    }
+    if (page === name && PLACEHOLDERS.indexOf(name) === -1) {
+      setNavOpen(false);
+      return;
+    }
+    window.location.href = dest;
   }
 
   function setModal(open) {
@@ -69,11 +106,19 @@
   }
 
   navLinks.forEach(function (el) {
+    var view = el.getAttribute("data-admin-nav");
+    if (view && PAGES[view]) el.setAttribute("href", hrefFor(view));
     el.addEventListener("click", function (event) {
-      var view = el.getAttribute("data-admin-nav");
       if (!view) return;
-      event.preventDefault();
-      showView(view);
+      if (page === "dashboard" && PLACEHOLDERS.indexOf(view) !== -1) {
+        event.preventDefault();
+        showPlaceholder(view);
+        return;
+      }
+      if (page === view) {
+        event.preventDefault();
+        setNavOpen(false);
+      }
     });
   });
 
@@ -118,15 +163,16 @@
   });
 
   window.addEventListener("hashchange", function () {
-    showView(currentView());
+    if (page === "dashboard") showPlaceholder(currentPlaceholder());
   });
 
   window.DSAtelier = window.DSAtelier || {};
-  window.DSAtelier.admin = {
-    showView: showView,
-    toast: toast,
-    confirm: confirm
-  };
+  window.DSAtelier.admin = window.DSAtelier.admin || {};
+  window.DSAtelier.admin.showView = navigate;
+  window.DSAtelier.admin.toast = toast;
+  window.DSAtelier.admin.confirm = confirm;
+  window.DSAtelier.admin.page = page;
 
-  showView(currentView());
+  if (page === "dashboard") showPlaceholder(currentPlaceholder());
+  else markActive(page);
 })();

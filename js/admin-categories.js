@@ -1,19 +1,9 @@
 (function () {
-  var SEED = [
-    { id: "anime", name: "Anime", slug: "anime", description: "Bold graphic art for tees and oversized blanks.", image: "assets/images/categories/cat-tee.svg", productCount: 4, displayOrder: 1, status: "active", updated: "2026-03-12" },
-    { id: "gaming", name: "Gaming", slug: "gaming", description: "Arcade marks, jerseys and merch drops.", image: "assets/images/categories/cat-jersey.svg", productCount: 3, displayOrder: 2, status: "active", updated: "2026-03-11" },
-    { id: "streetwear", name: "Streetwear", slug: "streetwear", description: "Heavy block graphics for oversized cotton.", image: "assets/images/categories/cat-oversize.svg", productCount: 5, displayOrder: 3, status: "active", updated: "2026-03-10" },
-    { id: "typography", name: "Typography", slug: "typography", description: "Large-letter layouts for hoodies and polos.", image: "assets/images/categories/cat-hoodie.svg", productCount: 2, displayOrder: 4, status: "active", updated: "2026-03-08" },
-    { id: "cyberpunk", name: "Cyberpunk", slug: "cyberpunk", description: "High-contrast grid and signal artwork.", image: "assets/images/categories/cat-sub.svg", productCount: 2, displayOrder: 5, status: "active", updated: "2026-03-07" },
-    { id: "minimal", name: "Minimal", slug: "minimal", description: "Quiet studio marks for everyday apparel.", image: "assets/images/categories/cat-polo.svg", productCount: 3, displayOrder: 6, status: "active", updated: "2026-03-06" },
-    { id: "studio", name: "Studio", slug: "studio", description: "In-house press graphics and brand runs.", image: "assets/images/hero/print-studio.svg", productCount: 2, displayOrder: 7, status: "active", updated: "2026-03-04" },
-    { id: "custom-art", name: "Custom Art", slug: "custom-art", description: "Ink-led artwork for gifts and short runs.", image: "assets/images/categories/cat-gift.svg", productCount: 1, displayOrder: 8, status: "inactive", updated: "2026-02-28" }
-  ];
-
+  var data = window.DSAtelier && window.DSAtelier.admin && window.DSAtelier.admin.data;
   var view = document.querySelector('[data-admin-view="categories"]');
-  if (!view) return;
+  if (!view || !data) return;
 
-  var categories = SEED.map(clone);
+  var categories = data.getCategories();
   var listEl = view.querySelector("[data-cat-list]");
   var formWrap = view.querySelector("[data-cat-form-wrap]");
   var form = view.querySelector("[data-cat-form]");
@@ -27,20 +17,6 @@
   var formError = view.querySelector("[data-cat-form-error]");
   var slugTouched = false;
   var mode = "list";
-
-  function clone(item) {
-    return {
-      id: item.id,
-      name: item.name,
-      slug: item.slug,
-      description: item.description || "",
-      image: item.image || "",
-      productCount: Number(item.productCount) || 0,
-      displayOrder: Number(item.displayOrder) || 1,
-      status: item.status === "inactive" ? "inactive" : "active",
-      updated: item.updated || today()
-    };
-  }
 
   function today() {
     var d = new Date();
@@ -108,9 +84,7 @@
   }
 
   function imageSrc(item) {
-    var src = item && item.image ? item.image : "assets/images/categories/cat-tee.svg";
-    if (src.indexOf("http") === 0 || src.indexOf("../") === 0) return src;
-    return "../" + src.replace(/^\.\//, "");
+    return data.imageUrl(item && item.image);
   }
 
   function statusBadge(status) {
@@ -166,7 +140,23 @@
     );
   }
 
+  function productCountFor(id) {
+    return data.countByCategory(id);
+  }
+
+  function syncProductCounts() {
+    categories.forEach(function (item) {
+      item.productCount = productCountFor(item.id);
+    });
+  }
+
+  function notifyCatalog() {
+    data.setCategories(categories);
+    categories = data.getCategories();
+  }
+
   function renderList() {
+    syncProductCounts();
     var list = filtered();
     if (rowsEl) rowsEl.innerHTML = list.map(rowHtml).join("");
     if (cardsEl) cardsEl.innerHTML = list.map(cardHtml).join("");
@@ -183,6 +173,7 @@
     mode = "list";
     if (listEl) listEl.hidden = false;
     if (formWrap) formWrap.hidden = true;
+    if (location.hash === "#add") history.replaceState(null, "", location.pathname + location.search);
     renderList();
   }
 
@@ -307,6 +298,7 @@
       });
       toast("Category added.");
     }
+    notifyCatalog();
     showList();
   }
 
@@ -315,6 +307,7 @@
     if (!item) return;
     item.status = item.status === "active" ? "inactive" : "active";
     item.updated = today();
+    notifyCatalog();
     renderList();
     toast(item.name + " is now " + item.status + ".");
   }
@@ -329,6 +322,7 @@
         categories = categories.filter(function (entry) {
           return entry.id !== id;
         });
+        notifyCatalog();
         showList();
         toast(item.name + " deleted.");
       }
@@ -374,14 +368,11 @@
       deleteCategory(del.getAttribute("data-cat-delete"));
       return;
     }
-    var products = event.target.closest("[data-cat-products]");
-    if (products) {
+    var productsBtn = event.target.closest("[data-cat-products]");
+    if (productsBtn) {
       event.preventDefault();
-      var item = findById(products.getAttribute("data-cat-products"));
-      confirmAction({
-        title: item ? item.name : "Products",
-        body: "Product management for this category will be available in Phase 3."
-      });
+      var item = findById(productsBtn.getAttribute("data-cat-products"));
+      window.location.href = "products.html" + (item ? "?category=" + encodeURIComponent(item.id) : "");
     }
   });
 
@@ -405,9 +396,17 @@
     form.addEventListener("change", syncFilled);
   }
 
-  document.addEventListener("ds-admin-view", function (event) {
-    if (event.detail && event.detail.view === "categories") showList();
+  document.addEventListener("ds-admin-products", function () {
+    categories = data.getCategories();
+    renderList();
   });
 
-  renderList();
+  window.DSAtelier.admin.categories = {
+    list: function () { return categories.slice(); },
+    find: findById,
+    refresh: function () { renderList(); }
+  };
+
+  if (location.hash === "#add") openForm(null);
+  else renderList();
 })();

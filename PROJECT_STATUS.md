@@ -20,6 +20,7 @@ The standalone frontend is not yet integrated with the Core PHP backend.
 - Policy page
 - Support page
 - Customer account dashboard
+- Studio Dashboard (`dashboard/index.html`, `dashboard/categories.html`, `dashboard/products.html`) — frontend demo only; no authentication
 - Responsive header
 - Mobile bottom navigation
 - Official logo integration
