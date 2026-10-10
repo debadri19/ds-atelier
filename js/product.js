@@ -201,6 +201,24 @@
     }
   }
 
+  function applyColorImage() {
+    var map = product.colorImages || {};
+    var src = state.color ? map[state.color] : "";
+    if (!src) return;
+    var index = -1;
+    (product.images || []).forEach(function (item, i) {
+      if (item.src === src) index = i;
+    });
+    if (index >= 0) {
+      setImage(index);
+      return;
+    }
+    if (mainImg) {
+      mainImg.src = src;
+      mainImg.alt = product.name + " in " + state.color;
+    }
+  }
+
   function setImage(index) {
     state.image = (index + product.images.length) % product.images.length;
     var item = product.images[state.image];
@@ -481,6 +499,7 @@
     if (color) {
       state.color = color.getAttribute("data-color");
       selectExclusive("color", state.color);
+      applyColorImage();
       updateActions();
     }
 

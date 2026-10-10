@@ -11,8 +11,8 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Categories - DS ATELIER</title>
-  <meta name="description" content="DS ATELIER Dashboard. Manage catalog categories for the demo storefront.">
+  <title>Designs / Artworks - DS ATELIER</title>
+  <meta name="description" content="DS ATELIER Dashboard. Manage artwork records, categories and product mappings.">
   <link rel="icon" href="../assets/images/brand/logo-icon.png">
   <link rel="apple-touch-icon" href="../assets/images/brand/logo-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body class="admin-body">
-  <div class="admin-app" data-admin-app data-admin-page="categories">
+  <div class="admin-app" data-admin-app data-admin-page="designs">
     <div class="admin-backdrop" data-admin-close></div>
 
     <aside class="admin-sidebar" id="admin-sidebar" aria-label="Dashboard">
@@ -39,8 +39,8 @@
         <a class="admin-nav-link" href="index.html" data-admin-nav="dashboard"><i class="fa-solid fa-chart-line" aria-hidden="true"></i>Dashboard</a>
         <p class="admin-nav-label">Catalog</p>
         <a class="admin-nav-link" href="products.html" data-admin-nav="products"><i class="fa-solid fa-shirt" aria-hidden="true"></i>Products</a>
-        <a class="admin-nav-link is-active" href="categories.html" data-admin-nav="categories"><i class="fa-solid fa-tags" aria-hidden="true"></i>Categories</a>
-        <a class="admin-nav-link" href="designs.html" data-admin-nav="designs"><i class="fa-solid fa-palette" aria-hidden="true"></i>Designs / Artworks</a>
+        <a class="admin-nav-link" href="categories.html" data-admin-nav="categories"><i class="fa-solid fa-tags" aria-hidden="true"></i>Categories</a>
+        <a class="admin-nav-link is-active" href="designs.html" data-admin-nav="designs"><i class="fa-solid fa-palette" aria-hidden="true"></i>Designs / Artworks</a>
         <a class="admin-nav-link" href="media.html" data-admin-nav="media"><i class="fa-solid fa-image" aria-hidden="true"></i>Media</a>
         <p class="admin-nav-label">Commerce</p>
         <a class="admin-nav-link" href="index.html#orders" data-admin-nav="orders"><i class="fa-solid fa-receipt" aria-hidden="true"></i>Orders</a>
@@ -79,110 +79,131 @@
       </header>
 
       <main class="admin-content" id="admin-main">
-        <section class="admin-view" data-admin-view="categories">
+        <section class="admin-view" data-admin-view="designs">
           <div class="admin-page-header">
             <div>
               <nav class="admin-breadcrumb" aria-label="Breadcrumb">
                 <a href="index.html">Dashboard</a>
                 <span aria-hidden="true">/</span>
-                <span>Categories</span>
+                <span>Designs / Artworks</span>
               </nav>
               <p class="admin-kicker">Catalog</p>
-              <h1>Categories</h1>
-              <p>Frontend demo catalog groups. Changes stay in this browser session only.</p>
+              <h1>Designs / Artworks</h1>
+              <p>Frontend demo artwork records. Changes stay in this browser session and update the public Designs pages.</p>
             </div>
             <div class="admin-page-actions">
-              <button class="btn btn-secondary btn-sm" type="button" data-cat-reset>Reset filters</button>
-              <button class="btn btn-primary btn-sm" type="button" data-cat-add>Add Category</button>
+              <button class="btn btn-secondary btn-sm" type="button" data-art-reset>Reset filters</button>
+              <button class="btn btn-primary btn-sm" type="button" data-art-add>Add Artwork</button>
             </div>
           </div>
 
-          <div class="admin-cat-list" data-cat-list>
+          <div class="admin-art-list" data-art-list>
             <article class="admin-card">
-              <div class="admin-toolbar admin-cat-toolbar">
+              <div class="admin-toolbar admin-art-toolbar">
                 <label class="admin-search admin-search-compact">
                   <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                  <input type="search" data-cat-search placeholder="Search name or slug" aria-label="Search categories" autocomplete="off">
+                  <input type="search" data-art-search placeholder="Search name, slug or tag" aria-label="Search artworks" autocomplete="off">
+                </label>
+                <label class="admin-filter">
+                  <span class="sr-only">Category</span>
+                  <select class="admin-filter-select" data-art-category aria-label="Filter by category">
+                    <option value="all">All categories</option>
+                  </select>
                 </label>
                 <label class="admin-filter">
                   <span class="sr-only">Status</span>
-                  <select class="admin-filter-select" data-cat-status aria-label="Filter by status">
+                  <select class="admin-filter-select" data-art-status aria-label="Filter by status">
                     <option value="all">All status</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
                 </label>
-                <p class="admin-cat-count" data-cat-count></p>
+                <p class="admin-art-count" data-art-count></p>
               </div>
-              <div class="admin-table-wrap admin-cat-table-wrap">
-                <table class="admin-table admin-cat-table">
+              <div class="admin-table-wrap admin-art-table-wrap">
+                <table class="admin-table admin-art-table">
                   <thead>
                     <tr>
-                      <th>Category</th>
+                      <th>Artwork</th>
                       <th>Slug</th>
+                      <th>Category</th>
                       <th>Products</th>
                       <th>Status</th>
-                      <th>Display Order</th>
                       <th>Updated</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
-                  <tbody data-cat-rows></tbody>
+                  <tbody data-art-rows></tbody>
                 </table>
               </div>
-              <div class="admin-cat-cards" data-cat-cards></div>
-              <div class="admin-empty admin-cat-empty" data-cat-empty hidden>
-                <i class="fa-solid fa-tags" aria-hidden="true"></i>
-                <h2>No matching categories</h2>
-                <p>Try another name, slug or status. Reset filters to see the full demo list.</p>
-                <button class="btn btn-secondary" type="button" data-cat-reset>Reset filters</button>
+              <div class="admin-art-cards" data-art-cards></div>
+              <div class="admin-empty admin-art-empty" data-art-empty hidden>
+                <i class="fa-solid fa-palette" aria-hidden="true"></i>
+                <h2>No matching artworks</h2>
+                <p>Try another name, slug, tag or filter. Reset filters to see the full demo list.</p>
+                <button class="btn btn-secondary" type="button" data-art-reset>Reset filters</button>
               </div>
             </article>
           </div>
 
-          <article class="admin-card admin-cat-form-card" data-cat-form-wrap hidden>
+          <article class="admin-card admin-art-form-card" data-art-form-wrap hidden>
             <div class="admin-card-head">
               <div>
-                <h2 data-cat-form-title>Add Category</h2>
+                <h2 data-art-form-title>Add Artwork</h2>
                 <p>Required fields are marked. Slug is generated from the name unless you edit it.</p>
               </div>
-              <button class="btn btn-ghost btn-sm" type="button" data-cat-cancel>Back to list</button>
+              <button class="btn btn-ghost btn-sm" type="button" data-art-cancel>Back to list</button>
             </div>
-            <form class="admin-cat-form" data-cat-form novalidate>
+            <form class="admin-art-form" data-art-form novalidate>
               <input type="hidden" name="id" value="">
-              <div class="form-group admin-cat-form-grid">
+              <div class="form-group admin-art-form-grid">
                 <div class="form-field">
-                  <input class="form-input" id="cat-name" name="name" type="text" placeholder=" " required>
-                  <label class="form-label" for="cat-name">Category Name *</label>
+                  <input class="form-input" id="art-name" name="name" type="text" placeholder=" " required>
+                  <label class="form-label" for="art-name">Artwork Name *</label>
                 </div>
                 <div class="form-field">
-                  <input class="form-input" id="cat-slug" name="slug" type="text" placeholder=" " required>
-                  <label class="form-label" for="cat-slug">Slug *</label>
-                </div>
-                <div class="form-field admin-cat-form-span">
-                  <textarea class="form-textarea" id="cat-description" name="description" placeholder=" " rows="4"></textarea>
-                  <label class="form-label" for="cat-description">Description</label>
+                  <input class="form-input" id="art-slug" name="slug" type="text" placeholder=" " required>
+                  <label class="form-label" for="art-slug">Slug *</label>
                 </div>
                 <div class="form-field">
-                  <input class="form-input" id="cat-image" name="image" type="text" placeholder=" ">
-                  <label class="form-label" for="cat-image">Image / Icon reference</label>
+                  <select class="form-select" id="art-category" name="category" required>
+                    <option value="">Select category</option>
+                  </select>
+                  <label class="form-label" for="art-category">Category *</label>
                 </div>
                 <div class="form-field">
-                  <input class="form-input" id="cat-order" name="displayOrder" type="number" min="1" step="1" placeholder=" " required>
-                  <label class="form-label" for="cat-order">Display Order *</label>
-                </div>
-                <div class="form-field">
-                  <select class="form-select" id="cat-status" name="status">
+                  <select class="form-select" id="art-status" name="status">
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
-                  <label class="form-label" for="cat-status">Status *</label>
+                  <label class="form-label" for="art-status">Status *</label>
+                </div>
+                <div class="form-field admin-art-form-span">
+                  <textarea class="form-textarea" id="art-description" name="description" placeholder=" " rows="4"></textarea>
+                  <label class="form-label" for="art-description">Description</label>
+                </div>
+                <div class="form-field">
+                  <input class="form-input" id="art-thumbnail" name="thumbnail" type="text" placeholder=" ">
+                  <label class="form-label" for="art-thumbnail">Thumbnail reference</label>
+                </div>
+                <div class="form-field">
+                  <input class="form-input" id="art-preview" name="preview" type="text" placeholder=" ">
+                  <label class="form-label" for="art-preview">Preview image reference</label>
+                </div>
+                <div class="form-field admin-art-form-span">
+                  <input class="form-input" id="art-tags" name="tags" type="text" placeholder=" ">
+                  <label class="form-label" for="art-tags">Tags (comma separated)</label>
+                </div>
+                <div class="admin-art-map admin-art-form-span">
+                  <p class="admin-art-map-label">Available products</p>
+                  <p class="admin-art-map-hint">Select catalog products that can print this artwork. Inactive products stay listed but will not show on the public design page.</p>
+                  <div class="admin-art-map-list" data-art-products></div>
                 </div>
               </div>
-              <p class="admin-cat-form-error" data-cat-form-error hidden></p>
+              <p class="admin-art-form-error" data-art-form-error hidden></p>
               <div class="admin-modal-actions">
-                <button class="btn btn-secondary" type="button" data-cat-cancel>Cancel</button>
-                <button class="btn btn-primary" type="submit" data-cat-save>Save Category</button>
+                <button class="btn btn-secondary" type="button" data-art-cancel>Cancel</button>
+                <button class="btn btn-primary" type="submit" data-art-save>Save Artwork</button>
               </div>
             </form>
           </article>
@@ -208,6 +229,6 @@
   <script src="../js/theme.js"></script>
   <script src="../js/admin-data.js"></script>
   <script src="../js/admin.js"></script>
-  <script src="../js/admin-categories.js"></script>
+  <script src="../js/admin-designs.js"></script>
 </body>
 </html>

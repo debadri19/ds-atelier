@@ -191,9 +191,57 @@
   ];
 
   var byId = {};
-  artworks.forEach(function (item) {
-    byId[item.id] = item;
-  });
+
+  function storefrontSrc(src) {
+    src = String(src || "");
+    if (src.indexOf("../") === 0) return src.replace(/^\.\.\//, "");
+    return src;
+  }
+
+  function rebuildIndex() {
+    byId = {};
+    artworks.forEach(function (item) {
+      byId[item.id] = item;
+    });
+  }
+
+  function overlayFromAdmin() {
+    try {
+      var raw = window.sessionStorage.getItem("ds-atelier-admin-demo");
+      if (!raw) return;
+      var parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.artworks)) return;
+      var activeProducts = {};
+      if (Array.isArray(parsed.products)) {
+        parsed.products.forEach(function (product) {
+          if (product && product.id && product.status === "active") activeProducts[product.id] = true;
+        });
+      }
+      var next = [];
+      parsed.artworks.forEach(function (item) {
+        if (!item || !item.id || item.status === "inactive") return;
+        var preview = storefrontSrc(item.preview || item.thumbnail || "");
+        var mapped = Array.isArray(item.availableProducts) ? item.availableProducts.filter(function (id) {
+          return !Object.keys(activeProducts).length || activeProducts[id];
+        }) : [];
+        next.push({
+          id: item.id,
+          name: item.name,
+          slug: item.slug || item.id,
+          category: item.category || "studio",
+          description: item.description || "",
+          thumbnail: storefrontSrc(item.thumbnail || preview),
+          preview: preview,
+          tags: Array.isArray(item.tags) ? item.tags.slice() : [],
+          availableProducts: mapped
+        });
+      });
+      artworks = next;
+    } catch (e) {}
+  }
+
+  overlayFromAdmin();
+  rebuildIndex();
 
   function getById(id) {
     if (!id) return null;

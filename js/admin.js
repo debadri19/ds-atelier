@@ -3,14 +3,14 @@
     dashboard: "index.html",
     products: "products.html",
     categories: "categories.html",
-    designs: "index.html#designs",
+    designs: "designs.html",
     orders: "index.html#orders",
     customers: "index.html#customers",
     discounts: "index.html#discounts",
-    media: "index.html#media",
+    media: "media.html",
     settings: "index.html#settings"
   };
-  var PLACEHOLDERS = ["designs", "orders", "customers", "discounts", "media", "settings"];
+  var PLACEHOLDERS = ["orders", "customers", "discounts", "settings"];
   var app = document.querySelector("[data-admin-app]");
   if (!app) return;
 
@@ -58,7 +58,9 @@
       history.replaceState(null, "", location.pathname + location.search);
     }
     setNavOpen(false);
-    window.scrollTo(0, 0);
+    var content = document.querySelector(".admin-content");
+    if (content) content.scrollTop = 0;
+    else window.scrollTo(0, 0);
   }
 
   function hrefFor(name) {
@@ -172,6 +174,15 @@
   window.DSAtelier.admin.toast = toast;
   window.DSAtelier.admin.confirm = confirm;
   window.DSAtelier.admin.page = page;
+
+  if (page === "dashboard" && String(location.hash || "").replace("#", "") === "designs") {
+    window.location.replace("designs.html");
+    return;
+  }
+  if (page === "dashboard" && String(location.hash || "").replace("#", "") === "media") {
+    window.location.replace("media.html");
+    return;
+  }
 
   if (page === "dashboard") showPlaceholder(currentPlaceholder());
   else markActive(page);

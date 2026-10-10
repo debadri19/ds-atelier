@@ -11,8 +11,8 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Categories - DS ATELIER</title>
-  <meta name="description" content="DS ATELIER Dashboard. Manage catalog categories for the demo storefront.">
+  <title>Media - DS ATELIER</title>
+  <meta name="description" content="DS ATELIER Dashboard. Manage image references, mockups and artwork media.">
   <link rel="icon" href="../assets/images/brand/logo-icon.png">
   <link rel="apple-touch-icon" href="../assets/images/brand/logo-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body class="admin-body">
-  <div class="admin-app" data-admin-app data-admin-page="categories">
+  <div class="admin-app" data-admin-app data-admin-page="media">
     <div class="admin-backdrop" data-admin-close></div>
 
     <aside class="admin-sidebar" id="admin-sidebar" aria-label="Dashboard">
@@ -39,9 +39,9 @@
         <a class="admin-nav-link" href="index.html" data-admin-nav="dashboard"><i class="fa-solid fa-chart-line" aria-hidden="true"></i>Dashboard</a>
         <p class="admin-nav-label">Catalog</p>
         <a class="admin-nav-link" href="products.html" data-admin-nav="products"><i class="fa-solid fa-shirt" aria-hidden="true"></i>Products</a>
-        <a class="admin-nav-link is-active" href="categories.html" data-admin-nav="categories"><i class="fa-solid fa-tags" aria-hidden="true"></i>Categories</a>
+        <a class="admin-nav-link" href="categories.html" data-admin-nav="categories"><i class="fa-solid fa-tags" aria-hidden="true"></i>Categories</a>
         <a class="admin-nav-link" href="designs.html" data-admin-nav="designs"><i class="fa-solid fa-palette" aria-hidden="true"></i>Designs / Artworks</a>
-        <a class="admin-nav-link" href="media.html" data-admin-nav="media"><i class="fa-solid fa-image" aria-hidden="true"></i>Media</a>
+        <a class="admin-nav-link is-active" href="media.html" data-admin-nav="media"><i class="fa-solid fa-image" aria-hidden="true"></i>Media</a>
         <p class="admin-nav-label">Commerce</p>
         <a class="admin-nav-link" href="index.html#orders" data-admin-nav="orders"><i class="fa-solid fa-receipt" aria-hidden="true"></i>Orders</a>
         <a class="admin-nav-link" href="index.html#customers" data-admin-nav="customers"><i class="fa-solid fa-users" aria-hidden="true"></i>Customers</a>
@@ -79,110 +79,112 @@
       </header>
 
       <main class="admin-content" id="admin-main">
-        <section class="admin-view" data-admin-view="categories">
+        <section class="admin-view" data-admin-view="media">
           <div class="admin-page-header">
             <div>
               <nav class="admin-breadcrumb" aria-label="Breadcrumb">
                 <a href="index.html">Dashboard</a>
                 <span aria-hidden="true">/</span>
-                <span>Categories</span>
+                <span>Media</span>
               </nav>
               <p class="admin-kicker">Catalog</p>
-              <h1>Categories</h1>
-              <p>Frontend demo catalog groups. Changes stay in this browser session only.</p>
+              <h1>Media</h1>
+              <p>Frontend image references only. Register existing project assets. Local files can be previewed temporarily and are not uploaded.</p>
             </div>
             <div class="admin-page-actions">
-              <button class="btn btn-secondary btn-sm" type="button" data-cat-reset>Reset filters</button>
-              <button class="btn btn-primary btn-sm" type="button" data-cat-add>Add Category</button>
+              <button class="btn btn-secondary btn-sm" type="button" data-media-reset>Reset filters</button>
+              <button class="btn btn-primary btn-sm" type="button" data-media-add>Add reference</button>
             </div>
           </div>
 
-          <div class="admin-cat-list" data-cat-list>
+          <div class="admin-media-list" data-media-list>
             <article class="admin-card">
-              <div class="admin-toolbar admin-cat-toolbar">
+              <div class="admin-toolbar admin-media-toolbar">
                 <label class="admin-search admin-search-compact">
                   <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                  <input type="search" data-cat-search placeholder="Search name or slug" aria-label="Search categories" autocomplete="off">
+                  <input type="search" data-media-search placeholder="Search path, alt or filename" aria-label="Search media" autocomplete="off">
                 </label>
                 <label class="admin-filter">
-                  <span class="sr-only">Status</span>
-                  <select class="admin-filter-select" data-cat-status aria-label="Filter by status">
-                    <option value="all">All status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                  <span class="sr-only">Media type</span>
+                  <select class="admin-filter-select" data-media-type aria-label="Filter by media type">
+                    <option value="all">All types</option>
                   </select>
                 </label>
-                <p class="admin-cat-count" data-cat-count></p>
+                <p class="admin-media-count" data-media-count></p>
               </div>
-              <div class="admin-table-wrap admin-cat-table-wrap">
-                <table class="admin-table admin-cat-table">
-                  <thead>
-                    <tr>
-                      <th>Category</th>
-                      <th>Slug</th>
-                      <th>Products</th>
-                      <th>Status</th>
-                      <th>Display Order</th>
-                      <th>Updated</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody data-cat-rows></tbody>
-                </table>
-              </div>
-              <div class="admin-cat-cards" data-cat-cards></div>
-              <div class="admin-empty admin-cat-empty" data-cat-empty hidden>
-                <i class="fa-solid fa-tags" aria-hidden="true"></i>
-                <h2>No matching categories</h2>
-                <p>Try another name, slug or status. Reset filters to see the full demo list.</p>
-                <button class="btn btn-secondary" type="button" data-cat-reset>Reset filters</button>
+              <div class="admin-media-grid" data-media-grid></div>
+              <div class="admin-empty admin-media-empty" data-media-empty hidden>
+                <i class="fa-solid fa-image" aria-hidden="true"></i>
+                <h2 data-media-empty-title>No matching media</h2>
+                <p data-media-empty-copy>Try another path, filename or type. Reset filters to see the full demo library.</p>
+                <button class="btn btn-secondary" type="button" data-media-reset>Reset filters</button>
               </div>
             </article>
           </div>
 
-          <article class="admin-card admin-cat-form-card" data-cat-form-wrap hidden>
+          <article class="admin-card admin-media-form-card" data-media-form-wrap hidden>
             <div class="admin-card-head">
               <div>
-                <h2 data-cat-form-title>Add Category</h2>
-                <p>Required fields are marked. Slug is generated from the name unless you edit it.</p>
+                <h2 data-media-form-title>Add media reference</h2>
+                <p>Choose an existing project asset. A local file is only a temporary browser preview and is not saved.</p>
               </div>
-              <button class="btn btn-ghost btn-sm" type="button" data-cat-cancel>Back to list</button>
+              <button class="btn btn-ghost btn-sm" type="button" data-media-cancel>Back to library</button>
             </div>
-            <form class="admin-cat-form" data-cat-form novalidate>
+            <form class="admin-media-form" data-media-form novalidate>
               <input type="hidden" name="id" value="">
-              <div class="form-group admin-cat-form-grid">
-                <div class="form-field">
-                  <input class="form-input" id="cat-name" name="name" type="text" placeholder=" " required>
-                  <label class="form-label" for="cat-name">Category Name *</label>
-                </div>
-                <div class="form-field">
-                  <input class="form-input" id="cat-slug" name="slug" type="text" placeholder=" " required>
-                  <label class="form-label" for="cat-slug">Slug *</label>
-                </div>
-                <div class="form-field admin-cat-form-span">
-                  <textarea class="form-textarea" id="cat-description" name="description" placeholder=" " rows="4"></textarea>
-                  <label class="form-label" for="cat-description">Description</label>
-                </div>
-                <div class="form-field">
-                  <input class="form-input" id="cat-image" name="image" type="text" placeholder=" ">
-                  <label class="form-label" for="cat-image">Image / Icon reference</label>
-                </div>
-                <div class="form-field">
-                  <input class="form-input" id="cat-order" name="displayOrder" type="number" min="1" step="1" placeholder=" " required>
-                  <label class="form-label" for="cat-order">Display Order *</label>
-                </div>
-                <div class="form-field">
-                  <select class="form-select" id="cat-status" name="status">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+              <div class="admin-media-preview-wrap">
+                <img data-media-preview alt="" hidden>
+                <div class="admin-media-preview-empty" data-media-preview-empty>No preview</div>
+                <p class="admin-media-temp" data-media-temp hidden>Temporary local preview. This file is not uploaded or stored.</p>
+              </div>
+              <div class="form-group admin-media-form-grid">
+                <div class="form-field admin-media-form-span">
+                  <select class="form-select" id="media-asset" name="asset">
+                    <option value="">Select existing asset</option>
                   </select>
-                  <label class="form-label" for="cat-status">Status *</label>
+                  <label class="form-label" for="media-asset">Existing asset</label>
+                </div>
+                <div class="form-field admin-media-form-span">
+                  <input class="form-input" id="media-src" name="src" type="text" placeholder=" " required>
+                  <label class="form-label" for="media-src">Image reference path *</label>
+                </div>
+                <div class="form-field">
+                  <select class="form-select" id="media-type" name="type" required>
+                    <option value="">Select type</option>
+                  </select>
+                  <label class="form-label" for="media-type">Media type *</label>
+                </div>
+                <div class="form-field">
+                  <input class="form-input" id="media-alt" name="alt" type="text" placeholder=" ">
+                  <label class="form-label" for="media-alt">Alt text</label>
+                </div>
+                <div class="form-field">
+                  <select class="form-select" id="media-product" name="productId">
+                    <option value="">No product</option>
+                  </select>
+                  <label class="form-label" for="media-product">Associated product</label>
+                </div>
+                <div class="form-field">
+                  <select class="form-select" id="media-color" name="colorId">
+                    <option value="">No color</option>
+                  </select>
+                  <label class="form-label" for="media-color">Associated color</label>
+                </div>
+                <div class="form-field">
+                  <select class="form-select" id="media-artwork" name="artworkId">
+                    <option value="">No artwork</option>
+                  </select>
+                  <label class="form-label" for="media-artwork">Associated artwork</label>
+                </div>
+                <div class="form-field">
+                  <input class="form-input" id="media-file" name="tempFile" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp">
+                  <label class="form-label" for="media-file">Temporary local preview</label>
                 </div>
               </div>
-              <p class="admin-cat-form-error" data-cat-form-error hidden></p>
+              <p class="admin-media-form-error" data-media-form-error hidden></p>
               <div class="admin-modal-actions">
-                <button class="btn btn-secondary" type="button" data-cat-cancel>Cancel</button>
-                <button class="btn btn-primary" type="submit" data-cat-save>Save Category</button>
+                <button class="btn btn-secondary" type="button" data-media-cancel>Cancel</button>
+                <button class="btn btn-primary" type="submit" data-media-save>Save reference</button>
               </div>
             </form>
           </article>
@@ -208,6 +210,6 @@
   <script src="../js/theme.js"></script>
   <script src="../js/admin-data.js"></script>
   <script src="../js/admin.js"></script>
-  <script src="../js/admin-categories.js"></script>
+  <script src="../js/admin-media.js"></script>
 </body>
 </html>

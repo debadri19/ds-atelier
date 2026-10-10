@@ -40,8 +40,8 @@
         <p class="admin-nav-label">Catalog</p>
         <a class="admin-nav-link is-active" href="products.html" data-admin-nav="products"><i class="fa-solid fa-shirt" aria-hidden="true"></i>Products</a>
         <a class="admin-nav-link" href="categories.html" data-admin-nav="categories"><i class="fa-solid fa-tags" aria-hidden="true"></i>Categories</a>
-        <a class="admin-nav-link" href="index.html#designs" data-admin-nav="designs"><i class="fa-solid fa-palette" aria-hidden="true"></i>Designs / Artworks</a>
-        <a class="admin-nav-link" href="index.html#media" data-admin-nav="media"><i class="fa-solid fa-image" aria-hidden="true"></i>Media</a>
+        <a class="admin-nav-link" href="designs.html" data-admin-nav="designs"><i class="fa-solid fa-palette" aria-hidden="true"></i>Designs / Artworks</a>
+        <a class="admin-nav-link" href="media.html" data-admin-nav="media"><i class="fa-solid fa-image" aria-hidden="true"></i>Media</a>
         <p class="admin-nav-label">Commerce</p>
         <a class="admin-nav-link" href="index.html#orders" data-admin-nav="orders"><i class="fa-solid fa-receipt" aria-hidden="true"></i>Orders</a>
         <a class="admin-nav-link" href="index.html#customers" data-admin-nav="customers"><i class="fa-solid fa-users" aria-hidden="true"></i>Customers</a>
@@ -146,6 +146,7 @@
                       <th>Category</th>
                       <th>Product Type</th>
                       <th>Price</th>
+                      <th>Variants</th>
                       <th>Status</th>
                       <th>Updated</th>
                       <th>Actions</th>
@@ -222,8 +223,8 @@
                   <label class="form-label" for="prod-sale">Sale Price</label>
                 </div>
                 <div class="form-field">
-                  <input class="form-input" id="prod-image" name="image" type="text" placeholder=" ">
-                  <label class="form-label" for="prod-image">Image / mockup reference</label>
+                  <input class="form-input" id="prod-image" name="image" type="text" placeholder=" " readonly>
+                  <label class="form-label" for="prod-image">Primary image (from gallery)</label>
                 </div>
                 <div class="form-field">
                   <select class="form-select" id="prod-status" name="status">
@@ -240,6 +241,147 @@
                   <label class="form-label" for="prod-featured">Featured</label>
                 </div>
               </div>
+              <section class="admin-media-panel" data-prod-gallery>
+                <div class="admin-variant-head">
+                  <div>
+                    <h3>Product Gallery</h3>
+                    <p>Garment mockups and product photos only. Artwork assignments stay in Designs. Set one primary image for the catalog.</p>
+                  </div>
+                </div>
+                <div class="admin-gallery-list" data-gallery-list></div>
+                <p class="admin-variant-empty" data-gallery-empty hidden>No gallery images yet. Add an existing project asset below.</p>
+                <div class="admin-gallery-add">
+                  <div class="form-field">
+                    <select class="form-select" id="prod-gallery-asset" data-gallery-asset>
+                      <option value="">Select existing asset</option>
+                    </select>
+                    <label class="form-label" for="prod-gallery-asset">Existing asset</label>
+                  </div>
+                  <div class="form-field">
+                    <input class="form-input" id="prod-gallery-src" type="text" placeholder=" " data-gallery-src>
+                    <label class="form-label" for="prod-gallery-src">Image reference</label>
+                  </div>
+                  <div class="form-field">
+                    <input class="form-input" id="prod-gallery-alt" type="text" placeholder=" " data-gallery-alt>
+                    <label class="form-label" for="prod-gallery-alt">Alt text</label>
+                  </div>
+                  <button class="btn btn-secondary btn-sm" type="button" data-gallery-add>Add image</button>
+                </div>
+              </section>
+              <section class="admin-media-panel" data-prod-designs>
+                <div class="admin-variant-head">
+                  <div>
+                    <h3>Front / Back design references</h3>
+                    <p>Optional print-side artwork files. These are distinct from garment mockups and from Designs mappings.</p>
+                  </div>
+                </div>
+                <div class="admin-design-refs">
+                  <article class="admin-design-ref" data-design-slot="front">
+                    <h4>Front design</h4>
+                    <div class="admin-design-preview" data-front-preview>
+                      <img alt="" hidden>
+                      <span data-front-empty>No front design assigned</span>
+                    </div>
+                    <div class="form-field">
+                      <select class="form-select" id="prod-front-asset" data-front-asset>
+                        <option value="">Select existing asset</option>
+                      </select>
+                      <label class="form-label" for="prod-front-asset">Existing asset</label>
+                    </div>
+                    <div class="form-field">
+                      <input class="form-input" id="prod-front" name="frontDesign" type="text" placeholder=" ">
+                      <label class="form-label" for="prod-front">Front design reference</label>
+                    </div>
+                    <div class="admin-media-actions">
+                      <button class="btn btn-ghost btn-sm" type="button" data-front-clear>Clear</button>
+                    </div>
+                  </article>
+                  <article class="admin-design-ref" data-design-slot="back">
+                    <h4>Back design</h4>
+                    <div class="admin-design-preview" data-back-preview>
+                      <img alt="" hidden>
+                      <span data-back-empty>No back design assigned</span>
+                    </div>
+                    <div class="form-field">
+                      <select class="form-select" id="prod-back-asset" data-back-asset>
+                        <option value="">Select existing asset</option>
+                      </select>
+                      <label class="form-label" for="prod-back-asset">Existing asset</label>
+                    </div>
+                    <div class="form-field">
+                      <input class="form-input" id="prod-back" name="backDesign" type="text" placeholder=" ">
+                      <label class="form-label" for="prod-back">Back design reference</label>
+                    </div>
+                    <div class="admin-media-actions">
+                      <button class="btn btn-ghost btn-sm" type="button" data-back-clear>Clear</button>
+                    </div>
+                  </article>
+                </div>
+              </section>
+              <section class="admin-variant-panel" data-prod-variants>
+                <div class="admin-variant-head">
+                  <div>
+                    <h3>Variants &amp; Options</h3>
+                    <p>Optional colors, sizes and color-size combinations. Products can use none, one or both option types.</p>
+                  </div>
+                </div>
+                <div class="admin-variant-block">
+                  <div class="admin-variant-block-head">
+                    <h4>Colors</h4>
+                  </div>
+                  <div class="admin-color-list" data-variant-colors></div>
+                  <div class="admin-variant-add admin-color-add">
+                    <span class="admin-color-swatch-spacer" aria-hidden="true"></span>
+                    <div class="form-field admin-color-name">
+                      <input class="form-input" id="prod-color-name" type="text" placeholder=" " data-variant-color-name autocomplete="off">
+                      <label class="form-label" for="prod-color-name">Color name</label>
+                    </div>
+                    <input class="admin-color-picker" type="color" value="#111111" data-variant-color-picker aria-label="Color swatch">
+                    <div class="form-field admin-color-hex">
+                      <input class="form-input" id="prod-color-hex" type="text" placeholder=" " data-variant-color-hex value="#111111" autocomplete="off">
+                      <label class="form-label" for="prod-color-hex">Hex</label>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" type="button" data-variant-add-color>Add color</button>
+                  </div>
+                </div>
+                <div class="admin-variant-block">
+                  <div class="admin-variant-block-head">
+                    <h4>Sizes</h4>
+                    <p>Select common apparel sizes or add a custom label. One Size products are supported.</p>
+                  </div>
+                  <div class="admin-size-chips" data-variant-sizes></div>
+                  <div class="admin-variant-add admin-size-add">
+                    <div class="form-field">
+                      <input class="form-input" id="prod-size-custom" type="text" placeholder=" " data-variant-size-custom autocomplete="off">
+                      <label class="form-label" for="prod-size-custom">Custom size</label>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" type="button" data-variant-add-size>Add size</button>
+                  </div>
+                </div>
+                <div class="admin-variant-block">
+                  <div class="admin-variant-block-head">
+                    <h4>Combinations</h4>
+                    <p data-variant-combo-copy>Combinations are generated from the selected colors and sizes. Empty price fields inherit the product price.</p>
+                  </div>
+                  <div class="admin-variant-table-wrap" data-variant-table-wrap>
+                    <table class="admin-table admin-variant-table">
+                      <thead>
+                        <tr>
+                          <th>Color</th>
+                          <th>Size</th>
+                          <th>SKU</th>
+                          <th>Regular price</th>
+                          <th>Sale price</th>
+                          <th>Availability</th>
+                        </tr>
+                      </thead>
+                      <tbody data-variant-rows></tbody>
+                    </table>
+                  </div>
+                  <div class="admin-variant-cards" data-variant-cards></div>
+                  <p class="admin-variant-empty" data-variant-empty>No combinations yet. Add a color, a size, or both to generate variants. A product can also have no variants.</p>
+                </div>
+              </section>
               <p class="admin-prod-form-error" data-prod-form-error hidden role="alert"></p>
               <div class="admin-modal-actions">
                 <button class="btn btn-secondary" type="button" data-prod-cancel>Cancel</button>

@@ -195,7 +195,9 @@
     field("displayOrder").value = item ? item.displayOrder : nextOrder();
     field("status").value = item ? item.status : "active";
     syncFilled();
-    window.scrollTo(0, 0);
+    var content = document.querySelector(".admin-content");
+    if (content) content.scrollTop = 0;
+    else window.scrollTo(0, 0);
   }
 
   function nextOrder() {

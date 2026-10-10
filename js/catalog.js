@@ -403,6 +403,58 @@
     }
   ];
 
+  function storefrontSrc(src) {
+    src = String(src || "");
+    if (src.indexOf("../") === 0) return src.replace(/^\.\.\//, "");
+    return src;
+  }
+
+  function overlayFromAdmin() {
+    try {
+      var raw = window.sessionStorage.getItem("ds-atelier-admin-demo");
+      if (!raw) return;
+      var parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.products)) return;
+      var byAdminId = {};
+      parsed.products.forEach(function (item) {
+        if (item && item.id) byAdminId[item.id] = item;
+      });
+      products.forEach(function (product) {
+        var admin = byAdminId[product.id];
+        if (!admin) return;
+        var gallery = Array.isArray(admin.gallery)
+          ? admin.gallery.filter(function (entry) { return entry && entry.src; })
+          : null;
+        if (gallery && gallery.length) {
+          var ordered = gallery.slice();
+          ordered.sort(function (a, b) {
+            if (a.primary && !b.primary) return -1;
+            if (!a.primary && b.primary) return 1;
+            return 0;
+          });
+          product.images = ordered.map(function (entry) {
+            return { src: storefrontSrc(entry.src), alt: entry.alt || product.name };
+          });
+          product.image = storefrontSrc(ordered[0].src);
+          product.alt = ordered[0].alt || product.alt;
+        } else if (admin.image) {
+          product.image = storefrontSrc(admin.image);
+        }
+        var colors = admin.options && Array.isArray(admin.options.colors) ? admin.options.colors : [];
+        if (colors.length) {
+          product.colorImages = {};
+          colors.forEach(function (color) {
+            if (color && color.name && color.image) {
+              product.colorImages[color.name] = storefrontSrc(color.image);
+            }
+          });
+        }
+      });
+    } catch (e) {}
+  }
+
+  overlayFromAdmin();
+
   var byId = {};
   products.forEach(function (item) {
     byId[item.id] = item;
