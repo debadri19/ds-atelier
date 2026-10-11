@@ -68,7 +68,7 @@ html:has(.admin-login-body) {
 .admin-login-title {
   margin: 0 0 0.3rem;
   font-family: var(--font-display);
-  font-size: clamp(1.7rem, 4vw, 2.15rem);
+  font-size: clamp(1.55rem, 4vw, 2.15rem);
   font-weight: 800;
   letter-spacing: -0.045em;
   line-height: var(--lh-tight);
@@ -187,6 +187,22 @@ html:has(.admin-login-body) {
   color: var(--primary-hover);
 }
 
+.admin-login-switch {
+  text-align: center;
+  margin-top: 1.25rem;
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.admin-login-switch a {
+  color: var(--primary);
+  font-weight: 650;
+}
+
+.admin-login-switch a:hover {
+  color: var(--primary-hover);
+}
+
 body.admin-login-body form.admin-login-form > .btn.btn-primary[type="submit"] {
   width: 100%;
   max-width: 100%;
@@ -215,53 +231,6 @@ body.admin-login-body form.admin-login-form > .btn.btn-primary[type="submit"] {
   display: none;
 }
 
-.admin-login-dialog[hidden] {
-  display: none;
-}
-
-.admin-login-dialog {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
-}
-
-.admin-login-dialog-backdrop {
-  position: absolute;
-  inset: 0;
-  background: var(--color-overlay);
-}
-
-.admin-login-dialog-panel {
-  position: relative;
-  z-index: 1;
-  width: min(100%, 24rem);
-  padding: 1.35rem 1.25rem 1.2rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-}
-
-.admin-login-dialog-panel h2 {
-  margin: 0 0 0.45rem;
-  font-size: 1.15rem;
-  letter-spacing: -0.03em;
-}
-
-.admin-login-dialog-panel p {
-  margin: 0 0 1rem;
-  color: var(--color-text-muted);
-  font-size: var(--fs-sm);
-}
-
-.admin-login-dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
 @media (max-width: 480px) {
   .admin-login-page {
     padding: 4.25rem 0.9rem 1.25rem;
@@ -277,13 +246,16 @@ body.admin-login-body form.admin-login-form > .btn.btn-primary[type="submit"] {
     width: min(8.05rem, 56%);
   }
 
+  .admin-login-title {
+    white-space: normal;
+  }
+
   .admin-login-row {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  body.admin-login-body form.admin-login-form > .btn.btn-primary[type="submit"],
-  .admin-login-dialog-actions .btn {
+  body.admin-login-body form.admin-login-form > .btn.btn-primary[type="submit"] {
     width: 100%;
   }
 }
