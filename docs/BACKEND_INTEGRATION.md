@@ -33,14 +33,15 @@ Do not restyle the storefront to match any previous MoonAura UI while wiring PHP
 
 | Area | Now |
 |---|---|
-| Catalog | Hardcoded JS array on Home |
-| Cart | Client-side counter only |
-| Checkout | Not built |
-| Auth / account | Anchor placeholders |
-| Wishlist | Not built |
-| Orders | Not built |
-| Payments | Badge labels in footer only |
+| Catalog | Mock catalog in `js/catalog.js` |
+| Cart | `cart.html` frontend demo (`js/commerce.js` localStorage); not a server cart |
+| Checkout | `checkout.html` frontend demo; no payment gateway |
+| Auth / account | Customer `auth.html` and `account.html` frontend demos; no server sessions |
+| Wishlist | `wishlist.html` frontend demo |
+| Orders | Demo orders in account UI only |
+| Payments | Badge labels in footer; checkout does not capture payment |
 | Custom options | Frontend configuration on Product page only |
+| Dashboard | Frontend demo modules; Orders/Customers/Discounts/Settings are placeholders |
 
 ---
 
@@ -74,11 +75,11 @@ Reuse existing checkout, payment, tax, and order creation. Frontend must follow 
 
 ### Authentication / account
 
-Wire Account header action to existing session/auth. Do not invent a parallel user store in the static frontend.
+Wire customer `auth.html` and the Account header action to existing session/auth. Keep Dashboard `dashboard/auth.html` separate. Do not treat the current demo session store as production users.
 
 ### Wishlist
 
-Connect only after the page exists; use existing wishlist backend if present.
+`wishlist.html` exists as a frontend demo; connect it to the existing wishlist backend if present.
 
 ### Order tracking
 

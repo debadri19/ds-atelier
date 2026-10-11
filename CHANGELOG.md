@@ -241,8 +241,26 @@ Patch release. Alpha / Standalone Frontend.
 
 ---
 
+## 2026-10-11
+
+### Customer and Dashboard authentication route rename (local, uncommitted)
+
+- Customer canonical page is `auth.html` with `#login`, `#register`, `#forgot-password`, `#reset-password`
+- Legacy customer URLs `login.html`, `register.html`, `forgot-password.html`, and `reset-password.html` remain as compatibility redirects (query string preserved before the hash)
+- Dashboard canonical page is `dashboard/auth.html`; `dashboard/login.html` and `dashboard/forgot-password.html` redirect to it
+- Customer and Dashboard authentication remain separate frontend demos; no backend auth
+- Playwright QA for these routes was executed in the 2026-10-11 workspace session and passed; the working tree was not committed
+- HEAD remains `555d3959e59117f191aaa6f46861979d224ed23c`
+
+### Documentation reconciliation
+
+- Added `docs/PROJECT_AUDIT_PENDING.md`
+- Corrected stale Cart/Checkout “not built” and Header Search “placeholder only” status lines to match files in this workspace
+
+---
+
 ## Unreleased / not implemented
 
-- Cart, Checkout, and other inner pages
 - Core PHP backend integration
-- Real catalog, cart, checkout, auth, payments
+- Real catalog, server cart, checkout payment, backend auth, and production QA
+- Cart, Checkout, Account, Wishlist, and Auth pages exist as frontend demos only

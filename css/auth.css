@@ -189,6 +189,7 @@ form.auth-form > .btn[type="submit"] {
   display: none;
 }
 
+[data-auth-state="register"] #auth-title,
 [data-auth-state="forgot-password"] #auth-title,
 [data-auth-state="reset-password"] #auth-title {
   font-size: clamp(1.45rem, 3.6vw, 1.9rem);

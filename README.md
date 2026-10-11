@@ -4,7 +4,7 @@ Premium custom apparel storefront. Tagline: **CREATE. PRINT. WEAR.**
 
 DTF printing, sublimation, custom products, bulk orders, and dropshipping for creators, brands, teams, and businesses.
 
-Current release: **v0.1.5** — Alpha / Standalone Frontend. Home, Shop, Product, About, Policy, and Support pages. Frontend UI polish for these pages is complete. This is not a complete ecommerce website.
+Current release: **v0.1.5** — Alpha / Standalone Frontend. Storefront and Dashboard pages exist as a static frontend. This is not a complete ecommerce website and is not connected to the Core PHP backend.
 
 ---
 
@@ -12,7 +12,7 @@ Current release: **v0.1.5** — Alpha / Standalone Frontend. Home, Shop, Product
 
 Standalone frontend for the approved DS ATELIER visual system.
 
-Home, Shop, Product, About, Policy, and Support follow the approved visual system. Later pages (Cart, Checkout, and remaining content pages) must reuse the same global CSS and components.
+Home, Shop, Product, About, Policy, Support, Account, Cart, Checkout, Wishlist, Designs, and authentication pages follow the approved visual system. Additional pages must reuse the same global CSS and components.
 
 Includes a global design system, Light/Dark mode, responsive navigation, official brand assets, and mock product data.
 
@@ -70,13 +70,18 @@ Details: `docs/FRONTEND_ARCHITECTURE.md`
 | About (`about.html`) | Built |
 | Policy (`policy.html`) | Built |
 | Support (`support.html`) | Built |
-| Dashboard (`dashboard/index.html`) | Built (frontend demo; no auth) |
-| Categories (`dashboard/categories.html`) | Built (frontend demo) |
-| Products (`dashboard/products.html`) | Built (frontend demo) |
-| Cart, Checkout | Not built |
+| Account (`account.html`) | Built (frontend demo) |
+| Cart (`cart.html`) | Built (frontend demo; no server cart) |
+| Checkout (`checkout.html`) | Built (frontend demo; no payment) |
+| Wishlist (`wishlist.html`) | Built (frontend demo) |
+| Designs (`designs.html`, `design.html`) | Built (frontend demo) |
+| Customer auth (`auth.html`) | Built (frontend demo; canonical login/register/forgot/reset) |
+| Dashboard (`dashboard/index.html`) | Built (frontend demo) |
+| Dashboard Categories / Products / Designs / Media | Built (frontend demo) |
+| Dashboard auth (`dashboard/auth.html`) | Built (frontend demo; separate from customer auth) |
 | Dedicated FAQ / Contact pages | Not built; Support includes FAQ and a contact form |
-| Custom Order, Bulk Orders, Dropshipping | Home sections only; dedicated pages not built |
-| Header Search | Visual placeholder only; search functionality is not implemented |
+| Custom Order, Bulk Orders, Dropshipping | Home sections only; dedicated pages not in this frontend repo |
+| Header Search | Frontend search modal in `js/main.js` (mock catalog only; no backend search) |
 
 ---
 
@@ -140,6 +145,7 @@ SVG placeholders live under `assets/images/`:
 |---|---|
 | `AI_INSTRUCTIONS.md` | Permanent rules for AI/code agents |
 | `PROJECT_STATUS.md` | Truthful build status |
+| `docs/PROJECT_AUDIT_PENDING.md` | Pending list and audit record |
 | `CHANGELOG.md` | Chronological history |
 | `docs/DESIGN_SYSTEM.md` | Tokens and components |
 | `docs/UI_RULES.md` | Do / do-not UI rules |
@@ -161,11 +167,9 @@ See `docs/BACKEND_INTEGRATION.md`. This is not implemented.
 
 ## Current limitations
 
-- Home, Shop, Product, About, Policy, and Support pages only
-- Mock product data in JavaScript
-- Cart badge is a demo counter
-- Account and Checkout are placeholders or unbuilt
-- Header Search icon is a visual placeholder only; search is not implemented
-- No PHP, no database, no payments
+- Mock product data in JavaScript; no PHP, database, or payments in this repo
+- Cart, Checkout, Account, Wishlist, and Auth are frontend demos, not production backend flows
+- Header Search is a frontend modal against mock data, not a backend search API
 - Listing cards use View Product; configuration and Add to Cart live on Product
-- Frontend UI polish for the current pages is complete; the overall storefront is still in progress
+- Frontend UI for current pages exists; backend integration and production QA remain pending
+- Canonical customer auth is uncommitted local `auth.html`; GitHub `main` at HEAD `555d395` still names the older `login.html` commit

@@ -795,7 +795,7 @@
     if (event.target.closest("[data-account-logout]")) {
       event.preventDefault();
       clearSession();
-      window.location.href = "login.html";
+      window.location.href = "auth.html#login";
       return;
     }
 

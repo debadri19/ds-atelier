@@ -100,6 +100,13 @@
       crumb: "Sign In",
       kicker: false
     },
+    register: {
+      title: "Create Account",
+      subtitle: "Create your account",
+      documentTitle: "Create Account - DS ATELIER",
+      crumb: "Create Account",
+      kicker: false
+    },
     "forgot-password": {
       title: "Forgot Password",
       subtitle: "Enter your email address to continue with password reset.",
@@ -149,6 +156,8 @@
       var icon = toggle.querySelector("i");
       if (icon) icon.className = "fa-regular fa-eye";
     });
+    var termsError = qs("[data-field='terms'] .form-error", form);
+    if (termsError) termsError.textContent = "";
   }
 
   function applyAuthState(state) {
@@ -187,10 +196,15 @@
 
     setHidden(qs("[data-auth-forgot-done]"), true);
     setHidden(qs("[data-auth-reset-done]"), true);
+    setHidden(qs("[data-auth-register-done]"), true);
 
     var session = readSession();
     if (isLogin && session && signed) {
       showSignedIn(session);
+      return;
+    }
+    if (state === "register" && session) {
+      showRegisterDone(session);
       return;
     }
     if (wrap) {
@@ -227,20 +241,47 @@
     return local.charAt(0).toUpperCase() + local.slice(1);
   }
 
+  function fillSessionCopy(root, session) {
+    if (!root || !session) return;
+    var emailEl = qs("[data-session-email]", root);
+    var nameEl = qs("[data-session-name]", root);
+    if (emailEl) emailEl.textContent = session.email || session.mobile || "";
+    if (nameEl) nameEl.textContent = session.name || "there";
+  }
+
+  function hideAuthViews() {
+    var wrap = qs("[data-auth-form-wrap]");
+    if (wrap) wrap.hidden = true;
+    setHidden(qs("[data-auth-signed-in]"), true);
+    setHidden(qs("[data-auth-register-done]"), true);
+    setHidden(qs("[data-auth-forgot-done]"), true);
+    setHidden(qs("[data-auth-reset-done]"), true);
+  }
+
   function showSignedIn(session) {
     var wrap = qs("[data-auth-form-wrap]");
     var signed = qs("[data-auth-signed-in]");
     if (!wrap || !signed || !session) return;
+    hideAuthViews();
     wrap.hidden = true;
     signed.hidden = false;
-    var forgotDone = qs("[data-auth-forgot-done]");
-    var resetDone = qs("[data-auth-reset-done]");
-    if (forgotDone) forgotDone.hidden = true;
-    if (resetDone) resetDone.hidden = true;
-    var emailEl = qs("[data-session-email]", signed);
-    var nameEl = qs("[data-session-name]", signed);
-    if (emailEl) emailEl.textContent = session.email || session.mobile || "";
-    if (nameEl) nameEl.textContent = session.name || "there";
+    signed.removeAttribute("aria-hidden");
+    fillSessionCopy(signed, session);
+  }
+
+  function showRegisterDone(session) {
+    var wrap = qs("[data-auth-form-wrap]");
+    var done = qs("[data-auth-register-done]");
+    if (!session) return;
+    if (!done) {
+      showSignedIn(session);
+      return;
+    }
+    hideAuthViews();
+    if (wrap) wrap.hidden = true;
+    done.hidden = false;
+    done.removeAttribute("aria-hidden");
+    fillSessionCopy(done, session);
   }
 
   function onClick(event) {
@@ -262,7 +303,7 @@
     if (event.target.closest("[data-auth-signout]")) {
       event.preventDefault();
       clearSession();
-      window.location.href = "login.html";
+      window.location.href = "auth.html#login";
       return;
     }
 
@@ -350,13 +391,8 @@
 
   function bindRegister() {
     var registerForm = qs("[data-auth-register]");
-    if (!registerForm || registerForm.getAttribute("data-bound") === "true") {
-      if (registerForm && readSession()) showSignedIn(readSession());
-      return;
-    }
+    if (!registerForm || registerForm.getAttribute("data-bound") === "true") return;
     registerForm.setAttribute("data-bound", "true");
-    var existing = readSession();
-    if (existing) showSignedIn(existing);
 
     registerForm.addEventListener("submit", function (event) {
       event.preventDefault();
@@ -429,7 +465,7 @@
 
       busy(registerForm.querySelector('button[type="submit"]'));
       writeSession({ email: email.trim(), name: String(name).trim(), mobile: mobileDigits(mobile) }, true);
-      showSignedIn(readSession());
+      showRegisterDone(readSession());
     });
   }
 

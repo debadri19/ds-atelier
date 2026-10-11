@@ -941,10 +941,7 @@
     "support.html": { css: ["css/support.css"], scripts: ["js/support.js"] },
     "about.html": { css: ["css/about.css"], scripts: [] },
     "policy.html": { css: ["css/policy.css"], scripts: ["js/policy.js"] },
-    "login.html": { css: ["css/auth.css"], scripts: ["js/auth.js"] },
-    "register.html": { css: ["css/auth.css"], scripts: ["js/auth.js"] },
-    "forgot-password.html": { css: ["css/auth.css"], scripts: ["js/auth.js"] },
-    "reset-password.html": { css: ["css/auth.css"], scripts: ["js/auth.js"] }
+    "auth.html": { css: ["css/auth.css"], scripts: ["js/auth.js"] }
   };
 
   var navigating = false;
