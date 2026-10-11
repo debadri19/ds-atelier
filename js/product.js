@@ -201,10 +201,39 @@
     }
   }
 
+  function configuredImageSrc() {
+    var variantMap = product.variantImages || {};
+    var colorMap = product.colorImages || {};
+    if (state.color && state.size && variantMap[state.color + "|" + state.size]) {
+      return variantMap[state.color + "|" + state.size];
+    }
+    if (state.color && colorMap[state.color]) return colorMap[state.color];
+    return "";
+  }
+
+  function bindImageFallback(img, fallbackSrc, fallbackAlt) {
+    if (!img) return;
+    img.onerror = function () {
+      if (img.getAttribute("data-fallback-applied") === "true") return;
+      img.setAttribute("data-fallback-applied", "true");
+      if (fallbackSrc && img.getAttribute("src") !== fallbackSrc) {
+        img.src = fallbackSrc;
+        if (fallbackAlt) img.alt = fallbackAlt;
+        return;
+      }
+      img.removeAttribute("src");
+      img.alt = fallbackAlt || product.name;
+    };
+    img.removeAttribute("data-fallback-applied");
+  }
+
   function applyColorImage() {
-    var map = product.colorImages || {};
-    var src = state.color ? map[state.color] : "";
-    if (!src) return;
+    var src = configuredImageSrc();
+    var fallback = product.images && product.images[0] ? product.images[0] : { src: product.image, alt: product.alt || product.name };
+    if (!src) {
+      if (product.images && product.images.length) setImage(state.image || 0);
+      return;
+    }
     var index = -1;
     (product.images || []).forEach(function (item, i) {
       if (item.src === src) index = i;
@@ -215,20 +244,25 @@
     }
     if (mainImg) {
       mainImg.src = src;
-      mainImg.alt = product.name + " in " + state.color;
+      mainImg.alt = product.name + (state.color ? " in " + state.color : "");
+      bindImageFallback(mainImg, fallback.src, fallback.alt);
     }
   }
 
   function setImage(index) {
+    if (!product.images || !product.images.length) return;
     state.image = (index + product.images.length) % product.images.length;
     var item = product.images[state.image];
+    var fallback = product.images[0] || { src: product.image, alt: product.alt || product.name };
     if (mainImg) {
       mainImg.src = item.src;
       mainImg.alt = item.alt;
+      bindImageFallback(mainImg, fallback.src, fallback.alt);
     }
     if (lightboxImg) {
       lightboxImg.src = item.src;
       lightboxImg.alt = item.alt;
+      bindImageFallback(lightboxImg, fallback.src, fallback.alt);
     }
     if (lightboxCounter) {
       lightboxCounter.textContent = (state.image + 1) + " / " + product.images.length;
@@ -507,6 +541,7 @@
     if (size && !size.disabled) {
       state.size = size.getAttribute("data-size");
       selectExclusive("size", state.size);
+      applyColorImage();
       updateActions();
     }
 

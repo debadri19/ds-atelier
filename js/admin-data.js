@@ -312,7 +312,7 @@
       id: item.id || ("color-" + (index + 1)),
       name: String(item.name || "Color").trim() || "Color",
       hex: normalizeHex(item.hex),
-      image: item.image || ""
+      image: normalizeAssetPath(item.image || "")
     };
   }
 
@@ -339,7 +339,7 @@
       regularPrice: regular,
       salePrice: sale,
       status: item.status === "inactive" ? "inactive" : "active",
-      image: item.image || ""
+      image: normalizeAssetPath(item.image || "")
     };
   }
 
@@ -368,10 +368,16 @@
     return next;
   }
 
+  function isTemporarySrc(src) {
+    src = String(src || "").trim().toLowerCase();
+    return src.indexOf("blob:") === 0 || src.indexOf("data:") === 0;
+  }
+
   function normalizeAssetPath(src) {
     src = String(src || "").trim();
     if (!src) return "";
-    if (src.indexOf("http") === 0 || src.indexOf("blob:") === 0 || src.indexOf("data:") === 0) return src;
+    if (isTemporarySrc(src)) return "";
+    if (src.indexOf("http") === 0) return src;
     src = src.replace(/^\.\.\//, "").replace(/^\.\//, "");
     if (src.indexOf("assets/") !== 0 && src.indexOf("/") === -1) src = "assets/images/" + src;
     return src;
@@ -526,7 +532,7 @@
       salePrice: item.salePrice == null || item.salePrice === "" ? null : Number(item.salePrice),
       status: item.status === "draft" ? "draft" : "active",
       featured: Boolean(item.featured),
-      image: item.image || primary || "",
+      image: normalizeAssetPath(primary || item.image || ""),
       gallery: gallery,
       frontDesign: normalizeAssetPath(item.frontDesign || ""),
       backDesign: normalizeAssetPath(item.backDesign || ""),
@@ -559,6 +565,9 @@
       if (!cats || !prods) return null;
       var arts = usable(parsed.artworks, cloneArtwork);
       var meds = usable(parsed.media, cloneMedia);
+      if (meds) {
+        meds = meds.filter(function (item) { return item && item.src; });
+      }
       return { categories: cats, products: prods, artworks: arts, media: meds };
     } catch (e) {
       return null;
@@ -752,10 +761,51 @@
     }
   }
 
+  function mediaKey(item) {
+    item = item || {};
+    return [item.type || "", item.src || "", item.productId || "", item.colorId || "", item.artworkId || ""].join("::");
+  }
+
+  function syncDerivedMedia() {
+    var derived = seedMediaFromCatalog(products, artworks);
+    var existingByKey = {};
+    var next = [];
+    var seen = {};
+    var i;
+    var item;
+    var key;
+    var prev;
+    for (i = 0; i < media.length; i += 1) {
+      item = media[i];
+      existingByKey[mediaKey(item)] = item;
+    }
+    for (i = 0; i < derived.length; i += 1) {
+      item = derived[i];
+      key = mediaKey(item);
+      prev = existingByKey[key];
+      if (prev) {
+        item.id = prev.id || item.id;
+        if (prev.alt) item.alt = prev.alt;
+        item.createdAt = prev.createdAt || item.createdAt;
+      }
+      seen[key] = true;
+      next.push(item);
+    }
+    for (i = 0; i < media.length; i += 1) {
+      item = media[i];
+      key = mediaKey(item);
+      if (seen[key] || !item.src) continue;
+      seen[key] = true;
+      next.push(item);
+    }
+    media = next;
+  }
+
   function setProducts(next) {
     var cloned = usable(next, cloneProduct);
     if (cloned) products = cloned;
     pruneArtworkMappings();
+    syncDerivedMedia();
     pruneMediaRefs();
     persist();
     document.dispatchEvent(new CustomEvent("ds-admin-products", { detail: { products: products } }));
@@ -768,6 +818,7 @@
     var cloned = usable(next, cloneArtwork);
     if (cloned) artworks = cloned;
     pruneArtworkMappings();
+    syncDerivedMedia();
     pruneMediaRefs();
     persist();
     document.dispatchEvent(new CustomEvent("ds-admin-artworks", { detail: { artworks: artworks } }));
@@ -777,7 +828,7 @@
 
   function setMedia(next) {
     var cloned = usable(next, cloneMedia);
-    if (cloned) media = cloned;
+    if (cloned) media = cloned.filter(function (item) { return item && item.src; });
     pruneMediaRefs();
     persist();
     document.dispatchEvent(new CustomEvent("ds-admin-media", { detail: { media: media } }));
@@ -1002,6 +1053,7 @@
     normalizeAssetPath: normalizeAssetPath,
     assetFileName: assetFileName,
     knownAsset: knownAsset,
+    isTemporarySrc: isTemporarySrc,
     mediaTypeLabel: mediaTypeLabel,
     variantImage: variantImage,
     publicGallery: publicGallery,

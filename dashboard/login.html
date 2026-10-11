@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    (function () {
+      var theme;
+      try { theme = localStorage.getItem("ds-atelier-theme"); } catch (e) {}
+      if (!theme) theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dashboard Login - DS ATELIER</title>
+  <meta name="description" content="Sign in to the DS ATELIER Dashboard. Authentication is not configured yet. This page is a UI prototype.">
+  <link rel="icon" href="../assets/images/brand/logo-icon.png">
+  <link rel="apple-touch-icon" href="../assets/images/brand/logo-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/admin-login.css">
+</head>
+<body class="admin-login-body">
+  <div class="admin-login-page">
+    <button class="admin-icon-btn admin-login-theme" type="button" data-theme-toggle aria-label="Toggle theme">
+      <i class="fa-regular fa-sun icon-sun" aria-hidden="true"></i>
+      <i class="fa-regular fa-moon icon-moon" aria-hidden="true"></i>
+    </button>
+
+    <main class="admin-login-card" id="admin-login-main">
+      <div class="admin-login-brand">
+        <img class="admin-login-logo" src="../assets/images/brand/logo-full.png" alt="DS ATELIER">
+        <p class="admin-login-kicker">Dashboard</p>
+      </div>
+      <div class="admin-login-head">
+        <h1 class="admin-login-title" id="admin-login-title">Login</h1>
+        <p class="admin-login-copy">Sign in to access your studio dashboard.</p>
+      </div>
+
+      <form class="admin-login-form" data-admin-login novalidate aria-labelledby="admin-login-title">
+        <div class="form-field" data-field="identifier">
+          <i class="form-icon fa-solid fa-user" aria-hidden="true"></i>
+          <label class="form-label" for="admin-login-identifier">Email Address or Username</label>
+          <input class="form-input" id="admin-login-identifier" name="identifier" type="text" placeholder=" " autocomplete="username" spellcheck="false" autocapitalize="none" required aria-describedby="admin-login-identifier-error">
+          <p class="form-error" id="admin-login-identifier-error"></p>
+        </div>
+        <div class="form-field" data-field="password">
+          <i class="form-icon fa-solid fa-lock" aria-hidden="true"></i>
+          <label class="form-label" for="admin-login-password">Password</label>
+          <input class="form-input" id="admin-login-password" name="password" type="password" placeholder=" " autocomplete="current-password" required aria-describedby="admin-login-password-error">
+          <button class="form-toggle" type="button" data-password-toggle aria-label="Show password" aria-pressed="false">
+            <i class="fa-regular fa-eye" aria-hidden="true"></i>
+          </button>
+          <p class="form-error" id="admin-login-password-error"></p>
+        </div>
+        <div class="admin-login-row">
+          <label class="admin-login-check">
+            <input type="checkbox" id="admin-login-remember" name="remember" value="presentation">
+            Remember Me
+          </label>
+          <a class="admin-login-link" href="forgot-password.html" data-admin-forgot>Forgot Password?</a>
+        </div>
+        <p class="admin-login-note" data-admin-login-note role="status" aria-live="polite"></p>
+        <button class="btn btn-primary" type="submit" data-admin-login-submit>Sign In</button>
+      </form>
+    </main>
+  </div>
+
+  <div class="admin-login-dialog" data-admin-forgot-dialog hidden>
+    <div class="admin-login-dialog-backdrop" data-admin-forgot-close></div>
+    <div class="admin-login-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="admin-forgot-title">
+      <h2 id="admin-forgot-title">Password recovery unavailable</h2>
+      <p>Dashboard password recovery is not available yet. This sign-in page is a UI prototype until secure authentication is connected.</p>
+      <div class="admin-login-dialog-actions">
+        <button class="btn btn-primary" type="button" data-admin-forgot-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/theme.js"></script>
+  <script src="../js/admin-login.js"></script>
+</body>
+</html>

@@ -190,16 +190,22 @@
     return next;
   }
 
-  function setPreview(wrap, src, emptySel) {
+  function setPreview(wrap, src, emptySel, emptyText) {
     if (!wrap) return;
     var img = wrap.querySelector("img");
     var empty = wrap.querySelector(emptySel) || wrap.querySelector("span");
+    var fallback = emptyText || "No image assigned";
+    if (empty && empty.getAttribute("data-empty-label")) fallback = empty.getAttribute("data-empty-label");
+    else if (empty && !empty.getAttribute("data-empty-label")) empty.setAttribute("data-empty-label", empty.textContent || fallback);
     if (!src) {
       if (img) {
         img.hidden = true;
         img.removeAttribute("src");
       }
-      if (empty) empty.hidden = false;
+      if (empty) {
+        empty.hidden = false;
+        empty.textContent = empty.getAttribute("data-empty-label") || fallback;
+      }
       return;
     }
     if (empty) empty.hidden = true;
@@ -220,8 +226,8 @@
     if (!form) return;
     fillAssetSelect(frontAssetEl, field("frontDesign") ? field("frontDesign").value : "");
     fillAssetSelect(backAssetEl, field("backDesign") ? field("backDesign").value : "");
-    setPreview(frontPreviewEl, field("frontDesign") ? field("frontDesign").value : "", "[data-front-empty]");
-    setPreview(backPreviewEl, field("backDesign") ? field("backDesign").value : "", "[data-back-empty]");
+    setPreview(frontPreviewEl, field("frontDesign") ? field("frontDesign").value : "", "[data-front-empty]", "No front design assigned");
+    setPreview(backPreviewEl, field("backDesign") ? field("backDesign").value : "", "[data-back-empty]", "No back design assigned");
   }
 
   function renderGallery() {
@@ -631,9 +637,14 @@
   }
 
   function addGalleryItem() {
+    var raw = String(gallerySrcEl ? gallerySrcEl.value : "").trim();
+    if (data.isTemporarySrc && data.isTemporarySrc(raw)) {
+      toast("Temporary local previews cannot be saved. Choose an existing project asset.");
+      return;
+    }
     var src = data.normalizeAssetPath
-      ? data.normalizeAssetPath(gallerySrcEl ? gallerySrcEl.value : "")
-      : String(gallerySrcEl ? gallerySrcEl.value : "").trim();
+      ? data.normalizeAssetPath(raw)
+      : raw;
     var alt = String(galleryAltEl ? galleryAltEl.value : "").trim();
     if (!src) {
       toast("Choose or enter an image reference.");
@@ -693,7 +704,12 @@
   function setColorMockup(id, src) {
     var color = findColor(id);
     if (!color) return;
-    color.image = data.normalizeAssetPath ? data.normalizeAssetPath(src) : src;
+    if (data.isTemporarySrc && data.isTemporarySrc(src)) {
+      toast("Temporary local previews cannot be saved. Choose an existing project asset.");
+      renderColors();
+      return;
+    }
+    color.image = data.normalizeAssetPath ? data.normalizeAssetPath(src) : String(src || "").trim();
     renderColors();
   }
 
@@ -1160,6 +1176,43 @@
         image: entry.image || ""
       });
     }
+    var gallery = [];
+    var gallerySeen = {};
+    var galleryHasPrimary = false;
+    for (i = 0; i < draftGallery.length; i += 1) {
+      var galleryEntry = draftGallery[i];
+      var gallerySrc = data.normalizeAssetPath ? data.normalizeAssetPath(galleryEntry.src) : String(galleryEntry.src || "").trim();
+      if (data.isTemporarySrc && data.isTemporarySrc(galleryEntry.src)) {
+        errors.push("Temporary local previews cannot be saved as gallery images.");
+        continue;
+      }
+      if (!gallerySrc) {
+        errors.push("Each gallery image needs a valid reference path.");
+        continue;
+      }
+      if (gallerySeen[gallerySrc]) continue;
+      gallerySeen[gallerySrc] = true;
+      gallery.push({
+        id: galleryEntry.id || ("gallery-" + (gallery.length + 1)),
+        src: gallerySrc,
+        alt: String(galleryEntry.alt || "").trim(),
+        primary: Boolean(galleryEntry.primary)
+      });
+      if (galleryEntry.primary) galleryHasPrimary = true;
+    }
+    if (gallery.length && !galleryHasPrimary) gallery[0].primary = true;
+    var primarySrc = "";
+    for (i = 0; i < gallery.length; i += 1) {
+      if (gallery[i].primary) {
+        primarySrc = gallery[i].src;
+        break;
+      }
+    }
+    if (!primarySrc && gallery.length) primarySrc = gallery[0].src;
+    var frontRaw = field("frontDesign") ? field("frontDesign").value : "";
+    var backRaw = field("backDesign") ? field("backDesign").value : "";
+    if (data.isTemporarySrc && data.isTemporarySrc(frontRaw)) errors.push("Temporary local previews cannot be saved as a front design.");
+    if (data.isTemporarySrc && data.isTemporarySrc(backRaw)) errors.push("Temporary local previews cannot be saved as a back design.");
     if (errors.length) return { errors: errors };
     return {
       errors: [],
@@ -1177,17 +1230,10 @@
         salePrice: salePrice,
         status: field("status").value === "draft" ? "draft" : "active",
         featured: field("featured").value === "yes",
-        image: String(field("image").value || "").trim() || primaryGallerySrc(),
-        gallery: draftGallery.map(function (entry, index) {
-          return {
-            id: entry.id || ("gallery-" + (index + 1)),
-            src: data.normalizeAssetPath ? data.normalizeAssetPath(entry.src) : entry.src,
-            alt: String(entry.alt || "").trim(),
-            primary: Boolean(entry.primary)
-          };
-        }).filter(function (entry) { return entry.src; }),
-        frontDesign: data.normalizeAssetPath ? data.normalizeAssetPath(field("frontDesign") ? field("frontDesign").value : "") : String(field("frontDesign") ? field("frontDesign").value : ""),
-        backDesign: data.normalizeAssetPath ? data.normalizeAssetPath(field("backDesign") ? field("backDesign").value : "") : String(field("backDesign") ? field("backDesign").value : ""),
+        image: primarySrc,
+        gallery: gallery,
+        frontDesign: data.normalizeAssetPath ? data.normalizeAssetPath(frontRaw) : String(frontRaw || "").trim(),
+        backDesign: data.normalizeAssetPath ? data.normalizeAssetPath(backRaw) : String(backRaw || "").trim(),
         options: options,
         variants: variants
       }
@@ -1489,7 +1535,15 @@
       var galleryCaption = target.getAttribute && target.getAttribute("data-gallery-caption");
       if (galleryPath) {
         var galleryItem = findGallery(galleryPath);
-        if (galleryItem) galleryItem.src = data.normalizeAssetPath ? data.normalizeAssetPath(target.value) : target.value;
+        if (galleryItem) {
+          if (data.isTemporarySrc && data.isTemporarySrc(target.value)) {
+            toast("Temporary local previews cannot be saved. Choose an existing project asset.");
+            target.value = galleryItem.src;
+            return;
+          }
+          galleryItem.src = data.normalizeAssetPath ? data.normalizeAssetPath(target.value) : target.value;
+          syncPrimaryImageField();
+        }
         return;
       }
       if (galleryCaption) {

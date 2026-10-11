@@ -405,6 +405,7 @@
 
   function storefrontSrc(src) {
     src = String(src || "");
+    if (src.indexOf("blob:") === 0 || src.indexOf("data:") === 0) return "";
     if (src.indexOf("../") === 0) return src.replace(/^\.\.\//, "");
     return src;
   }
@@ -422,31 +423,62 @@
       products.forEach(function (product) {
         var admin = byAdminId[product.id];
         if (!admin) return;
+        var staticImage = product.image;
+        var staticAlt = product.alt || product.name;
         var gallery = Array.isArray(admin.gallery)
-          ? admin.gallery.filter(function (entry) { return entry && entry.src; })
+          ? admin.gallery.filter(function (entry) { return entry && storefrontSrc(entry.src); })
           : null;
         if (gallery && gallery.length) {
           var ordered = gallery.slice();
-          ordered.sort(function (a, b) {
-            if (a.primary && !b.primary) return -1;
-            if (!a.primary && b.primary) return 1;
-            return 0;
+          var rest = [];
+          var primary = [];
+          ordered.forEach(function (entry) {
+            if (entry.primary) primary.push(entry);
+            else rest.push(entry);
           });
+          ordered = primary.concat(rest);
           product.images = ordered.map(function (entry) {
             return { src: storefrontSrc(entry.src), alt: entry.alt || product.name };
           });
-          product.image = storefrontSrc(ordered[0].src);
+          product.image = product.images[0].src;
           product.alt = ordered[0].alt || product.alt;
-        } else if (admin.image) {
+        } else if (gallery) {
+          var fallbackSrc = storefrontSrc(admin.image) || staticImage;
+          var fallbackAlt = storefrontSrc(admin.image) ? (product.name || staticAlt) : staticAlt;
+          product.image = fallbackSrc || staticImage;
+          product.alt = fallbackAlt;
+          product.images = product.image
+            ? [{ src: product.image, alt: fallbackAlt }]
+            : [{ src: staticImage, alt: staticAlt }];
+        } else if (storefrontSrc(admin.image)) {
           product.image = storefrontSrc(admin.image);
         }
         var colors = admin.options && Array.isArray(admin.options.colors) ? admin.options.colors : [];
+        var sizes = admin.options && Array.isArray(admin.options.sizes) ? admin.options.sizes : [];
+        var colorById = {};
+        var sizeById = {};
         if (colors.length) {
           product.colorImages = {};
           colors.forEach(function (color) {
-            if (color && color.name && color.image) {
+            if (!color || !color.id) return;
+            colorById[color.id] = color;
+            if (color.name && storefrontSrc(color.image)) {
               product.colorImages[color.name] = storefrontSrc(color.image);
             }
+          });
+        }
+        sizes.forEach(function (size) {
+          if (size && size.id) sizeById[size.id] = size;
+        });
+        var variants = Array.isArray(admin.variants) ? admin.variants : [];
+        if (variants.length) {
+          product.variantImages = {};
+          variants.forEach(function (variant) {
+            if (!variant || !storefrontSrc(variant.image)) return;
+            var color = colorById[variant.colorId];
+            var size = sizeById[variant.sizeId];
+            if (!color || !color.name || !size || !size.label) return;
+            product.variantImages[color.name + "|" + size.label] = storefrontSrc(variant.image);
           });
         }
       });

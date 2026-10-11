@@ -339,15 +339,16 @@
   }
 
   function readForm() {
-    var src = data.normalizeAssetPath ? data.normalizeAssetPath(field("src").value) : String(field("src").value || "").trim();
+    var rawSrc = String(field("src").value || "").trim();
+    var src = data.normalizeAssetPath ? data.normalizeAssetPath(rawSrc) : rawSrc;
     var type = String(field("type").value || "").trim();
     var currentId = String(field("id").value || "");
     var errors = [];
-    if (!src) errors.push("Image reference path is required.");
-    if (!type) errors.push("Media type is required.");
-    if (src.indexOf("blob:") === 0 || src.indexOf("data:") === 0) {
+    if (data.isTemporarySrc && data.isTemporarySrc(rawSrc)) {
       errors.push("Temporary local previews cannot be saved. Choose an existing project asset.");
     }
+    if (!src) errors.push("Image reference path is required.");
+    if (!type) errors.push("Media type is required.");
     if (errors.length) return { errors: errors };
     return {
       errors: [],
@@ -404,7 +405,7 @@
     if (!item) return;
     confirmAction({
       title: "Remove media reference",
-      body: 'Remove "' + fileName(item.src) + '" from the demo library? Artwork records are not deleted.',
+      body: 'Remove "' + fileName(item.src) + '" from the demo library? Products, variants, artworks and artwork mappings are not deleted.',
       onConfirm: function () {
         media = media.filter(function (entry) {
           return entry.id !== id;
@@ -505,6 +506,8 @@
     find: findById,
     refresh: function () { renderList(); }
   };
+
+  window.addEventListener("pagehide", clearTempPreview);
 
   if (location.hash === "#add") openForm(null);
   else renderList();
