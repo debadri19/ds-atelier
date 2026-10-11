@@ -92,6 +92,130 @@
     return Boolean(qs("[data-auth-login], [data-auth-register], [data-auth-forgot], [data-auth-reset]"));
   }
 
+  var AUTH_STATES = {
+    login: {
+      title: "Bienvenue!",
+      subtitle: "Sign in to your account",
+      documentTitle: "Sign In - DS ATELIER",
+      crumb: "Sign In",
+      kicker: false
+    },
+    "forgot-password": {
+      title: "Forgot Password",
+      subtitle: "Enter your email address to continue with password reset.",
+      documentTitle: "Forgot Password - DS ATELIER",
+      crumb: "Forgot Password",
+      kicker: false
+    },
+    "reset-password": {
+      title: "Reset Password",
+      subtitle: "Choose a new password. Nothing is saved on a server in this demo.",
+      documentTitle: "Reset Password - DS ATELIER",
+      crumb: "Reset Password",
+      kicker: true
+    }
+  };
+
+  function hasAuthStates() {
+    return Boolean(qs("[data-auth-state]"));
+  }
+
+  function normalizeAuthHash(hash) {
+    var value = String(hash || "").replace(/^#/, "").trim().toLowerCase();
+    if (AUTH_STATES[value]) return value;
+    return "login";
+  }
+
+  function setHidden(el, hidden) {
+    if (!el) return;
+    el.hidden = hidden;
+    el.setAttribute("aria-hidden", hidden ? "true" : "false");
+    if ("inert" in el) el.inert = hidden;
+  }
+
+  function resetFormUi(form) {
+    if (!form) return;
+    qsa(".form-field", form).forEach(function (field) {
+      setFieldError(field, "");
+    });
+    setNote(qs("[data-auth-note]", form), "");
+    qsa(".form-input[type='password'], .form-input[autocomplete='current-password'], .form-input[autocomplete='new-password']", form).forEach(function (input) {
+      input.value = "";
+      input.type = "password";
+    });
+    qsa("[data-password-toggle]", form).forEach(function (toggle) {
+      toggle.setAttribute("aria-pressed", "false");
+      toggle.setAttribute("aria-label", "Show password");
+      var icon = toggle.querySelector("i");
+      if (icon) icon.className = "fa-regular fa-eye";
+    });
+  }
+
+  function applyAuthState(state) {
+    var config = AUTH_STATES[state] || AUTH_STATES.login;
+    var card = qs("[data-auth-state]");
+    var title = qs("#auth-title");
+    var subtitle = qs("#auth-subtitle");
+    var kicker = qs("[data-auth-kicker]");
+    var wrap = qs("[data-auth-form-wrap]");
+    var signed = qs("[data-auth-signed-in]");
+    var crumbLogin = qs("[data-auth-crumb-login]");
+    var crumbLoginLink = qs("[data-auth-crumb-login-link]");
+    var crumbRest = qs("[data-auth-crumb-rest]");
+    var crumbCurrent = qs("[data-auth-crumb-current]");
+    var isLogin = state === "login";
+
+    if (card) card.setAttribute("data-auth-state", state);
+    if (title) title.textContent = config.title;
+    if (subtitle) subtitle.textContent = config.subtitle;
+    setHidden(kicker, !config.kicker);
+    document.title = config.documentTitle;
+
+    setHidden(crumbLogin, !isLogin);
+    setHidden(crumbLoginLink, isLogin);
+    setHidden(crumbRest, isLogin);
+    if (crumbCurrent) crumbCurrent.textContent = config.crumb;
+
+    qsa("[data-auth-panel]").forEach(function (form) {
+      var active = form.getAttribute("data-auth-panel") === state;
+      setHidden(form, !active);
+      if (!active) resetFormUi(form);
+    });
+    qsa("[data-auth-switch]").forEach(function (el) {
+      setHidden(el, el.getAttribute("data-auth-switch") !== state);
+    });
+
+    setHidden(qs("[data-auth-forgot-done]"), true);
+    setHidden(qs("[data-auth-reset-done]"), true);
+
+    var session = readSession();
+    if (isLogin && session && signed) {
+      showSignedIn(session);
+      return;
+    }
+    if (wrap) {
+      wrap.hidden = false;
+      wrap.removeAttribute("aria-hidden");
+      if ("inert" in wrap) wrap.inert = false;
+    }
+    setHidden(signed, true);
+  }
+
+  function syncAuthFromLocation() {
+    if (!hasAuthStates()) return;
+    var raw = String(window.location.hash || "").replace(/^#/, "");
+    var state = normalizeAuthHash(raw);
+    if (raw !== state) {
+      var next = window.location.pathname + window.location.search + "#" + state;
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, "", next);
+      } else {
+        window.location.hash = state;
+      }
+    }
+    applyAuthState(state);
+  }
+
   function busy(el) {
     if (global.DSAtelier && global.DSAtelier.ui && global.DSAtelier.ui.busy) global.DSAtelier.ui.busy(el);
   }
@@ -109,6 +233,10 @@
     if (!wrap || !signed || !session) return;
     wrap.hidden = true;
     signed.hidden = false;
+    var forgotDone = qs("[data-auth-forgot-done]");
+    var resetDone = qs("[data-auth-reset-done]");
+    if (forgotDone) forgotDone.hidden = true;
+    if (resetDone) resetDone.hidden = true;
     var emailEl = qs("[data-session-email]", signed);
     var nameEl = qs("[data-session-name]", signed);
     if (emailEl) emailEl.textContent = session.email || session.mobile || "";
@@ -135,7 +263,13 @@
       event.preventDefault();
       clearSession();
       window.location.href = "login.html";
+      return;
     }
+
+    if (!hasAuthStates()) return;
+    var authLink = event.target.closest('a[href^="#"]');
+    if (!authLink) return;
+    applyAuthState(normalizeAuthHash(authLink.getAttribute("href")));
   }
 
   function bindMobileInputs() {
@@ -389,8 +523,11 @@
     bindRegister();
     bindForgot();
     bindReset();
+    syncAuthFromLocation();
     if (!bound) {
       document.addEventListener("click", onClick);
+      window.addEventListener("hashchange", syncAuthFromLocation);
+      window.addEventListener("popstate", syncAuthFromLocation);
       bound = true;
     }
   }

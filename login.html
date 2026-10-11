@@ -12,7 +12,7 @@
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Sign In - DS ATELIER</title>
-  <meta name="description" content="Sign in to your DS ATELIER account. Demo only — no passwords are stored.">
+  <meta name="description" content="Sign in to your DS ATELIER account, reset a password, or continue a recovery link. Demo only — no passwords are stored.">
   <link rel="icon" href="assets/images/brand/logo-icon.png">
   <link rel="apple-touch-icon" href="assets/images/brand/logo-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -137,15 +137,22 @@
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <a href="index.html">Home</a>
           <span aria-hidden="true">/</span>
-          <span>Sign In</span>
+          <span data-auth-crumb-login>Sign In</span>
+          <a href="#login" data-auth-crumb-login-link hidden>Sign In</a>
+          <span data-auth-crumb-rest hidden>
+            <span aria-hidden="true">/</span>
+            <span data-auth-crumb-current>Forgot Password</span>
+          </span>
         </nav>
-        <div class="auth-card">
+        <div class="auth-card" data-auth-state="login">
           <div data-auth-form-wrap>
             <div class="auth-card-head">
-              <h1 class="auth-card-title" id="login-title">Bienvenue!</h1>
-              <p class="auth-card-subtitle">Sign in to your account</p>
+              <p class="eyebrow auth-card-kicker" data-auth-kicker hidden>Account</p>
+              <h1 class="auth-card-title" id="auth-title">Bienvenue!</h1>
+              <p class="auth-card-subtitle" id="auth-subtitle">Sign in to your account</p>
             </div>
-            <form class="auth-form" data-auth-login novalidate aria-labelledby="login-title">
+
+            <form class="auth-form" data-auth-panel="login" data-auth-login novalidate aria-labelledby="auth-title">
               <div class="form-field" data-field="identifier">
                 <i class="form-icon fa-solid fa-user" aria-hidden="true"></i>
                 <label class="form-label" for="login-identifier">Email / Mobile Number</label>
@@ -166,12 +173,48 @@
                   <input type="checkbox" id="login-remember" name="remember">
                   Remember me
                 </label>
-                <a class="auth-inline-link" href="forgot-password.html">Forgot Password?</a>
+                <a class="auth-inline-link" href="#forgot-password">Forgot Password?</a>
               </div>
               <p class="auth-note" data-auth-note role="status"></p>
               <button class="btn btn-primary" type="submit">Sign In</button>
             </form>
-            <p class="auth-switch">New here? <a href="register.html">Create Account</a></p>
+            <p class="auth-switch" data-auth-switch="login">New here? <a href="register.html">Create Account</a></p>
+
+            <form class="auth-form" data-auth-panel="forgot-password" data-auth-forgot novalidate aria-labelledby="auth-title" hidden>
+              <div class="form-field" data-field="email">
+                <i class="form-icon fa-solid fa-envelope" aria-hidden="true"></i>
+                <label class="form-label" for="forgot-email">Email</label>
+                <input class="form-input" id="forgot-email" name="email" type="email" placeholder=" " autocomplete="email" required aria-describedby="forgot-email-error">
+                <p class="form-error" id="forgot-email-error"></p>
+              </div>
+              <p class="auth-note" data-auth-note role="status"></p>
+              <button class="btn btn-primary" type="submit">Send Reset Link</button>
+            </form>
+            <p class="auth-switch" data-auth-switch="forgot-password" hidden><a href="#login">Back to Sign In</a></p>
+
+            <form class="auth-form" data-auth-panel="reset-password" data-auth-reset novalidate aria-labelledby="auth-title" hidden>
+              <div class="form-field" data-field="password">
+                <i class="form-icon fa-solid fa-lock" aria-hidden="true"></i>
+                <label class="form-label" for="reset-password">New password</label>
+                <input class="form-input" id="reset-password" name="password" type="password" placeholder=" " autocomplete="new-password" required minlength="8" aria-describedby="reset-password-error">
+                <button class="form-toggle" type="button" data-password-toggle aria-label="Show password" aria-pressed="false">
+                  <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                </button>
+                <p class="form-error" id="reset-password-error"></p>
+              </div>
+              <div class="form-field" data-field="confirm">
+                <i class="form-icon fa-solid fa-lock" aria-hidden="true"></i>
+                <label class="form-label" for="reset-confirm">Confirm password</label>
+                <input class="form-input" id="reset-confirm" name="confirm" type="password" placeholder=" " autocomplete="new-password" required minlength="8" aria-describedby="reset-confirm-error">
+                <button class="form-toggle" type="button" data-password-toggle aria-label="Show password" aria-pressed="false">
+                  <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                </button>
+                <p class="form-error" id="reset-confirm-error"></p>
+              </div>
+              <p class="auth-note" data-auth-note role="status"></p>
+              <button class="btn btn-primary" type="submit">Update Password</button>
+            </form>
+            <p class="auth-switch" data-auth-switch="reset-password" hidden><a href="#login">Back to Sign In</a></p>
           </div>
           <div class="auth-success" data-auth-signed-in hidden>
             <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
@@ -180,6 +223,23 @@
             <div class="auth-success-actions">
               <a class="btn btn-primary" href="shop.html">Continue Shopping</a>
               <button class="btn btn-secondary" type="button" data-auth-signout>Sign Out</button>
+            </div>
+          </div>
+          <div class="auth-success" data-auth-forgot-done hidden>
+            <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+            <h2>Check Your Inbox</h2>
+            <p>If an account existed for <strong data-forgot-email></strong>, a reset link would be sent. No email was sent in this demo.</p>
+            <div class="auth-success-actions">
+              <a class="btn btn-primary" href="#reset-password">Continue to Reset</a>
+              <a class="btn btn-secondary" href="#login">Back to Sign In</a>
+            </div>
+          </div>
+          <div class="auth-success" data-auth-reset-done hidden>
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <h2>Password Updated</h2>
+            <p>Demo only — the new password was not saved. You can sign in with any valid-looking credentials.</p>
+            <div class="auth-success-actions">
+              <a class="btn btn-primary" href="#login">Sign In</a>
             </div>
           </div>
         </div>

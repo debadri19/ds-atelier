@@ -27,6 +27,10 @@
   margin-bottom: 1.35rem;
 }
 
+.auth-card-head .auth-card-kicker {
+  margin-bottom: 0.35rem;
+}
+
 .auth-card-title {
   font-size: clamp(1.7rem, 4vw, 2.15rem);
   letter-spacing: -0.045em;
@@ -177,10 +181,17 @@ form.auth-form > .btn[type="submit"] {
 
 .auth-card [hidden],
 .auth-form-wrap[hidden],
+.auth-form[hidden],
+.auth-switch[hidden],
 .auth-success[hidden],
 .auth-note:empty,
 .form-error:empty {
   display: none;
+}
+
+[data-auth-state="forgot-password"] #auth-title,
+[data-auth-state="reset-password"] #auth-title {
+  font-size: clamp(1.45rem, 3.6vw, 1.9rem);
 }
 
 .auth-success {

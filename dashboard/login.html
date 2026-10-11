@@ -30,17 +30,17 @@
       <i class="fa-regular fa-moon icon-moon" aria-hidden="true"></i>
     </button>
 
-    <main class="admin-login-card" id="admin-login-main">
+    <main class="admin-login-card" id="admin-login-main" data-auth-state="login">
       <div class="admin-login-brand">
         <img class="admin-login-logo" src="../assets/images/brand/logo-full.png" alt="DS ATELIER">
         <p class="admin-login-kicker">Dashboard</p>
       </div>
       <div class="admin-login-head">
-        <h1 class="admin-login-title" id="admin-login-title">Login</h1>
-        <p class="admin-login-copy">Sign in to access your studio dashboard.</p>
+        <h1 class="admin-login-title" id="admin-auth-title">Login</h1>
+        <p class="admin-login-copy" id="admin-auth-copy">Sign in to access your studio dashboard.</p>
       </div>
 
-      <form class="admin-login-form" data-admin-login novalidate aria-labelledby="admin-login-title">
+      <form class="admin-login-form" data-admin-auth-form="login" data-admin-login novalidate aria-labelledby="admin-auth-title">
         <div class="form-field" data-field="identifier">
           <i class="form-icon fa-solid fa-user" aria-hidden="true"></i>
           <label class="form-label" for="admin-login-identifier">Email Address or Username</label>
@@ -61,11 +61,51 @@
             <input type="checkbox" id="admin-login-remember" name="remember" value="presentation">
             Remember Me
           </label>
-          <a class="admin-login-link" href="forgot-password.html">Forgot Password?</a>
+          <a class="admin-login-link" href="#forgot-password">Forgot Password?</a>
         </div>
         <p class="admin-login-note" data-admin-login-note role="status" aria-live="polite"></p>
         <button class="btn btn-primary" type="submit" data-admin-login-submit>Sign In</button>
       </form>
+
+      <form class="admin-login-form" data-admin-auth-form="forgot-password" data-admin-forgot-form novalidate aria-labelledby="admin-auth-title" hidden>
+        <div class="form-field" data-field="email">
+          <i class="form-icon fa-solid fa-envelope" aria-hidden="true"></i>
+          <label class="form-label" for="admin-forgot-email">Email Address</label>
+          <input class="form-input" id="admin-forgot-email" name="email" type="email" placeholder=" " autocomplete="email" spellcheck="false" autocapitalize="none" required aria-describedby="admin-forgot-email-error">
+          <p class="form-error" id="admin-forgot-email-error"></p>
+        </div>
+        <p class="admin-login-note" data-admin-forgot-note role="status" aria-live="polite"></p>
+        <button class="btn btn-primary" type="submit" data-admin-forgot-submit>Send Reset Link</button>
+      </form>
+      <p class="admin-login-switch" data-admin-auth-switch="forgot-password" hidden>
+        <a class="admin-login-link" href="#login">Back to Login</a>
+      </p>
+
+      <form class="admin-login-form" data-admin-auth-form="reset-password" data-admin-reset-form novalidate aria-labelledby="admin-auth-title" hidden>
+        <div class="form-field" data-field="password">
+          <i class="form-icon fa-solid fa-lock" aria-hidden="true"></i>
+          <label class="form-label" for="admin-reset-password">New Password</label>
+          <input class="form-input" id="admin-reset-password" name="password" type="password" placeholder=" " autocomplete="new-password" required minlength="8" aria-describedby="admin-reset-password-error">
+          <button class="form-toggle" type="button" data-password-toggle aria-label="Show password" aria-pressed="false">
+            <i class="fa-regular fa-eye" aria-hidden="true"></i>
+          </button>
+          <p class="form-error" id="admin-reset-password-error"></p>
+        </div>
+        <div class="form-field" data-field="confirm">
+          <i class="form-icon fa-solid fa-lock" aria-hidden="true"></i>
+          <label class="form-label" for="admin-reset-confirm">Confirm New Password</label>
+          <input class="form-input" id="admin-reset-confirm" name="confirm" type="password" placeholder=" " autocomplete="new-password" required minlength="8" aria-describedby="admin-reset-confirm-error">
+          <button class="form-toggle" type="button" data-password-toggle aria-label="Show password" aria-pressed="false">
+            <i class="fa-regular fa-eye" aria-hidden="true"></i>
+          </button>
+          <p class="form-error" id="admin-reset-confirm-error"></p>
+        </div>
+        <p class="admin-login-note" data-admin-reset-note role="status" aria-live="polite"></p>
+        <button class="btn btn-primary" type="submit" data-admin-reset-submit>Reset Password</button>
+      </form>
+      <p class="admin-login-switch" data-admin-auth-switch="reset-password" hidden>
+        <a class="admin-login-link" href="#login">Back to Login</a>
+      </p>
     </main>
   </div>
 
