@@ -1,8 +1,6 @@
 # Backend Integration — DS ATELIER
 
-This repository is a **standalone frontend**.
-
-It will later be integrated with the existing Core PHP backend. That work is **not done**.
+This repository remains a **standalone frontend** except for Phase 2 customer authentication. Phase 1 added a DS-specific PHP foundation under `backend/`. Catalog, cart, checkout and payments are **not** connected. Dashboard authentication is still a frontend demo.
 
 Do not treat `js/main.js` mock products as production database data.
 
@@ -36,7 +34,7 @@ Do not restyle the storefront to match any previous MoonAura UI while wiring PHP
 | Catalog | Mock catalog in `js/catalog.js` |
 | Cart | `cart.html` frontend demo (`js/commerce.js` localStorage); not a server cart |
 | Checkout | `checkout.html` frontend demo; no payment gateway |
-| Auth / account | Customer `auth.html` and `account.html` frontend demos; no server sessions |
+| Auth / account | Customer `auth.html` uses PHP/JSON against `ds_atelier_dev`. `account.html` remains a frontend demo. Password-reset email is not sent. |
 | Wishlist | `wishlist.html` frontend demo |
 | Orders | Demo orders in account UI only |
 | Payments | Badge labels in footer; checkout does not capture payment |
@@ -75,7 +73,7 @@ Reuse existing checkout, payment, tax, and order creation. Frontend must follow 
 
 ### Authentication / account
 
-Wire customer `auth.html` and the Account header action to existing session/auth. Keep Dashboard `dashboard/auth.html` separate. Do not treat the current demo session store as production users.
+Customer `auth.html` posts to `backend/public/customer/*.php`. Keep Dashboard `dashboard/auth.html` separate. Do not treat the `account.html` demo session store as production account data.
 
 ### Wishlist
 
@@ -97,4 +95,31 @@ Store print configuration and uploaded files with the line item. Exact schema is
 - Do not claim integration is complete after copying mock JSON.
 - Do not rebuild MoonAura templates “because the PHP still outputs them.” Adapt output to DS ATELIER components.
 
-When integration starts, update this file and `PROJECT_STATUS.md` in the same task.
+## Phase 1 foundation (2026-10-11)
+
+Added under `backend/`, separate from UI assets:
+
+- Environment-based `DS_ATELIER_*` config (`backend/.env.example`)
+- PDO factory targeting dedicated `ds_atelier_dev` only
+- Session cookie helpers (HttpOnly, SameSite, Secure policy)
+- CSRF token helpers
+- Fail-closed Dashboard/admin guard (no admin session is created in this phase)
+- Migration filename convention and `ds_atelier_schema_migrations` tracker SQL
+- Local setup notes in `backend/README.md`
+
+Same-origin PHP/JSON handlers are the intended later integration style. Existing `.html` routes were not migrated.
+
+This phase does not implement customer login, catalog queries, cart, checkout, payments, Newsletter, or Meta Pixel/CAPI.
+
+## Phase 2 customer authentication (2026-10-13)
+
+Applied against dedicated `ds_atelier_dev` only:
+
+- `customers` and `customer_password_resets` migrations
+- Same-origin JSON handlers: `backend/public/customer/{csrf,session,register,login,logout,forgot,reset}.php`
+- `js/auth.js` posts login/register/forgot/reset/logout to those handlers
+- Passwords use `password_hash` / `password_verify`; reset tokens store SHA-256 only
+- Public forgot-password JSON never includes the raw token and reports `email_sent: false`
+- SMTP is not configured; no reset email is sent
+
+Out of this phase: catalog, cart, wishlist, checkout, payments, Newsletter, Meta Pixel/CAPI, Dashboard authentication.

@@ -12,7 +12,7 @@
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Sign In - DS ATELIER</title>
-  <meta name="description" content="Sign in or create a DS ATELIER account, reset a password, or continue a recovery link. Demo only — no passwords are stored.">
+  <meta name="description" content="Sign in or create a DS ATELIER account, or request a password reset.">
   <link rel="icon" href="assets/images/brand/logo-icon.png">
   <link rel="apple-touch-icon" href="assets/images/brand/logo-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -268,7 +268,7 @@
           <div class="auth-success" data-auth-signed-in hidden>
             <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
             <h2>Welcome Back, <span data-session-name>there</span></h2>
-            <p>Signed in as <strong data-session-email></strong>. Demo session only — nothing was verified on a server.</p>
+            <p>Signed in as <strong data-session-email></strong>.</p>
             <div class="auth-success-actions">
               <a class="btn btn-primary" href="shop.html">Continue Shopping</a>
               <button class="btn btn-secondary" type="button" data-auth-signout>Sign Out</button>
@@ -277,7 +277,7 @@
           <div class="auth-success" data-auth-register-done hidden>
             <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
             <h2>Welcome, <span data-session-name>there</span></h2>
-            <p>Demo account saved locally for <strong data-session-email></strong>. No email was sent and no password was stored.</p>
+            <p>Your account is ready for <strong data-session-email></strong>.</p>
             <div class="auth-success-actions">
               <a class="btn btn-primary" href="shop.html">Start Shopping</a>
               <button class="btn btn-secondary" type="button" data-auth-signout>Sign Out</button>
@@ -286,7 +286,7 @@
           <div class="auth-success" data-auth-forgot-done hidden>
             <i class="fa-regular fa-envelope" aria-hidden="true"></i>
             <h2>Check Your Inbox</h2>
-            <p>If an account existed for <strong data-forgot-email></strong>, a reset link would be sent. No email was sent in this demo.</p>
+            <p>If an account exists for <strong data-forgot-email></strong>, a reset link will be sent when email delivery is configured. No email was sent.</p>
             <div class="auth-success-actions">
               <a class="btn btn-primary" href="#reset-password">Continue to Reset</a>
               <a class="btn btn-secondary" href="#login">Back to Sign In</a>
@@ -295,7 +295,7 @@
           <div class="auth-success" data-auth-reset-done hidden>
             <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
             <h2>Password Updated</h2>
-            <p>Demo only — the new password was not saved. You can sign in with any valid-looking credentials.</p>
+            <p>Your password was updated. You can sign in with your new password.</p>
             <div class="auth-success-actions">
               <a class="btn btn-primary" href="#login">Sign In</a>
             </div>

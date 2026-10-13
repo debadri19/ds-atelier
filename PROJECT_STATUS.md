@@ -1,11 +1,11 @@
 # Project Status — DS ATELIER
 
 Version: v0.1.5  
-Status: Alpha — Standalone Frontend (in progress)
+Status: Alpha — Frontend plus Phase 2 customer authentication (in progress)
 
 Truthful snapshot. Do not treat planned work as done.
 
-The standalone frontend is not yet integrated with the Core PHP backend.
+Catalog, cart, checkout, and payments are not integrated. Phase 2 wires customer `auth.html` to same-origin PHP against dedicated `ds_atelier_dev`. Dashboard authentication remains a frontend demo.
 
 ---
 
@@ -21,7 +21,7 @@ The standalone frontend is not yet integrated with the Core PHP backend.
 - Support page
 - Customer account dashboard (`account.html`) — frontend demo
 - Cart, Checkout, Wishlist, Designs — frontend demo pages
-- Customer authentication (`auth.html`) — frontend demo; `#login` `#register` `#forgot-password` `#reset-password`; legacy redirects retained
+- Customer authentication (`auth.html`) — Phase 2 server login/register/logout/reset against `ds_atelier_dev`; `#login` `#register` `#forgot-password` `#reset-password`; legacy redirects retained. Password-reset email is not sent (SMTP not configured).
 - Studio Dashboard (`dashboard/index.html`, categories, products, designs, media) — frontend demo
 - Dashboard authentication (`dashboard/auth.html`) — frontend demo; separate from customer auth; legacy `dashboard/login.html` redirect retained
 - Responsive header
@@ -31,6 +31,8 @@ The standalone frontend is not yet integrated with the Core PHP backend.
 - Product card View Product CTA
 - Documentation lock
 - Frontend UI polish phase for the current six pages
+- Phase 1 backend foundation files under `backend/`
+- Phase 2 customer PHP/JSON handlers under `backend/public/customer/` and `customers` / `customer_password_resets` tables in `ds_atelier_dev`
 
 ### Header
 
@@ -74,7 +76,7 @@ The standalone frontend is not yet integrated with the Core PHP backend.
 
 ## Pending
 
-- Core PHP/MySQL backend integration (catalog, auth, cart, checkout, payment, orders, wishlist, admin)
+- Core PHP/MySQL integration (catalog, cart, checkout, payment, orders, wishlist, admin). Customer auth is Phase 2; Dashboard auth is not.
 - Real product/catalog and artwork migration (replace `js/catalog.js` / `js/artworks.js` mocks)
 - Dashboard production persistence (Categories/Products/Designs/Media) and placeholder modules (Orders, Customers, Discounts, Settings)
 - Dedicated Custom Order / Bulk Orders / Dropshipping PHP pages — **Needs Verification** against the backend repo (Home sections exist here; dedicated PHP files do not)
@@ -93,7 +95,9 @@ See `docs/PROJECT_AUDIT_PENDING.md` for evidence and status labels.
 - Apparel visuals on Home are SVG placeholders, not photography
 - Storefront images live under `assets/images/{hero,categories,products,services,icons,miscellaneous}/`
 - Product mockups live under `assets/images/products/<product-slug>/mockups/default/<color>/`
-- Cart, Checkout, Account, Wishlist, and Auth persist in the browser only (`localStorage` / `sessionStorage`); they are not server sessions
+- Cart, Checkout, Account, and Wishlist persist in the browser only (`localStorage` / `sessionStorage`); they are not server sessions
+- Customer Auth uses a PHP session against `ds_atelier_dev`. Forgot-password issues a hashed token but does not send email (SMTP not configured). Reset requires `?token=` on `auth.html#reset-password`.
+- `account.html` still uses the demo session store for account UI data
 - Mock product data in `js/catalog.js` only; Product Details uses `product.html?id=`
 - Canonical customer auth in this working tree is `auth.html`; that rename is not in commit `555d395`
 
@@ -101,9 +105,9 @@ See `docs/PROJECT_AUDIT_PENDING.md` for evidence and status labels.
 
 ## Next phase
 
-1. Safely commit/push the local authentication route rename when the owner approves
-2. PHP backend integration and production catalog migration
-3. Persistent Dashboard modules/media and real commerce/payment processing
+1. Safely commit/push the local authentication route rename and Phase 2 backend when the owner approves
+2. Configure SMTP before claiming password-reset email delivery
+3. Product catalog/variant/artwork schema and remaining commerce/payment processing (Phase 3+)
 4. Production end-to-end QA
 
 Frontend pages for Home, Shop, Product, About, Policy, Support, Account, Cart, Checkout, Wishlist, Designs, and Auth exist. Backend integration, production catalog, and production QA are not complete.

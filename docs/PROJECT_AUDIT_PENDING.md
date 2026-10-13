@@ -20,11 +20,11 @@ These items are supported by the current workspace and/or the 2026-10-11 histori
 Required future implementation.
 
 - Catalog still lives in `js/catalog.js` mock data.
-- Customer auth, account, addresses, wishlist and order history are frontend/demo stores (`localStorage` / `sessionStorage`), not server sessions.
+- Customer auth is Phase 2 PHP against `ds_atelier_dev`. Account, addresses, wishlist and order history remain frontend/demo stores (`localStorage` / `sessionStorage`).
 - Cart and Checkout pages exist, but totals, stock, shipping, tax and payment are not server-validated.
 - Success/error copy is demo-only.
 
-**Evidence:** `docs/BACKEND_INTEGRATION.md` still states integration is not done; `js/catalog.js`, `js/commerce.js`, `js/checkout.js`, `js/auth.js` remain client-side. No PHP/MySQL application files are in this workspace.
+**Evidence:** `docs/BACKEND_INTEGRATION.md` still states catalog/cart/checkout are not done; `js/catalog.js`, `js/commerce.js`, `js/checkout.js` remain client-side. Customer `js/auth.js` posts to `backend/public/customer/*.php` (Phase 2).
 
 ### P2 — Production catalog and artwork data
 
@@ -100,14 +100,14 @@ States: `#login`, `#register`, `#forgot-password`, `#reset-password`
 
 Legacy redirects retained: `login.html`, `register.html`, `forgot-password.html`, `reset-password.html` (query string before hash; `location.replace()`).
 
-Registration fields remain on the shared card: Full Name, Email, Mobile, Password, Confirm Password, Terms. Demo-only; passwords are not stored.
+Registration fields remain on the shared card: Full Name, Email, Mobile, Password, Confirm Password, Terms. Phase 2 stores hashed passwords in `ds_atelier_dev`. SMTP is not configured, so forgot-password does not send email.
 
 **QA (executed 2026-10-11, before this documentation task):**
 
 - Registration-as-fourth-state Playwright: 20/20 PASS.
 - Auth rename Playwright: required customer cases PASS (four states, Back/Forward, validation, toggles, query-before-hash, four legacy redirects, full reset query string, unknown hash → login, no redirect loops). One extra case (`login.html?ref=home#register`) first FAIL due to leftover demo session; retest with a clean session PASS.
 
-Real backend authentication is **not** complete; that remains under P1.
+Customer backend authentication is Phase 2 (implemented locally, not committed). Catalog/cart/checkout backend work remains under P1. Dashboard authentication remains demo/UI-only.
 
 ### Dashboard authentication UI and route rename
 
@@ -154,7 +154,7 @@ Do not promote these to Confirmed Pending or Completed without more evidence.
 | Catalog | `js/catalog.js` mock products | PHP product queries, stock, production imagery |
 | Artwork | `js/artworks.js` mock dataset | Persistent artwork/product mapping |
 | Cart / Checkout | `cart.html`, `checkout.html`, `js/commerce.js` localStorage | Server cart, payment capture, tax/shipping authority |
-| Customer auth | `auth.html` + `js/auth.js` demo session | Real login, registration, email reset |
+| Customer auth | `auth.html` + `js/auth.js` + PHP session on `ds_atelier_dev` | SMTP password-reset email (not configured) |
 | Account / orders | `account.html` demo orders | Server order history |
 | Wishlist | `wishlist.html` local store | Server wishlist |
 | Dashboard | session demo store; placeholder commerce modules | Persistent CRUD, media uploads, admin auth |
@@ -173,7 +173,7 @@ Supported by current files and `docs/BACKEND_INTEGRATION.md`:
 - Durable media storage for Dashboard Media/mockups
 - Production end-to-end QA after that wiring (P6)
 
-This frontend repository has no Node build step and no database.
+This frontend repository has no Node build step. Phase 1 added `backend/` foundation files. Phase 2 added customer auth tables and PHP/JSON handlers against `ds_atelier_dev`. Catalog/cart/checkout handlers are not present.
 
 ---
 
@@ -254,3 +254,25 @@ P5 (documentation reconciliation) is the purpose of this 2026-10-11 documentatio
 ## Project boundary
 
 This record is for **DS ATELIER only**.
+
+---
+
+## Phase 1 backend foundation (2026-10-11)
+
+Scaffold only. Not customer authentication and not storefront integration.
+
+- New files live under `backend/`
+- Existing auth/docs working-tree files were preserved
+- Admin guard denies by default
+- PDO live connection was later verified against dedicated `ds_atelier_dev` (`database=ok`)
+
+## Phase 2 customer authentication (2026-10-13)
+
+Implemented locally, not committed. Dedicated `ds_atelier_dev` only.
+
+- Migrations applied: `customers`, `customer_password_resets`
+- `auth.html` / `js/auth.js` post to `backend/public/customer/*.php`
+- Tests: `backend/tests/phase2_customer_auth.php` PASS; HTTP CSRF/register/login/forgot PASS; Playwright register/login/forgot PASS
+- Password-reset email: **not sent**. SMTP is not configured. Public JSON reports `email_sent: false` and never includes the raw token
+- Dashboard `dashboard/auth.html` was not modified
+- Catalog, cart, wishlist, checkout, payments, Newsletter, Meta Pixel/CAPI were not implemented

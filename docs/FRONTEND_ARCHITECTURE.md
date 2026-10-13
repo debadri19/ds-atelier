@@ -1,6 +1,6 @@
 # Frontend Architecture — DS ATELIER
 
-Standalone static frontend. No bundler. No backend in this phase.
+Standalone static frontend plus Phase 2 customer authentication. No bundler. Catalog, cart, checkout, and Dashboard authentication remain frontend-only.
 
 ---
 
@@ -68,7 +68,7 @@ Standalone static frontend. No bundler. No backend in this phase.
     cart.js                  Cart page
     checkout.js              Checkout page (frontend demo)
     wishlist.js              Wishlist page
-    auth.js                  Customer authentication states
+    auth.js                  Customer authentication states (PHP/JSON in Phase 2)
     admin-data.js            Dashboard session demo data (`ds-atelier-admin-demo`)
     admin.js                 Dashboard shell, nav, toast, confirm modal
     admin-login.js           Dashboard authentication states

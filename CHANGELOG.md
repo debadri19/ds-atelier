@@ -4,6 +4,31 @@ Chronological history of changes that actually exist. Dates use the work session
 
 ---
 
+## 2026-10-13
+
+### Phase 2 customer authentication
+
+- Applied `customers` and `customer_password_resets` to dedicated `ds_atelier_dev`
+- Wired `auth.html` / `js/auth.js` to same-origin PHP/JSON customer handlers
+- Password hashing, CSRF, session regeneration, duplicate-account checks, generic login errors
+- Reset tokens are hashed, expiring, and single-use; raw tokens are not returned in public JSON
+- SMTP is not configured; forgot-password does not send email and does not claim that it did
+- Dashboard authentication, catalog, cart, checkout, and payments were not changed
+
+---
+
+## 2026-10-11
+
+### Phase 1 backend foundation
+
+- Added `backend/` PHP 8.2 scaffold: config/env, PDO factory, session/CSRF helpers, fail-closed admin guard, logging, migration convention
+- Added `backend/.env.example`, `backend/README.md`, `backend/tests/phase1_foundation.php`
+- Storefront `.html` routes and authentication UI were not changed in this pass
+- No application catalog/auth/cart/checkout tables were created
+- Dedicated `ds_atelier_dev` MySQL was not available in this environment; PDO live connection remains unverified
+
+---
+
 ## 2026-10-04
 
 ### Customer account dashboard

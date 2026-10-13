@@ -1,6 +1,18 @@
 (function (global) {
   var SESSION_KEY = "ds-atelier-demo-session";
   var bound = false;
+  var csrfToken = "";
+  var serverCustomer = null;
+  var sessionReady = false;
+  var API = {
+    csrf: "backend/public/customer/csrf.php",
+    session: "backend/public/customer/session.php",
+    register: "backend/public/customer/register.php",
+    login: "backend/public/customer/login.php",
+    logout: "backend/public/customer/logout.php",
+    forgot: "backend/public/customer/forgot.php",
+    reset: "backend/public/customer/reset.php"
+  };
 
   function qs(sel, root) {
     return (root || document).querySelector(sel);
@@ -58,10 +70,97 @@
   }
 
   function clearSession() {
+    serverCustomer = null;
     try {
       localStorage.removeItem(SESSION_KEY);
       sessionStorage.removeItem(SESSION_KEY);
     } catch (e) {}
+  }
+
+  function resetTokenFromLocation() {
+    try {
+      return new URLSearchParams(window.location.search).get("token") || "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function ensureCsrf() {
+    if (csrfToken) return Promise.resolve(csrfToken);
+    return fetch(API.csrf, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" }
+    }).then(function (response) {
+      return response.json().catch(function () {
+        return {};
+      });
+    }).then(function (data) {
+      if (data && data.csrf) csrfToken = data.csrf;
+      return csrfToken;
+    });
+  }
+
+  function postAuth(url, payload) {
+    payload = payload || {};
+    return ensureCsrf().then(function () {
+      payload._csrf = csrfToken;
+      return fetch(url, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-CSRF-TOKEN": csrfToken
+        },
+        body: JSON.stringify(payload)
+      });
+    }).then(function (response) {
+      return response.json().catch(function () {
+        return { ok: false, error: "Something went wrong. Please try again later." };
+      }).then(function (data) {
+        if (data && data.csrf) csrfToken = data.csrf;
+        data.status = response.status;
+        return data;
+      });
+    });
+  }
+
+  function refreshServerSession() {
+    return fetch(API.session, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" }
+    }).then(function (response) {
+      return response.json().catch(function () {
+        return { ok: false };
+      });
+    }).then(function (data) {
+      sessionReady = true;
+      if (data && data.csrf) csrfToken = data.csrf;
+      if (data && data.authenticated && data.customer) {
+        serverCustomer = data.customer;
+        writeSession(data.customer, true);
+        return data.customer;
+      }
+      serverCustomer = null;
+      clearSession();
+      sessionReady = true;
+      return null;
+    }).catch(function () {
+      sessionReady = true;
+      serverCustomer = null;
+      return null;
+    });
+  }
+
+  function applyServerFieldErrors(form, fields) {
+    if (!fields) return;
+    Object.keys(fields).forEach(function (name) {
+      setFieldError(qs("[data-field='" + name + "']", form), fields[name]);
+      if (name === "terms") {
+        var termsError = qs("[data-field='terms'] .form-error", form);
+        if (termsError) termsError.textContent = fields[name];
+      }
+    });
   }
 
   function setFieldError(field, message) {
@@ -116,7 +215,7 @@
     },
     "reset-password": {
       title: "Reset Password",
-      subtitle: "Choose a new password. Nothing is saved on a server in this demo.",
+      subtitle: "Choose a new password using the reset link from your email.",
       documentTitle: "Reset Password - DS ATELIER",
       crumb: "Reset Password",
       kicker: true
@@ -198,7 +297,7 @@
     setHidden(qs("[data-auth-reset-done]"), true);
     setHidden(qs("[data-auth-register-done]"), true);
 
-    var session = readSession();
+    var session = sessionReady ? serverCustomer : null;
     if (isLogin && session && signed) {
       showSignedIn(session);
       return;
@@ -230,15 +329,12 @@
     applyAuthState(state);
   }
 
-  function busy(el) {
-    if (global.DSAtelier && global.DSAtelier.ui && global.DSAtelier.ui.busy) global.DSAtelier.ui.busy(el);
-  }
-
-  function nameFromEmail(email) {
-    var local = String(email || "").split("@")[0] || "";
-    local = local.replace(/[._-]+/g, " ").trim();
-    if (!local) return "there";
-    return local.charAt(0).toUpperCase() + local.slice(1);
+  function setBusy(el, on) {
+    if (!el) return;
+    el.classList.toggle("is-busy", !!on);
+    if (on) el.setAttribute("aria-busy", "true");
+    else el.removeAttribute("aria-busy");
+    el.disabled = !!on;
   }
 
   function fillSessionCopy(root, session) {
@@ -302,8 +398,14 @@
 
     if (event.target.closest("[data-auth-signout]")) {
       event.preventDefault();
-      clearSession();
-      window.location.href = "auth.html#login";
+      var signoutBtn = event.target.closest("[data-auth-signout]");
+      setBusy(signoutBtn, true);
+      postAuth(API.logout, {}).catch(function () {
+        return { ok: true };
+      }).then(function () {
+        clearSession();
+        window.location.href = "auth.html#login";
+      });
       return;
     }
 
@@ -327,12 +429,9 @@
   function bindLogin() {
     var loginForm = qs("[data-auth-login]");
     if (!loginForm || loginForm.getAttribute("data-bound") === "true") {
-      if (loginForm && readSession()) showSignedIn(readSession());
       return;
     }
     loginForm.setAttribute("data-bound", "true");
-    var session = readSession();
-    if (session) showSignedIn(session);
 
     loginForm.addEventListener("submit", function (event) {
       event.preventDefault();
@@ -379,13 +478,28 @@
         return;
       }
 
-      busy(loginForm.querySelector('button[type="submit"]'));
-      writeSession({
-        email: asEmail ? identifier.trim() : "",
-        name: asEmail ? nameFromEmail(identifier) : "there",
-        mobile: asMobile ? mobileDigits(identifier) : ""
-      }, remember);
-      showSignedIn(readSession());
+      var submitBtn = loginForm.querySelector('button[type="submit"]');
+      setBusy(submitBtn, true);
+      postAuth(API.login, {
+        identifier: String(identifier).trim(),
+        password: password,
+        remember: remember
+      }).then(function (data) {
+        if (data && data.ok && data.customer) {
+          serverCustomer = data.customer;
+          writeSession(data.customer, remember);
+          showSignedIn(data.customer);
+          return;
+        }
+        applyServerFieldErrors(loginForm, data && data.fields);
+        setNote(note, (data && data.error) || "Unable to sign in. Please try again later.", "is-error");
+        var next = firstInvalidField(loginForm);
+        if (next) next.focus();
+      }).catch(function () {
+        setNote(note, "Something went wrong. Please try again later.", "is-error");
+      }).then(function () {
+        setBusy(submitBtn, false);
+      });
     });
   }
 
@@ -463,9 +577,32 @@
         return;
       }
 
-      busy(registerForm.querySelector('button[type="submit"]'));
-      writeSession({ email: email.trim(), name: String(name).trim(), mobile: mobileDigits(mobile) }, true);
-      showRegisterDone(readSession());
+      var submitBtn = registerForm.querySelector('button[type="submit"]');
+      setBusy(submitBtn, true);
+      postAuth(API.register, {
+        name: String(name).trim(),
+        email: String(email).trim(),
+        mobile: mobileDigits(mobile),
+        password: password,
+        confirm: confirm,
+        terms: !!(terms && terms.checked)
+      }).then(function (data) {
+        if (data && data.ok && data.customer) {
+          serverCustomer = data.customer;
+          writeSession(data.customer, true);
+          showRegisterDone(data.customer);
+          return;
+        }
+        applyServerFieldErrors(registerForm, data && data.fields);
+        setNote(note, (data && data.error) || "Unable to create the account. Please try again later.", "is-error");
+        var next = firstInvalidField(registerForm);
+        if (next) next.focus();
+        else if (terms && data && data.fields && data.fields.terms) terms.focus();
+      }).catch(function () {
+        setNote(note, "Something went wrong. Please try again later.", "is-error");
+      }).then(function () {
+        setBusy(submitBtn, false);
+      });
     });
   }
 
@@ -496,15 +633,29 @@
         if (invalidEl) invalidEl.focus();
         return;
       }
-      busy(forgotForm.querySelector('button[type="submit"]'));
-      var wrap = qs("[data-auth-form-wrap]");
-      var done = qs("[data-auth-forgot-done]");
-      if (wrap) wrap.hidden = true;
-      if (done) {
-        done.hidden = false;
-        var sent = qs("[data-forgot-email]", done);
-        if (sent) sent.textContent = email.trim();
-      }
+      var submitBtn = forgotForm.querySelector('button[type="submit"]');
+      setBusy(submitBtn, true);
+      postAuth(API.forgot, { email: String(email).trim() }).then(function (data) {
+        if (data && data.ok) {
+          var wrap = qs("[data-auth-form-wrap]");
+          var done = qs("[data-auth-forgot-done]");
+          if (wrap) wrap.hidden = true;
+          if (done) {
+            done.hidden = false;
+            var sent = qs("[data-forgot-email]", done);
+            if (sent) sent.textContent = email.trim();
+          }
+          return;
+        }
+        applyServerFieldErrors(forgotForm, data && data.fields);
+        setNote(note, (data && data.error) || "Something went wrong. Please try again later.", "is-error");
+        var next = firstInvalidField(forgotForm);
+        if (next) next.focus();
+      }).catch(function () {
+        setNote(note, "Something went wrong. Please try again later.", "is-error");
+      }).then(function () {
+        setBusy(submitBtn, false);
+      });
     });
   }
 
@@ -544,11 +695,35 @@
         if (focusEl) focusEl.focus();
         return;
       }
-      busy(resetForm.querySelector('button[type="submit"]'));
-      var wrap = qs("[data-auth-form-wrap]");
-      var done = qs("[data-auth-reset-done]");
-      if (wrap) wrap.hidden = true;
-      if (done) done.hidden = false;
+      var token = resetTokenFromLocation();
+      if (!token) {
+        setNote(note, "This reset link is invalid or has expired.", "is-error");
+        return;
+      }
+      var submitBtn = resetForm.querySelector('button[type="submit"]');
+      setBusy(submitBtn, true);
+      postAuth(API.reset, {
+        token: token,
+        password: password,
+        confirm: confirm
+      }).then(function (data) {
+        if (data && data.ok) {
+          clearSession();
+          var wrap = qs("[data-auth-form-wrap]");
+          var done = qs("[data-auth-reset-done]");
+          if (wrap) wrap.hidden = true;
+          if (done) done.hidden = false;
+          return;
+        }
+        applyServerFieldErrors(resetForm, data && data.fields);
+        setNote(note, (data && data.error) || "Unable to update the password. Please try again later.", "is-error");
+        var next = firstInvalidField(resetForm);
+        if (next) next.focus();
+      }).catch(function () {
+        setNote(note, "Something went wrong. Please try again later.", "is-error");
+      }).then(function () {
+        setBusy(submitBtn, false);
+      });
     });
   }
 
@@ -559,13 +734,15 @@
     bindRegister();
     bindForgot();
     bindReset();
-    syncAuthFromLocation();
     if (!bound) {
       document.addEventListener("click", onClick);
       window.addEventListener("hashchange", syncAuthFromLocation);
       window.addEventListener("popstate", syncAuthFromLocation);
       bound = true;
     }
+    refreshServerSession().then(function () {
+      syncAuthFromLocation();
+    });
   }
 
   global.DSAtelier = global.DSAtelier || {};

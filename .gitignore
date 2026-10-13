@@ -156,6 +156,13 @@
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
 
+# DS ATELIER backend secrets and runtime files
+backend/.env
+backend/storage/logs/*
+!backend/storage/logs/.gitkeep
+backend/storage/private/*
+!backend/storage/private/.gitkeep
+
 # Compressed files
 *.zip
 *.rar
