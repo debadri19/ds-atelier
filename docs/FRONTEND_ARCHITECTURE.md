@@ -1,6 +1,6 @@
 # Frontend Architecture — DS ATELIER
 
-Standalone static frontend plus Phase 2 customer authentication. No bundler. Catalog, cart, checkout, and Dashboard authentication remain frontend-only.
+Standalone static frontend plus Phase 2 customer authentication and Phase 3 read-only catalog APIs. No bundler. Cart, checkout, and Dashboard authentication remain frontend-only.
 
 ---
 
@@ -54,7 +54,7 @@ Standalone static frontend plus Phase 2 customer authentication. No bundler. Cat
     admin-login.css          Dashboard authentication layout
   js/
     theme.js                 Light/dark persistence
-    catalog.js               Canonical frontend product catalog
+    catalog.js               Catalog API client plus development mock fallback
     artworks.js              Canonical frontend artwork dataset
     main.js                  Home featured products, drawer, newsletter
     designs.js               Designs category filter and artwork grid

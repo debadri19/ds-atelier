@@ -26,6 +26,16 @@ function ds_atelier_require_post(): bool
     return strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? '')) === 'POST';
 }
 
+function ds_atelier_require_get(): bool
+{
+    return strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? '')) === 'GET';
+}
+
+function ds_atelier_query_params(): array
+{
+    return is_array($_GET) ? $_GET : [];
+}
+
 function ds_atelier_boot_customer_request(): array
 {
     $config = ds_atelier_bootstrap();

@@ -41,18 +41,52 @@
     return "₹" + value.toLocaleString("en-IN");
   }
 
+  function selectedVariant() {
+    if (!product || !catalog || !catalog.findVariant) return null;
+    return catalog.findVariant(product, state.color, state.size);
+  }
+
+  function currentPrice() {
+    var variant = selectedVariant();
+    return variant ? Number(variant.price) : Number(product.price);
+  }
+
+  function currentMrp() {
+    var variant = selectedVariant();
+    return variant ? Number(variant.mrp) : Number(product.mrp);
+  }
+
+  function currentSku() {
+    var variant = selectedVariant();
+    return variant && variant.sku ? variant.sku : product.sku;
+  }
+
   function discountPercent() {
-    return Math.round(((product.mrp - product.price) / product.mrp) * 100);
+    var mrp = currentMrp();
+    var price = currentPrice();
+    if (!mrp) return 0;
+    return Math.round(((mrp - price) / mrp) * 100);
   }
 
   function estimatedTotal() {
-    return product.price * state.quantity;
+    return currentPrice() * state.quantity;
+  }
+
+  function variantAvailable() {
+    if (!state.color || !state.size) return true;
+    if (catalog && catalog.variantPurchasable) return catalog.variantPurchasable(product, state.color, state.size);
+    var variant = selectedVariant();
+    if (!variant) return false;
+    if (product.availability === "Made to order") return variant.active !== false;
+    return variant.active !== false && Number(variant.stock || 0) > 0;
   }
 
   function configuredLine() {
+    var variant = selectedVariant();
     return {
       productId: product.id,
-      sku: product.sku,
+      sku: currentSku(),
+      variantId: variant ? variant.id : "",
       name: product.name,
       printType: state.printType,
       color: state.color,
@@ -67,8 +101,8 @@
       specialInstructions: state.specialInstructions,
       artworkId: artwork ? artwork.id : "",
       artworkName: artwork ? artwork.name : "",
-      price: product.price,
-      mrp: product.mrp,
+      price: currentPrice(),
+      mrp: currentMrp(),
       weight: product.weight,
       estimatedTotal: estimatedTotal()
     };
@@ -144,8 +178,8 @@
     setText("[data-product-name]", product.name);
     setText("[data-product-rating]", String(product.rating));
     setText("[data-product-reviews]", product.reviews + " reviews");
-    setText("[data-product-price]", money(product.price));
-    setText("[data-product-mrp]", money(product.mrp));
+    setText("[data-product-price]", money(currentPrice()));
+    setText("[data-product-mrp]", money(currentMrp()));
     setText("[data-product-off]", discountPercent() + "% off");
     setText("[data-product-lead]", String(product.lead || "").replace(/\s*Configuration is required before Add to Cart\.?/i, "").trim());
     hydrateArtworkContext();
@@ -189,7 +223,8 @@
     var sizeWrap = document.querySelector("[data-size-options]");
     if (sizeWrap) {
       sizeWrap.innerHTML = product.sizes.map(function (size) {
-        return '<button class="size-btn" type="button" data-size="' + size + '" aria-pressed="false">' + size + "</button>";
+        var available = !state.color || !catalog || !catalog.variantPurchasable || catalog.variantPurchasable(product, state.color, size);
+        return '<button class="size-btn" type="button" data-size="' + size + '" aria-pressed="false"' + (available ? "" : " disabled") + '>' + size + "</button>";
       }).join("");
     }
 
@@ -297,7 +332,7 @@
   }
 
   function isComplete() {
-    return Boolean(state.printType && state.color && state.size && uploadsReady() && state.printPosition && state.quantity >= 1);
+    return Boolean(state.printType && state.color && state.size && uploadsReady() && state.printPosition && state.quantity >= 1 && variantAvailable());
   }
 
   function missing() {
@@ -306,6 +341,7 @@
     if (!state.printPosition) needs.push("print position");
     if (!state.color) needs.push("color");
     if (!state.size) needs.push("size");
+    if (state.color && state.size && !variantAvailable()) needs.push("an available size and colour");
     if (!uploadsReady()) {
       var slots = requiredUploadSlots();
       if (slots.length === 2) needs.push("front and back design files");
@@ -317,12 +353,15 @@
 
   function updateSummary() {
     var map = {
-      "[data-summary-mrp]": money(product.mrp),
-      "[data-summary-price]": money(product.price),
+      "[data-summary-mrp]": money(currentMrp()),
+      "[data-summary-price]": money(currentPrice()),
       "[data-summary-discount]": discountPercent() + "%",
       "[data-summary-qty]": String(state.quantity),
       "[data-summary-total]": money(estimatedTotal())
     };
+    setText("[data-product-price]", money(currentPrice()));
+    setText("[data-product-mrp]", money(currentMrp()));
+    setText("[data-product-off]", discountPercent() + "% off");
     Object.keys(map).forEach(function (sel) {
       var el = document.querySelector(sel);
       if (el) el.textContent = map[sel];
@@ -533,7 +572,25 @@
     if (color) {
       state.color = color.getAttribute("data-color");
       selectExclusive("color", state.color);
+      if (state.size && !variantAvailable()) {
+        state.size = "";
+        selectExclusive("size", "");
+      }
+      var sizeWrap = document.querySelector("[data-size-options]");
+      if (sizeWrap && product.sizes) {
+        sizeWrap.querySelectorAll("[data-size]").forEach(function (btn) {
+          var size = btn.getAttribute("data-size");
+          var available = !catalog || !catalog.variantPurchasable || catalog.variantPurchasable(product, state.color, size);
+          btn.disabled = !available;
+          if (!available && state.size === size) {
+            state.size = "";
+            btn.classList.remove("is-selected");
+            btn.setAttribute("aria-pressed", "false");
+          }
+        });
+      }
       applyColorImage();
+      updateSummary();
       updateActions();
     }
 
@@ -542,6 +599,7 @@
       state.size = size.getAttribute("data-size");
       selectExclusive("size", state.size);
       applyColorImage();
+      updateSummary();
       updateActions();
     }
 
@@ -585,7 +643,7 @@
     }
 
     var addCart = event.target.closest("[data-add-cart]");
-    if (addCart && isComplete()) {
+    if (addCart && isComplete() && variantAvailable()) {
       busy(addCart);
       var line = configuredLine();
       var commerce = global.DSAtelier && global.DSAtelier.commerce;
@@ -611,7 +669,7 @@
     }
 
     var buyNow = event.target.closest("[data-buy-now]");
-    if (buyNow && isComplete() && hint) {
+    if (buyNow && isComplete() && variantAvailable() && hint) {
       busy(buyNow);
       configuredLine();
       hint.hidden = false;
@@ -714,14 +772,52 @@
     }
   }
 
+  function showProductStatus(kind, message) {
+    var stage = document.querySelector(".product-stage");
+    if (!stage) return;
+    stage.innerHTML = '<div class="product-status product-status-' + kind + '"><p>' + message + '</p><p><a class="btn btn-secondary" href="shop.html">Back to Shop</a></p></div>';
+    if (relatedGrid) relatedGrid.innerHTML = "";
+  }
+
+  function mountProduct() {
+    related = catalog && product ? catalog.getRelated(product.id, 4) : [];
+    if (!product || !mainImg) return;
+    state = {
+      image: 0,
+      printType: "",
+      color: "",
+      size: "",
+      quantity: 1,
+      designFile: null,
+      designFiles: { front: null, back: null },
+      printPosition: "",
+      specialInstructions: ""
+    };
+    hydrate();
+    if (thumbs) {
+      thumbs.innerHTML = (product.images || []).map(function (item, i) {
+        return '<button type="button" data-thumb="' + i + '"' + (i === 0 ? ' class="is-active"' : "") + ' aria-label="Show image ' + (i + 1) + '"><img src="' + item.src + '" alt="" width="160" height="160"></button>';
+      }).join("");
+    }
+    if (relatedGrid) relatedGrid.innerHTML = related.map(card).join("");
+    setImage(0);
+    updateSummary();
+    updateActions();
+    bindLocal();
+    syncUploadZones();
+    if (!bound) {
+      document.addEventListener("click", onClick);
+      document.addEventListener("keydown", onKey);
+      bound = true;
+    }
+  }
+
   function init() {
     catalog = global.DSAtelier && global.DSAtelier.catalog;
     var requestedId = queryParam("id");
     var artworkId = queryParam("design");
     var artworks = global.DSAtelier && global.DSAtelier.artworks;
     artwork = artworks && artworks.getById ? artworks.getById(artworkId) : null;
-    product = catalog && catalog.resolve ? catalog.resolve(requestedId) : null;
-    related = catalog && product ? catalog.getRelated(product.id, 4) : [];
     mainImg = document.querySelector("[data-main-image]");
     thumbs = document.querySelector("[data-thumbs]");
     relatedGrid = document.querySelector("[data-related-grid]");
@@ -738,35 +834,32 @@
     lastFocus = null;
     activeOverlay = null;
     previewUrls = { front: "", back: "" };
-    if (!product || !mainImg) return;
-    state = {
-      image: 0,
-      printType: "",
-      color: "",
-      size: "",
-      quantity: 1,
-      designFile: null,
-      designFiles: { front: null, back: null },
-      printPosition: "",
-      specialInstructions: ""
-    };
-    hydrate();
-    if (thumbs) {
-      thumbs.innerHTML = product.images.map(function (item, i) {
-        return '<button type="button" data-thumb="' + i + '"' + (i === 0 ? ' class="is-active"' : "") + ' aria-label="Show image ' + (i + 1) + '"><img src="' + item.src + '" alt="" width="160" height="160"></button>';
-      }).join("");
+    if (!mainImg) return;
+    if (!requestedId) {
+      showProductStatus("missing", "Choose a product from Shop to view details.");
+      return;
     }
-    if (relatedGrid) relatedGrid.innerHTML = related.map(card).join("");
-    setImage(0);
-    updateSummary();
-    updateActions();
-    bindLocal();
-    syncUploadZones();
-    if (!bound) {
-      document.addEventListener("click", onClick);
-      document.addEventListener("keydown", onKey);
-      bound = true;
+    if (catalog && catalog.loadProduct) {
+      if (hint) hint.textContent = "Loading product.";
+      var ready = catalog.ready && catalog.ready.then ? catalog.ready : Promise.resolve();
+      Promise.all([catalog.loadProduct(requestedId), ready]).then(function (results) {
+        var result = results[0];
+        if (!result || !result.ok || !result.product) {
+          if (result && result.code === 404) showProductStatus("missing", "This product is not available.");
+          else showProductStatus("error", (result && result.error) || "Unable to load this product. Please try again later.");
+          return;
+        }
+        product = result.product;
+        mountProduct();
+      });
+      return;
     }
+    product = catalog && catalog.getById ? catalog.getById(requestedId) : null;
+    if (!product) {
+      showProductStatus("missing", "This product is not available.");
+      return;
+    }
+    mountProduct();
   }
 
   global.DSAtelier = global.DSAtelier || {};

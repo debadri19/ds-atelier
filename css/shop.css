@@ -222,6 +222,10 @@
   color: var(--color-text-muted);
 }
 
+.shop-error {
+  color: var(--color-text);
+}
+
 .shop-pagination {
   margin-top: 1.75rem;
 }

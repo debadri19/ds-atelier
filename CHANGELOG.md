@@ -4,6 +4,19 @@ Chronological history of changes that actually exist. Dates use the work session
 
 ---
 
+## 2026-10-21
+
+### Phase 3 product catalog
+
+- Added catalog schema and additive migrations for categories, sizes, colours, products, media, print types, and variants
+- Seeded development-only fixtures from the existing mock catalog without overwriting existing product rows
+- Added read-only JSON handlers for product listing, product details, and categories
+- Wired Shop, Home featured products, Product Details, and header search to the catalog API
+- Variant price, MRP, SKU, and availability now drive PDP selection; unavailable variants cannot be purchased
+- Static mock fallback is limited to development/demo mode and does not silently mask production API failures
+
+---
+
 ## 2026-10-13
 
 ### Phase 2 customer authentication

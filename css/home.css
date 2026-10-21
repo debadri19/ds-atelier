@@ -181,6 +181,13 @@
   gap: 1.1rem;
 }
 
+.product-grid .shop-empty {
+  grid-column: 1 / -1;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
 .cta-print {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;

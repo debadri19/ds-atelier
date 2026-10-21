@@ -30,10 +30,28 @@
     catalog = window.DSAtelier && window.DSAtelier.catalog;
     products = catalog && catalog.getFeatured ? catalog.getFeatured() : [];
     var grid = document.querySelector("[data-product-grid]");
-    if (grid) grid.innerHTML = products.map(productCard).join("");
+    if (!grid) return;
+    if (products.length) {
+      grid.innerHTML = products.map(productCard).join("");
+      return;
+    }
+    if (catalog && catalog.error) {
+      grid.innerHTML = '<p class="shop-empty">Unable to load featured products. Please try again later.</p>';
+      return;
+    }
+    grid.innerHTML = '<p class="shop-empty">Loading products.</p>';
   }
 
-  renderHome();
+  function bootHome() {
+    catalog = window.DSAtelier && window.DSAtelier.catalog;
+    if (catalog && catalog.ready && catalog.ready.then) {
+      catalog.ready.then(renderHome);
+      return;
+    }
+    renderHome();
+  }
+
+  bootHome();
 
   function drawerEl() {
     return document.querySelector("[data-drawer]");

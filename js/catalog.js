@@ -487,10 +487,160 @@
 
   overlayFromAdmin();
 
+  var mockProducts = products;
+  var source = "pending";
+  var lastError = null;
+  var API = {
+    products: "backend/public/catalog/products.php",
+    product: "backend/public/catalog/product.php",
+    categories: "backend/public/catalog/categories.php"
+  };
+
   var byId = {};
   products.forEach(function (item) {
     byId[item.id] = item;
   });
+
+  function rebuildIndex() {
+    byId = {};
+    products.forEach(function (item) {
+      if (item && item.id) byId[item.id] = item;
+    });
+  }
+
+  function demoFallbackAllowed() {
+    try {
+      if (new URLSearchParams(global.location.search).get("demo") === "1") return true;
+    } catch (e) {}
+    try {
+      if (global.localStorage && global.localStorage.getItem("ds-atelier-demo-catalog") === "1") return true;
+    } catch (e2) {}
+    var protocol = String(global.location && global.location.protocol || "");
+    if (protocol === "file:") return true;
+    var host = String(global.location && global.location.hostname || "");
+    return host === "localhost" || host === "127.0.0.1";
+  }
+
+  function applyProducts(list, nextSource) {
+    products = Array.isArray(list) ? list.slice() : [];
+    source = nextSource;
+    lastError = null;
+    rebuildIndex();
+    overlayFromAdmin();
+    rebuildIndex();
+  }
+
+  function fetchJson(url) {
+    return fetch(url, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" }
+    }).then(function (response) {
+      return response.json().catch(function () {
+        return {};
+      }).then(function (data) {
+        if (!data || typeof data !== "object") data = {};
+        data.status = response.status;
+        return data;
+      });
+    });
+  }
+
+  function csvParam(values) {
+    if (!Array.isArray(values)) return String(values || "");
+    return values.filter(Boolean).join(",");
+  }
+
+  function listQuery(params) {
+    params = params || {};
+    var query = [];
+    function add(name, value) {
+      if (value === undefined || value === null || value === "") return;
+      query.push(encodeURIComponent(name) + "=" + encodeURIComponent(String(value)));
+    }
+    add("page", params.page || 1);
+    add("per_page", params.per_page || params.perPage || 8);
+    add("sort", params.sort || "latest");
+    add("q", params.q || params.search || "");
+    add("category", csvParam(params.category));
+    add("size", csvParam(params.size));
+    add("colour", csvParam(params.colour || params.color));
+    add("material", csvParam(params.material));
+    add("availability", csvParam(params.availability));
+    add("price", csvParam(params.price));
+    add("min_price", params.min_price);
+    add("max_price", params.max_price);
+    add("scope", params.scope || "shop");
+    if (params.featured) add("featured", "1");
+    return query.join("&");
+  }
+
+  function inPriceBucket(item, ranges) {
+    if (!ranges || !ranges.length) return true;
+    return ranges.some(function (range) {
+      if (range === "under-799") return item.price < 800;
+      if (range === "800-1199") return item.price >= 800 && item.price <= 1199;
+      if (range === "1200-plus") return item.price >= 1200;
+      return true;
+    });
+  }
+
+  function localMatches(item, params) {
+    params = params || {};
+    var categories = [].concat(params.category || []).filter(Boolean);
+    var sizes = [].concat(params.size || []).filter(Boolean);
+    var colours = [].concat(params.colour || params.color || []).filter(Boolean);
+    var materials = [].concat(params.material || []).filter(Boolean);
+    var availability = [].concat(params.availability || []).filter(Boolean);
+    var prices = [].concat(params.price || []).filter(Boolean);
+    var q = String(params.q || params.search || "").trim().toLowerCase();
+    if (categories.length && categories.indexOf(item.category) === -1) return false;
+    if (!inPriceBucket(item, prices)) return false;
+    if (sizes.length && !(item.sizes || []).some(function (size) { return sizes.indexOf(size) !== -1; })) return false;
+    if (colours.length) {
+      var itemColours = (item.colors || []).concat(item.color ? [item.color] : []);
+      if (!colours.some(function (colour) { return itemColours.indexOf(colour) !== -1; })) return false;
+    }
+    if (materials.length && materials.indexOf(item.material) === -1) return false;
+    if (availability.length && availability.indexOf(item.availability) === -1) return false;
+    if (q && searchTags(item).indexOf(q) === -1) return false;
+    if ((params.scope || "shop") === "featured") return Boolean(item.featured) || FEATURED_IDS.indexOf(item.id) !== -1;
+    if ((params.scope || "shop") === "shop" && item.inShop === false) return false;
+    if (params.min_price != null && item.price < Number(params.min_price)) return false;
+    if (params.max_price != null && item.price > Number(params.max_price)) return false;
+    return true;
+  }
+
+  function localList(params) {
+    params = params || {};
+    var sort = params.sort || "latest";
+    var page = Math.max(1, Number(params.page) || 1);
+    var perPage = Math.max(1, Number(params.per_page || params.perPage) || 8);
+    var list = products.filter(function (item) {
+      return localMatches(item, params);
+    });
+    var copy = list.slice();
+    if (sort === "price-asc") copy.sort(function (a, b) { return a.price - b.price; });
+    else if (sort === "price-desc") copy.sort(function (a, b) { return b.price - a.price; });
+    else if (sort === "popular") copy.sort(function (a, b) { return b.popular - a.popular; });
+    var total = copy.length;
+    var totalPages = Math.max(1, Math.ceil((total || 1) / perPage));
+    if (total === 0) totalPages = 1;
+    if (page > totalPages) page = totalPages;
+    var start = (page - 1) * perPage;
+    return {
+      ok: true,
+      products: copy.slice(start, start + perPage),
+      meta: {
+        page: page,
+        per_page: perPage,
+        total: total,
+        total_pages: totalPages,
+        sort: sort,
+        scope: params.scope || "shop",
+        q: String(params.q || params.search || "")
+      }
+    };
+  }
 
   function getById(id) {
     if (!id) return null;
@@ -501,10 +651,6 @@
     return products.filter(function (item) {
       return item.inShop !== false;
     });
-  }
-
-  function getFeatured() {
-    return FEATURED_IDS.map(getById).filter(Boolean);
   }
 
   function getRelated(id, limit) {
@@ -691,10 +837,148 @@
     return "shop.html?category=" + encodeURIComponent(name);
   }
 
+  function fallbackError(error) {
+    lastError = error || "Catalog is temporarily unavailable.";
+    source = "error";
+    if (demoFallbackAllowed()) {
+      applyProducts(mockProducts, "demo");
+      lastError = error || lastError;
+      source = "demo";
+      return true;
+    }
+    products = [];
+    rebuildIndex();
+    return false;
+  }
+
+  function list(params) {
+    var query = listQuery(params);
+    return fetchJson(API.products + (query ? "?" + query : "")).then(function (data) {
+      if (data && data.ok && Array.isArray(data.products)) {
+        data.products.forEach(function (item) {
+          if (item && item.id) byId[item.id] = item;
+        });
+        source = "api";
+        lastError = null;
+        return data;
+      }
+      var message = (data && data.error) || "Unable to load products.";
+      if (demoFallbackAllowed()) {
+        var local = localList(params);
+        local.source = "demo";
+        local.fallback = true;
+        lastError = message;
+        return local;
+      }
+      var err = new Error(message);
+      err.status = data && data.status;
+      err.payload = data;
+      throw err;
+    }).catch(function (error) {
+      if (error && error.payload) throw error;
+      var message = (error && error.message) || "Unable to load products.";
+      if (demoFallbackAllowed()) {
+        var local = localList(params);
+        local.source = "demo";
+        local.fallback = true;
+        lastError = message;
+        return local;
+      }
+      throw error;
+    });
+  }
+
+  function loadStorefront() {
+    if (source === "api" && products.length) {
+      return Promise.resolve({ ok: true, source: source, products: products });
+    }
+    return fetchJson(API.products + "?scope=storefront&per_page=48&page=1").then(function (data) {
+      if (data && data.ok && Array.isArray(data.products)) {
+        applyProducts(data.products, "api");
+        return { ok: true, source: "api", products: products };
+      }
+      var usedDemo = fallbackError((data && data.error) || "Unable to load products.");
+      if (usedDemo) return { ok: true, source: "demo", fallback: true, products: products };
+      return { ok: false, source: "error", error: lastError, products: [] };
+    }).catch(function (error) {
+      var usedDemo = fallbackError((error && error.message) || "Unable to load products.");
+      if (usedDemo) return { ok: true, source: "demo", fallback: true, products: products };
+      return { ok: false, source: "error", error: lastError, products: [] };
+    });
+  }
+
+  function loadProduct(id) {
+    var slug = String(id || "").trim();
+    if (!slug) {
+      return Promise.resolve({ ok: false, error: "Product not found.", code: 404 });
+    }
+    return fetchJson(API.product + "?id=" + encodeURIComponent(slug)).then(function (data) {
+      if (data && data.ok && data.product) {
+        byId[data.product.id] = data.product;
+        source = source === "pending" ? "api" : source;
+        lastError = null;
+        return { ok: true, product: data.product, source: "api" };
+      }
+      if (data && (data.status === 404 || data.code === 404)) {
+        return { ok: false, error: "Product not found.", code: 404 };
+      }
+      var message = (data && data.error) || "Unable to load this product.";
+      if (demoFallbackAllowed()) {
+        var item = getById(slug);
+        if (item) return { ok: true, product: item, source: "demo", fallback: true };
+        return { ok: false, error: "Product not found.", code: 404 };
+      }
+      return { ok: false, error: message, code: data && data.status ? data.status : 503 };
+    }).catch(function (error) {
+      var message = (error && error.message) || "Unable to load this product.";
+      if (demoFallbackAllowed()) {
+        var item = getById(slug);
+        if (item) return { ok: true, product: item, source: "demo", fallback: true };
+        return { ok: false, error: "Product not found.", code: 404 };
+      }
+      return { ok: false, error: message, code: 503 };
+    });
+  }
+
+  function findVariant(product, colour, size) {
+    if (!product || !Array.isArray(product.variants)) return null;
+    var colourName = String(colour || "");
+    var sizeCode = String(size || "");
+    var found = null;
+    product.variants.forEach(function (variant) {
+      if (!variant) return;
+      if (variant.size === sizeCode && (variant.colour === colourName || variant.color === colourName)) {
+        found = variant;
+      }
+    });
+    return found;
+  }
+
+  function variantPurchasable(product, colour, size) {
+    var variant = findVariant(product, colour, size);
+    if (!variant) return false;
+    if (variant.purchasable === false) return false;
+    if (product && product.availability === "Made to order") return variant.active !== false;
+    return variant.active !== false && Number(variant.stock || 0) > 0;
+  }
+
+  function getFeatured() {
+    var featured = FEATURED_IDS.map(getById).filter(Boolean);
+    if (featured.length) return featured;
+    return products.filter(function (item) {
+      return item && item.featured;
+    });
+  }
+
+  var ready = loadStorefront();
+
   global.DSAtelier = global.DSAtelier || {};
   global.DSAtelier.catalog = {
     DEFAULT_ID: DEFAULT_ID,
-    products: products,
+    get products() { return products; },
+    get source() { return source; },
+    get error() { return lastError; },
+    ready: ready,
     getAll: getAll,
     getById: getById,
     getFeatured: getFeatured,
@@ -706,6 +990,12 @@
     categories: categories,
     searchCategories: searchCategories,
     suggest: suggest,
-    shopCategoryUrl: shopCategoryUrl
+    shopCategoryUrl: shopCategoryUrl,
+    list: list,
+    loadStorefront: loadStorefront,
+    loadProduct: loadProduct,
+    findVariant: findVariant,
+    variantPurchasable: variantPurchasable,
+    demoFallbackAllowed: demoFallbackAllowed
   };
 })(window);

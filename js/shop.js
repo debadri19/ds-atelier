@@ -45,8 +45,11 @@
     var availability = checked("availability");
     if (categories.length && categories.indexOf(item.category) === -1) return false;
     if (!inPrice(item, prices)) return false;
-    if (sizes.length && !item.sizes.some(function (size) { return sizes.indexOf(size) !== -1; })) return false;
-    if (colors.length && colors.indexOf(item.color) === -1) return false;
+    if (sizes.length && !(item.sizes || []).some(function (size) { return sizes.indexOf(size) !== -1; })) return false;
+    if (colors.length) {
+      var itemColours = (item.colors || []).concat(item.color ? [item.color] : []);
+      if (!colors.some(function (colour) { return itemColours.indexOf(colour) !== -1; })) return false;
+    }
     if (materials.length && materials.indexOf(item.material) === -1) return false;
     if (availability.length && availability.indexOf(item.availability) === -1) return false;
     return true;
@@ -110,17 +113,68 @@
     paginationEl.innerHTML = html;
   }
 
-  function render() {
-    if (!live()) return;
+  function statusMarkup(kind, message) {
+    return '<p class="shop-empty shop-' + kind + '">' + message + "</p>";
+  }
+
+  function currentFilters() {
+    return {
+      page: page,
+      per_page: PAGE_SIZE,
+      sort: sort,
+      category: checked("category"),
+      price: checked("price"),
+      size: checked("size"),
+      colour: checked("color"),
+      material: checked("material"),
+      availability: checked("availability"),
+      scope: "shop"
+    };
+  }
+
+  function renderLocal() {
     var filtered = sortItems(products.filter(matches));
     var totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     if (page > totalPages) page = totalPages;
     var start = (page - 1) * PAGE_SIZE;
     var visible = filtered.slice(start, start + PAGE_SIZE);
-    grid.innerHTML = visible.length ? visible.map(card).join("") : '<p class="shop-empty">No products match these filters.</p>';
+    grid.innerHTML = visible.length ? visible.map(card).join("") : statusMarkup("empty", "No products match these filters.");
     if (countEl) countEl.textContent = "Showing " + filtered.length + " Products";
     renderPagination(totalPages);
     updateActiveFilters();
+  }
+
+  function render() {
+    if (!live()) return;
+    updateActiveFilters();
+    if (!catalog || !catalog.list) {
+      renderLocal();
+      return;
+    }
+    grid.innerHTML = statusMarkup("loading", "Loading products.");
+    if (countEl) countEl.textContent = "Loading products";
+    catalog.list(currentFilters()).then(function (data) {
+      if (!live()) return;
+      var list = (data && data.products) || [];
+      var meta = (data && data.meta) || {};
+      var total = Number(meta.total || 0);
+      var totalPages = Math.max(1, Number(meta.total_pages || 1));
+      page = Math.max(1, Number(meta.page || page));
+      if (!list.length) {
+        grid.innerHTML = statusMarkup("empty", "No products match these filters.");
+      } else {
+        grid.innerHTML = list.map(card).join("");
+      }
+      if (countEl) countEl.textContent = "Showing " + total + " Products";
+      renderPagination(totalPages);
+      updateActiveFilters();
+    }).catch(function (error) {
+      if (!live()) return;
+      grid.innerHTML = statusMarkup("error", (error && error.message) || "Unable to load products. Please try again later.");
+      if (countEl) countEl.textContent = "Unable to load products";
+      renderPagination(1);
+      updateActiveFilters();
+    });
   }
 
   function openSheet(sheet) {
@@ -254,6 +308,13 @@
       document.addEventListener("keydown", onKey);
       document.addEventListener("change", onChange);
       bound = true;
+    }
+    if (catalog && catalog.ready && catalog.ready.then) {
+      catalog.ready.then(function () {
+        products = catalog.getAll ? catalog.getAll() : products;
+        render();
+      });
+      return;
     }
     render();
   }

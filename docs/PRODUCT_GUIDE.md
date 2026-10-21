@@ -2,11 +2,11 @@
 
 Guide for future apparel catalog work.
 
-This document describes **intended** catalog fields and the customization flow. It does not claim a live database.
+This document describes catalog fields and the customization flow.
 
-Current catalog presentation uses a frontend-only mock catalog in `js/catalog.js` (`DSAtelier.catalog`). Home, Shop, and Product pages read from it. They are not production catalog data.
+Home, Shop, and Product pages read the Phase 3 catalog API. `js/catalog.js` still contains the original mock products for development/demo fallback only. That fallback never silently replaces a production API failure.
 
-Routing: `product.html?id=<product-id>`. Missing or unknown `id` falls back to `oversized-graphic-tee`.
+Routing: `product.html?id=<product-slug>`. Missing or unknown `id` shows a product-not-found state.
 
 ---
 
@@ -99,7 +99,7 @@ Customer path:
 7. Enter special instructions
 8. Add to Cart
 
-Product Details (`product.html?id=` / `js/product.js`) looks up the catalog entry, then handles quantity, Buy Now, and validation that required custom options are complete. Add to Cart stays disabled until print type, color, size, design file, and print position are selected. No backend submission yet.
+Product Details (`product.html?id=` / `js/product.js`) loads the catalog entry, then handles quantity, Buy Now, and validation that required custom options are complete. Selected colour/size use variant price, MRP, SKU, and availability. Add to Cart stays disabled until print type, color, size, design file, and print position are selected, and the selected variant is purchasable. Cart storage remains browser-only.
 
 ---
 

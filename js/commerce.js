@@ -133,10 +133,33 @@
     };
   }
 
+  function variantAllowed(product, extras) {
+    var cat = catalog();
+    if (!product) return false;
+    var color = extras && extras.color;
+    var size = extras && extras.size;
+    if (!color || !size) return false;
+    if (cat && cat.variantPurchasable) return cat.variantPurchasable(product, color, size);
+    if (!Array.isArray(product.variants) || !product.variants.length) return true;
+    var variant = cat && cat.findVariant ? cat.findVariant(product, color, size) : null;
+    if (!variant) return false;
+    if (product.availability === "Made to order") return variant.active !== false;
+    return variant.active !== false && Number(variant.stock || 0) > 0;
+  }
+
   function addToCart(id, extras) {
     var product = getProduct(id);
     if (!product) return;
     var row = Object.assign(defaultConfig(product), extras || {});
+    if (!variantAllowed(product, row)) return;
+    var cat = catalog();
+    var variant = cat && cat.findVariant ? cat.findVariant(product, row.color, row.size) : null;
+    if (variant) {
+      row.variantId = variant.id;
+      row.sku = variant.sku;
+      row.price = variant.price;
+      row.mrp = variant.mrp;
+    }
     row.qty = Math.max(1, Number(row.qty) || 1);
     var match = state.cart.find(function (item) { return cartLineId(item) === cartLineId(row); });
     if (match) match.qty += row.qty;
@@ -171,12 +194,16 @@
     return state.cart.map(function (row, index) {
       var product = getProduct(row.id);
       if (!product) return null;
+      var cat = catalog();
+      var variant = cat && cat.findVariant ? cat.findVariant(product, row.color, row.size) : null;
+      var unitPrice = variant ? Number(variant.price) : Number(row.price != null ? row.price : product.price);
+      var unitMrp = variant ? Number(variant.mrp) : Number(row.mrp != null ? row.mrp : product.mrp);
       return {
         index: index,
         row: row,
         product: product,
-        lineMrp: product.mrp * row.qty,
-        linePrice: product.price * row.qty
+        lineMrp: unitMrp * row.qty,
+        linePrice: unitPrice * row.qty
       };
     }).filter(Boolean);
   }

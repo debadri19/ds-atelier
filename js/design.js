@@ -103,7 +103,13 @@
     var back = root.querySelector("[data-design-back]");
     if (back) back.setAttribute("href", artworks.designsCategoryUrl(item.category));
     renderTags(root, item);
-    renderProducts(root, item);
+    if (catalog && catalog.ready && catalog.ready.then) {
+      catalog.ready.then(function () {
+        renderProducts(root, item);
+      });
+    } else {
+      renderProducts(root, item);
+    }
     document.title = item.name + " - DS ATELIER";
     var desc = document.querySelector('meta[name="description"]');
     if (desc) desc.setAttribute("content", item.description);

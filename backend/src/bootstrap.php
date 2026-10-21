@@ -13,6 +13,8 @@ require_once __DIR__ . '/response.php';
 require_once __DIR__ . '/error.php';
 require_once __DIR__ . '/migrations.php';
 require_once __DIR__ . '/customer-auth.php';
+require_once __DIR__ . '/catalog.php';
+require_once __DIR__ . '/catalog-seed.php';
 require_once __DIR__ . '/http.php';
 
 function ds_atelier_bootstrap(?string $envFile = null): array

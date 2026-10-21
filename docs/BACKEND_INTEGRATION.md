@@ -1,6 +1,6 @@
 # Backend Integration — DS ATELIER
 
-This repository remains a **standalone frontend** except for Phase 2 customer authentication. Phase 1 added a DS-specific PHP foundation under `backend/`. Catalog, cart, checkout and payments are **not** connected. Dashboard authentication is still a frontend demo.
+This repository remains a **standalone frontend** except for Phase 2 customer authentication and Phase 3 read-only catalog APIs. Phase 1 added a DS-specific PHP foundation under `backend/`. Cart, checkout and payments are **not** connected. Dashboard authentication is still a frontend demo.
 
 Do not treat `js/main.js` mock products as production database data.
 
@@ -31,7 +31,7 @@ Do not restyle the storefront to match any previous MoonAura UI while wiring PHP
 
 | Area | Now |
 |---|---|
-| Catalog | Mock catalog in `js/catalog.js` |
+| Catalog | Shop, Home, and Product read `backend/public/catalog/*.php`. `js/catalog.js` keeps mock products for development/demo fallback only. |
 | Cart | `cart.html` frontend demo (`js/commerce.js` localStorage); not a server cart |
 | Checkout | `checkout.html` frontend demo; no payment gateway |
 | Auth / account | Customer `auth.html` uses PHP/JSON against `ds_atelier_dev`. `account.html` remains a frontend demo. Password-reset email is not sent. |
@@ -123,3 +123,16 @@ Applied against dedicated `ds_atelier_dev` only:
 - SMTP is not configured; no reset email is sent
 
 Out of this phase: catalog, cart, wishlist, checkout, payments, Newsletter, Meta Pixel/CAPI, Dashboard authentication.
+
+## Phase 3 product catalog (2026-10-21)
+
+Applied against dedicated `ds_atelier_dev` only:
+
+- Additive catalog tables: `categories`, `sizes`, `colours`, `products`, `product_print_types`, `product_media`, `product_variants`
+- Development seeder copies the existing mock products without overwriting rows that already exist
+- Same-origin JSON handlers: `backend/public/catalog/{products,product,categories}.php`
+- `js/catalog.js`, `js/shop.js`, `js/product.js`, and Home featured products consume those handlers
+- Unpublished products and inactive variants are excluded; unavailable variants cannot be added to the browser cart
+- Static mock-data fallback is limited to `file:` pages or explicit `?demo=1` / `ds-atelier-demo-catalog=1`
+
+Out of this phase: admin CRUD, persistent cart/wishlist, checkout, orders, payments, Newsletter, Meta Pixel/CAPI, Dashboard authentication.
