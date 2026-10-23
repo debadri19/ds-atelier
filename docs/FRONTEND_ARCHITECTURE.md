@@ -1,6 +1,6 @@
 # Frontend Architecture — DS ATELIER
 
-Standalone static frontend plus Phase 2 customer authentication and Phase 3 read-only catalog APIs. No bundler. Cart, checkout, and Dashboard authentication remain frontend-only.
+Standalone static frontend plus Phase 2 customer authentication, Phase 3 read-only catalog APIs, Phase 4 persistent cart/wishlist, and Phase 5 checkout/order creation. No bundler. Dashboard authentication remains frontend-only.
 
 ---
 
@@ -17,10 +17,10 @@ Standalone static frontend plus Phase 2 customer authentication and Phase 3 read
   policy.html                Policy page
   support.html               Support page
   account.html               Customer account dashboard
-  cart.html                  Cart (frontend demo)
-  checkout.html              Checkout (frontend demo)
-  wishlist.html              Wishlist (frontend demo)
-  order-success.html         Order success (frontend demo)
+  cart.html                  Cart (Phase 4 server cart)
+  checkout.html              Checkout (Phase 5 pending-payment orders)
+  wishlist.html              Wishlist (Phase 4 server wishlist)
+  order-success.html         Order success (Phase 5 server order)
   auth.html                  Customer authentication (canonical)
   login.html                 Compatibility redirect → auth.html#login
   register.html              Compatibility redirect → auth.html#register
@@ -64,9 +64,10 @@ Standalone static frontend plus Phase 2 customer authentication and Phase 3 read
     policy.js                Policy section navigation
     support.js               Support search, FAQ accordion, contact form
     account.js               Account dashboard sections, demo orders, addresses, profile
-    commerce.js              Browser cart/wishlist store
+    commerce.js              Server cart/wishlist/checkout client with localStorage migration
     cart.js                  Cart page
-    checkout.js              Checkout page (frontend demo)
+    checkout.js              Checkout page (Phase 5 quote/place)
+    order-success.js         Order confirmation (Phase 5 server order)
     wishlist.js              Wishlist page
     auth.js                  Customer authentication states (PHP/JSON in Phase 2)
     admin-data.js            Dashboard session demo data (`ds-atelier-admin-demo`)
@@ -176,9 +177,10 @@ Do not add another global override stylesheet.
 | `js/policy.js` | Policy sidebar / mobile section navigation |
 | `js/support.js` | Support search, FAQ accordion, frontend contact form |
 | `js/account.js` | Account dashboard: overview, demo orders, addresses, profile, password UI |
-| `js/commerce.js` | Browser cart/wishlist store |
+| `js/commerce.js` | Server cart/wishlist/checkout client, CSRF, guest cookie, localStorage migration |
 | `js/cart.js` | Cart page |
-| `js/checkout.js` | Checkout page (frontend demo) |
+| `js/checkout.js` | Checkout page (quote/place pending-payment orders) |
+| `js/order-success.js` | Order confirmation (loads server order by ref) |
 | `js/wishlist.js` | Wishlist page |
 | `js/auth.js` | Customer authentication hash states |
 | `js/admin-data.js` | Dashboard demo catalog in namespaced `sessionStorage`; `DSAtelier.admin.data` |
@@ -227,9 +229,10 @@ Future page scripts should be additive and must not fork the theme system.
 | Policy | `policy.html` | built |
 | Support | `support.html` | built |
 | Account | `account.html` | built (frontend demo) |
-| Cart | `cart.html` | built (frontend demo) |
-| Checkout | `checkout.html` | built (frontend demo) |
-| Wishlist | `wishlist.html` | built (frontend demo) |
+| Cart | `cart.html` | built (Phase 4 server cart) |
+| Checkout | `checkout.html` | built (Phase 5 pending-payment orders) |
+| Order success | `order-success.html` | built (Phase 5 server order; pending payment) |
+| Wishlist | `wishlist.html` | built (Phase 4 server wishlist) |
 | Customer auth | `auth.html` | built (frontend demo; local uncommitted canonical) |
 | Dashboard | `dashboard/index.html` | built (frontend demo) |
 | Dashboard auth | `dashboard/auth.html` | built (frontend demo) |
@@ -262,6 +265,6 @@ Below 768px: floating bottom navigation and extra body padding for safe area.
 
 ## Data
 
-Products live in `js/catalog.js` (`DSAtelier.catalog`). Home, Shop, and Product cards are generated from that catalog so they can later be replaced by PHP-rendered cards without changing `.product-card` structure.
+Products live in `backend/public/catalog/*.php` at runtime, with `js/catalog.js` as development/demo fallback. Cart and wishlist persist in `ds_atelier_dev` through `js/commerce.js`. Checkout still uses frontend-only address/order demo data.
 
 Product Details is `product.html?id=<product-id>`. Missing or unknown `id` falls back to `oversized-graphic-tee`. View Product CTAs use that query. Related cards use the same URL pattern. Direct URLs, refresh, and back/forward are full page loads.

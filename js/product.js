@@ -647,24 +647,40 @@
       busy(addCart);
       var line = configuredLine();
       var commerce = global.DSAtelier && global.DSAtelier.commerce;
+      function showHint(message) {
+        if (!hint) return;
+        hint.hidden = false;
+        hint.textContent = message;
+      }
       if (commerce && commerce.addToCart) {
-        commerce.addToCart(line.productId, {
+        var added = commerce.addToCart(line.productId, {
           color: line.color,
           size: line.size,
           printType: line.printType,
           printPosition: line.printPosition,
           qty: line.quantity,
           artworkId: line.artworkId,
-          artworkName: line.artworkName
+          artworkName: line.artworkName,
+          variantId: line.variantId
         });
+        if (added && typeof added.then === "function") {
+          added.then(function (data) {
+            if (data && data.ok) {
+              showHint("Added to cart. Uploaded artwork files are not stored until a later checkout phase.");
+            } else {
+              showHint((data && data.error) || "Unable to add this item to your cart.");
+            }
+          }).catch(function () {
+            showHint("Unable to add this item to your cart.");
+          });
+        } else {
+          showHint("Added to cart. Checkout is not connected yet.");
+        }
       } else {
         document.querySelectorAll(".cart-count").forEach(function (el) {
           el.textContent = String(Number(el.textContent || 0) + state.quantity);
         });
-      }
-      if (hint) {
-        hint.hidden = false;
-        hint.textContent = "Added to cart (demo). Checkout is not connected yet.";
+        showHint("Added to cart. Checkout is not connected yet.");
       }
     }
 

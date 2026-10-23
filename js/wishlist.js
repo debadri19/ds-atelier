@@ -34,7 +34,11 @@
       document.addEventListener("ds-atelier-commerce", render);
       bound = true;
     }
-    render();
+    if (commerce.ready) {
+      commerce.ready().then(render);
+    } else {
+      render();
+    }
   }
 
   global.DSAtelier = global.DSAtelier || {};

@@ -1,6 +1,6 @@
 # DS ATELIER Backend Foundation
 
-Phase 1 scaffold, Phase 2 customer authentication, and Phase 3 read-only product catalog. Storefront `.html` routes are unchanged. Cart, checkout, payments, Newsletter, Meta Pixel, and Dashboard authentication are not implemented.
+Phase 1 scaffold, Phase 2 customer authentication, Phase 3 read-only product catalog, Phase 4 persistent cart/wishlist, and Phase 5 checkout/order creation. Storefront `.html` routes are unchanged. Payments, Newsletter, Meta Pixel, and Dashboard authentication are not implemented.
 
 ## Layout
 
@@ -14,7 +14,12 @@ Phase 1 scaffold, Phase 2 customer authentication, and Phase 3 read-only product
 - `backend/tests/phase1_foundation.php` — helper tests
 - `backend/tests/phase2_customer_auth.php` — live `ds_atelier_dev` register/login/CSRF/reset tests
 - `backend/tests/phase3_catalog.php` — catalog schema, filters, variants, and HTTP endpoint tests
+- `backend/tests/phase4_cart.php` — guest/auth cart and wishlist, CSRF, merge, stock, isolation, and HTTP tests
+- `backend/tests/phase5_checkout.php` — quote/place, pending payment, isolation, idempotency, CSRF, and HTTP tests
 - `backend/public/catalog/` — read-only products, product detail, and categories JSON
+- `backend/public/cart/` — CSRF-protected cart JSON
+- `backend/public/wishlist/` — CSRF-protected wishlist JSON
+- `backend/public/checkout/` — CSRF-protected quote/place and GET order JSON
 - `backend/fixtures/catalog-data.php` — development-only mock catalog fixtures
 - `backend/bin/seed-catalog.php` — insert fixtures into `ds_atelier_dev` without overwriting existing products
 
@@ -32,6 +37,8 @@ php backend/bin/migrate.php
 php backend/bin/seed-catalog.php
 php backend/tests/phase2_customer_auth.php
 php backend/tests/phase3_catalog.php
+php backend/tests/phase4_cart.php
+php backend/tests/phase5_checkout.php
 ```
 
 `status.php` without `--config-only` attempts PDO. If MySQL is absent it reports `database=unavailable` and exits 2. It does not print passwords.
@@ -74,6 +81,14 @@ Same-origin JSON handlers live under `backend/public/customer/`. Passwords use `
 
 SMTP is not configured. Forgot-password does not send email and reports `email_sent: false`.
 
+## Cart and wishlist
+
+Same-origin JSON handlers live under `backend/public/cart/` and `backend/public/wishlist/`. Guests are identified by HttpOnly cookie `ds_atelier_guest`; the raw token is never stored. Catalog variant price and stock are the source of truth. Quantity is capped at 20. Guest carts and wishlists merge into the customer account on login and register. Artwork files are not stored in this phase.
+
+## Checkout and orders
+
+Same-origin JSON handlers live under `backend/public/checkout/`. Quote and place require CSRF. Money is integer paise. Development demo shipping is ₹79, free at or above ₹999, and blocked in production. Tax policy `unconfigured` adds ₹0 with a notice and is blocked in production. `WELCOME10` is a development demo coupon. Orders are created as `pending_payment` / `pending`. Clients cannot set payment status or customer ownership. Idempotency keys are unique. The cart is cleared only after a successful place. Inventory is not decremented.
+
 ## Out of scope
 
-Artwork, cart, wishlist, checkout, orders, tax, payments, Newsletter, Meta Pixel/CAPI, Dashboard authentication, and admin catalog CRUD remain later phases.
+Artwork file storage, payment capture, invoices/email, Newsletter, Meta Pixel/CAPI, Dashboard authentication, and admin catalog CRUD remain later phases.

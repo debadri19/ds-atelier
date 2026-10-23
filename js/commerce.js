@@ -2,14 +2,28 @@
   var WISHLIST_KEY = "ds-atelier-wishlist";
   var CART_KEY = "ds-atelier-cart";
   var COUPON_KEY = "ds-atelier-coupon";
-  var DEFAULT_WISHLIST = ["anime-graphic-tee", "oversized-graphic-tee", "minimal-hoodie", "custom-tote-bag"];
-  var DEFAULT_CART = [
-    { id: "oversized-graphic-tee", color: "Cream", size: "L", printType: "DTF", printPosition: "Front", qty: 1 },
-    { id: "anime-graphic-tee", color: "Black", size: "M", printType: "DTF", printPosition: "Front + Back", qty: 2 }
-  ];
+  var CART_MIGRATED_KEY = "ds-atelier-cart-migrated";
+  var WISHLIST_MIGRATED_KEY = "ds-atelier-wishlist-migrated";
   var COLLECTION_IDS = ["minimal-hoodie", "custom-tote-bag", "caps", "sublimation-cushion"];
   var SHIPPING_THRESHOLD = 999;
   var SHIPPING_FEE = 79;
+  var API = {
+    csrf: "backend/public/customer/csrf.php",
+    cartGet: "backend/public/cart/get.php",
+    cartAdd: "backend/public/cart/add.php",
+    cartUpdate: "backend/public/cart/update.php",
+    cartRemove: "backend/public/cart/remove.php",
+    cartClear: "backend/public/cart/clear.php",
+    cartMigrate: "backend/public/cart/migrate.php",
+    wishlistGet: "backend/public/wishlist/get.php",
+    wishlistAdd: "backend/public/wishlist/add.php",
+    wishlistRemove: "backend/public/wishlist/remove.php",
+    wishlistToggle: "backend/public/wishlist/toggle.php",
+    wishlistMigrate: "backend/public/wishlist/migrate.php",
+    checkoutQuote: "backend/public/checkout/quote.php",
+    checkoutPlace: "backend/public/checkout/place.php",
+    checkoutOrder: "backend/public/checkout/order.php"
+  };
 
   function catalog() {
     return global.DSAtelier && global.DSAtelier.catalog;
@@ -50,27 +64,52 @@
     } catch (e) {}
   }
 
-  function seededWishlist() {
-    if (forceEmpty()) return [];
-    var stored = read(WISHLIST_KEY, null);
-    if (stored) return stored;
-    write(WISHLIST_KEY, DEFAULT_WISHLIST.slice());
-    return DEFAULT_WISHLIST.slice();
+  function removeKey(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {}
   }
 
-  function seededCart() {
-    if (forceEmpty()) return [];
-    var stored = read(CART_KEY, null);
-    if (stored) return stored;
-    write(CART_KEY, DEFAULT_CART.map(function (row) { return Object.assign({}, row); }));
-    return DEFAULT_CART.map(function (row) { return Object.assign({}, row); });
+  function flag(key) {
+    try {
+      return localStorage.getItem(key) === "1";
+    } catch (e) {
+      return false;
+    }
   }
 
+  function setFlag(key) {
+    try {
+      localStorage.setItem(key, "1");
+    } catch (e) {}
+  }
+
+  var csrfToken = "";
+  var bootPromise = null;
   var state = {
-    wishlist: seededWishlist(),
-    cart: seededCart(),
-    coupon: forceEmpty() ? "" : (read(COUPON_KEY, "") || "")
+    ready: false,
+    loading: false,
+    source: "pending",
+    error: null,
+    cart: emptyCart(),
+    wishlistIds: [],
+    wishlistItems: [],
+    coupon: forceEmpty() ? "" : (read(COUPON_KEY, "") || ""),
+    quote: null
   };
+
+  function emptyCart() {
+    return {
+      id: null,
+      owner: "anonymous",
+      items: [],
+      count: 0,
+      subtotal: 0,
+      mrp: 0,
+      discount: 0,
+      warnings: []
+    };
+  }
 
   function emit() {
     syncCounts();
@@ -79,43 +118,127 @@
     } catch (e) {}
   }
 
-  function persist() {
-    if (!forceEmpty()) {
-      write(WISHLIST_KEY, state.wishlist);
-      write(CART_KEY, state.cart);
-      write(COUPON_KEY, state.coupon);
-    }
+  function persistCoupon() {
+    if (!forceEmpty()) write(COUPON_KEY, state.coupon);
+  }
+
+  function persistLocalFallback() {
+    if (forceEmpty() || state.source === "api") return;
+    write(CART_KEY, state.cart.items.map(function (item) {
+      return {
+        id: item.id,
+        color: item.color,
+        size: item.size,
+        printType: item.printType,
+        printPosition: item.printPosition,
+        artworkId: item.artworkId || "",
+        artworkName: item.artworkName || "",
+        qty: item.qty,
+        variantId: item.variantId
+      };
+    }));
+    write(WISHLIST_KEY, state.wishlistIds.slice());
+  }
+
+  function localCartRows() {
+    if (forceEmpty()) return [];
+    var stored = read(CART_KEY, null);
+    return Array.isArray(stored) ? stored : [];
+  }
+
+  function localWishlistIds() {
+    if (forceEmpty()) return [];
+    var stored = read(WISHLIST_KEY, null);
+    return Array.isArray(stored) ? stored.filter(Boolean) : [];
+  }
+
+  function applyCart(payload) {
+    state.cart = payload && typeof payload === "object" ? payload : emptyCart();
+    if (!Array.isArray(state.cart.items)) state.cart.items = [];
+    state.cart.count = Number(state.cart.count || 0);
+    state.cart.subtotal = Number(state.cart.subtotal || 0);
+    state.cart.mrp = Number(state.cart.mrp || 0);
+    state.cart.discount = Number(state.cart.discount || 0);
+    state.cart.warnings = Array.isArray(state.cart.warnings) ? state.cart.warnings : [];
+  }
+
+  function applyWishlist(payload) {
+    var ids = payload && Array.isArray(payload.productIds) ? payload.productIds.slice() : [];
+    var items = payload && Array.isArray(payload.items) ? payload.items.slice() : [];
+    state.wishlistIds = ids;
+    state.wishlistItems = items;
+    items.forEach(function (item) {
+      var cat = catalog();
+      if (cat && item && item.id) {
+        try { cat.products && (void 0); } catch (e) {}
+      }
+    });
+  }
+
+  function ensureCsrf() {
+    if (csrfToken) return Promise.resolve(csrfToken);
+    return fetch(API.csrf, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" }
+    }).then(function (response) {
+      return response.json().catch(function () { return {}; });
+    }).then(function (data) {
+      if (data && data.csrf) csrfToken = data.csrf;
+      return csrfToken;
+    });
+  }
+
+  function parseJson(response) {
+    return response.json().catch(function () {
+      return { ok: false, error: "Something went wrong. Please try again later." };
+    }).then(function (data) {
+      if (!data || typeof data !== "object") data = {};
+      if (data.csrf) csrfToken = data.csrf;
+      data.status = response.status;
+      return data;
+    });
+  }
+
+  function postJson(url, payload) {
+    payload = payload || {};
+    return ensureCsrf().then(function () {
+      payload._csrf = csrfToken;
+      return fetch(url, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-CSRF-TOKEN": csrfToken
+        },
+        body: JSON.stringify(payload)
+      });
+    }).then(parseJson);
+  }
+
+  function getJson(url) {
+    return fetch(url, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" }
+    }).then(parseJson);
+  }
+
+  function networkError() {
+    return { ok: false, error: "Unable to reach the cart service. Please try again.", code: 503 };
+  }
+
+  function applySuccess(data) {
+    if (data && data.cart) applyCart(data.cart);
+    if (data && data.wishlist) applyWishlist(data.wishlist);
+    state.source = "api";
+    state.error = null;
     emit();
+    return data;
   }
 
   function getProduct(id) {
     var cat = catalog();
     return cat && cat.getById ? cat.getById(id) : null;
-  }
-
-  function wishlistIds() {
-    return state.wishlist.slice();
-  }
-
-  function wishlistItems() {
-    return state.wishlist.map(getProduct).filter(Boolean);
-  }
-
-  function inWishlist(id) {
-    return state.wishlist.indexOf(id) !== -1;
-  }
-
-  function toggleWishlist(id) {
-    if (!id) return;
-    var i = state.wishlist.indexOf(id);
-    if (i === -1) state.wishlist.push(id);
-    else state.wishlist.splice(i, 1);
-    persist();
-  }
-
-  function removeWishlist(id) {
-    state.wishlist = state.wishlist.filter(function (item) { return item !== id; });
-    persist();
   }
 
   function cartLineId(row) {
@@ -147,81 +270,70 @@
     return variant.active !== false && Number(variant.stock || 0) > 0;
   }
 
-  function addToCart(id, extras) {
-    var product = getProduct(id);
-    if (!product) return;
-    var row = Object.assign(defaultConfig(product), extras || {});
-    if (!variantAllowed(product, row)) return;
-    var cat = catalog();
-    var variant = cat && cat.findVariant ? cat.findVariant(product, row.color, row.size) : null;
-    if (variant) {
-      row.variantId = variant.id;
-      row.sku = variant.sku;
-      row.price = variant.price;
-      row.mrp = variant.mrp;
+  function productFromCartItem(item) {
+    var existing = getProduct(item.id);
+    if (existing) {
+      return existing;
     }
-    row.qty = Math.max(1, Number(row.qty) || 1);
-    var match = state.cart.find(function (item) { return cartLineId(item) === cartLineId(row); });
-    if (match) match.qty += row.qty;
-    else state.cart.push(row);
-    persist();
-  }
-
-  function moveToCart(id) {
-    addToCart(id);
-    removeWishlist(id);
-  }
-
-  function setQty(index, qty) {
-    if (!state.cart[index]) return;
-    var next = Math.max(1, Number(qty) || 1);
-    state.cart[index].qty = next;
-    persist();
-  }
-
-  function removeCart(index) {
-    state.cart.splice(index, 1);
-    persist();
-  }
-
-  function clearCart() {
-    state.cart = [];
-    state.coupon = "";
-    persist();
+    return {
+      id: item.id,
+      name: item.name,
+      image: item.image,
+      alt: item.alt || item.name,
+      price: item.unitPrice || item.price,
+      mrp: item.unitMrp || item.mrp,
+      sku: item.sku
+    };
   }
 
   function cartItems() {
-    return state.cart.map(function (row, index) {
-      var product = getProduct(row.id);
-      if (!product) return null;
-      var cat = catalog();
-      var variant = cat && cat.findVariant ? cat.findVariant(product, row.color, row.size) : null;
-      var unitPrice = variant ? Number(variant.price) : Number(row.price != null ? row.price : product.price);
-      var unitMrp = variant ? Number(variant.mrp) : Number(row.mrp != null ? row.mrp : product.mrp);
+    return (state.cart.items || []).map(function (item, index) {
+      var product = productFromCartItem(item);
+      var qty = Number(item.qty || 0);
+      var unitPrice = Number(item.unitPrice != null ? item.unitPrice : item.price || 0);
+      var unitMrp = Number(item.unitMrp != null ? item.unitMrp : item.mrp || 0);
       return {
         index: index,
-        row: row,
+        itemId: item.itemId,
+        row: {
+          id: item.id,
+          color: item.color,
+          size: item.size,
+          printType: item.printType,
+          printPosition: item.printPosition,
+          artworkId: item.artworkId || "",
+          artworkName: item.artworkName || "",
+          qty: qty,
+          variantId: item.variantId,
+          sku: item.sku,
+          price: unitPrice,
+          mrp: unitMrp,
+          lineKey: item.lineKey
+        },
         product: product,
-        lineMrp: unitMrp * row.qty,
-        linePrice: unitPrice * row.qty
+        lineMrp: Number(item.lineMrp != null ? item.lineMrp : unitMrp * qty),
+        linePrice: Number(item.linePrice != null ? item.linePrice : unitPrice * qty),
+        purchasable: item.purchasable !== false,
+        issues: item.issues || []
       };
-    }).filter(Boolean);
+    });
   }
 
   function cartCount() {
-    return state.cart.reduce(function (sum, row) { return sum + (Number(row.qty) || 0); }, 0);
+    return Number(state.cart.count || 0);
   }
 
-  function applyCoupon(code) {
-    var next = String(code || "").trim().toUpperCase();
-    state.coupon = next === "WELCOME10" ? "WELCOME10" : next;
-    persist();
-    return state.coupon === "WELCOME10";
+  function wishlistIds() {
+    return state.wishlistIds.slice();
   }
 
-  function clearCoupon() {
-    state.coupon = "";
-    persist();
+  function wishlistItems() {
+    if (state.wishlistItems.length) return state.wishlistItems.slice();
+    return state.wishlistIds.map(getProduct).filter(Boolean);
+  }
+
+  function inWishlist(id) {
+    return state.wishlistIds.indexOf(id) !== -1;
   }
 
   function totals() {
@@ -229,8 +341,8 @@
     var mrp = 0;
     var price = 0;
     items.forEach(function (item) {
-      mrp += item.lineMrp;
-      price += item.linePrice;
+      mrp += Number(item.lineMrp || 0);
+      price += Number(item.linePrice || 0);
     });
     var discount = Math.max(0, mrp - price);
     if (state.coupon === "WELCOME10" && price) {
@@ -248,6 +360,76 @@
     };
   }
 
+  function applyCoupon(code) {
+    var next = String(code || "").trim().toUpperCase();
+    state.coupon = next;
+    persistCoupon();
+    emit();
+    return next;
+  }
+
+  function clearCoupon() {
+    state.coupon = "";
+    persistCoupon();
+    emit();
+  }
+
+  function quoteCheckout(coupon) {
+    var code = coupon != null ? String(coupon).trim().toUpperCase() : state.coupon;
+    return withReady(function () {
+      return postJson(API.checkoutQuote, { coupon: code }).then(function (data) {
+        if (data && data.ok && data.quote) {
+          state.quote = data.quote;
+          if (data.cart) applyCart(data.cart);
+          state.error = null;
+          emit();
+          return data;
+        }
+        state.quote = null;
+        state.error = (data && data.error) || "Unable to calculate checkout totals.";
+        emit();
+        return data || { ok: false, error: state.error };
+      }).catch(function () {
+        return failLocal("Unable to calculate checkout totals.");
+      });
+    });
+  }
+
+  function placeOrder(payload) {
+    payload = payload || {};
+    if (!payload.idempotencyKey) {
+      payload.idempotencyKey = "chk_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 12);
+    }
+    return withReady(function () {
+      return postJson(API.checkoutPlace, payload).then(function (data) {
+        if (data && data.ok && data.order) {
+          if (data.cart) applyCart(data.cart);
+          state.coupon = "";
+          persistCoupon();
+          state.quote = null;
+          state.error = null;
+          emit();
+          return data;
+        }
+        if (data && data.cart) applyCart(data.cart);
+        state.error = (data && data.error) || "Unable to place this order.";
+        emit();
+        return data || { ok: false, error: state.error };
+      }).catch(function () {
+        return failLocal("Unable to place this order.");
+      });
+    });
+  }
+
+  function getOrder(ref) {
+    var query = "ref=" + encodeURIComponent(ref || "");
+    return getJson(API.checkoutOrder + "?" + query).then(function (data) {
+      return data || { ok: false, error: "Order not found." };
+    }).catch(function () {
+      return { ok: false, error: "Unable to load this order." };
+    });
+  }
+
   function excludeIds(base, extra) {
     var skip = {};
     (extra || []).forEach(function (id) { skip[id] = true; });
@@ -257,7 +439,7 @@
   function recommended(limit, extraSkip) {
     var cat = catalog();
     var max = limit || 4;
-    var skip = (extraSkip || []).concat(state.wishlist, state.cart.map(function (row) { return row.id; }));
+    var skip = (extraSkip || []).concat(state.wishlistIds, (state.cart.items || []).map(function (row) { return row.id; }));
     var pool = [];
     if (cat && cat.getFeatured) pool = pool.concat(cat.getFeatured());
     if (cat && cat.getAll) pool = pool.concat(cat.getAll());
@@ -273,7 +455,7 @@
 
   function collection(limit) {
     var max = limit || 4;
-    var skip = state.cart.map(function (row) { return row.id; });
+    var skip = (state.cart.items || []).map(function (row) { return row.id; });
     var items = COLLECTION_IDS.map(getProduct).filter(Boolean);
     var list = excludeIds(items, skip);
     if (list.length < max) list = list.concat(recommended(max, skip.concat(list.map(function (item) { return item.id; }))));
@@ -345,7 +527,7 @@
   }
 
   function openQuickView(id) {
-    var item = getProduct(id);
+    var item = getProduct(id) || wishlistItems().filter(function (row) { return row.id === id; })[0];
     if (!item) return;
     if (!quickView) {
       quickView = document.createElement("div");
@@ -389,6 +571,281 @@
     });
   }
 
+  function failLocal(message) {
+    state.error = message || "Unable to update your cart. Please try again.";
+    persistLocalFallback();
+    emit();
+    return { ok: false, error: state.error };
+  }
+
+  function withReady(action) {
+    return ready().then(action).catch(function () {
+      return failLocal("Unable to update your cart. Please try again.");
+    });
+  }
+
+  function addToCart(id, extras) {
+    var product = getProduct(id);
+    var row = product ? Object.assign(defaultConfig(product), extras || {}) : Object.assign({ id: id, qty: 1 }, extras || {});
+    if (product && !variantAllowed(product, row)) {
+      state.error = "That size and colour combination is not available.";
+      emit();
+      return Promise.resolve({ ok: false, error: state.error });
+    }
+    row.qty = Math.max(1, Number(row.qty) || 1);
+    var payload = {
+      productId: row.id || id,
+      variantId: row.variantId || "",
+      color: row.color,
+      size: row.size,
+      printType: row.printType,
+      printPosition: row.printPosition,
+      qty: row.qty,
+      artworkId: row.artworkId || "",
+      artworkName: row.artworkName || ""
+    };
+    return withReady(function () {
+      return postJson(API.cartAdd, payload).then(function (data) {
+        if (data && data.ok && data.cart) {
+          applySuccess(data);
+          return data;
+        }
+        state.error = (data && data.error) || "Unable to add this item to your cart.";
+        emit();
+        return data || { ok: false, error: state.error };
+      }).catch(function () {
+        return failLocal("Unable to add this item to your cart.");
+      });
+    });
+  }
+
+  function setQty(index, qty) {
+    var items = cartItems();
+    var current = items[index];
+    if (!current || !current.itemId) return Promise.resolve({ ok: false, error: "Cart item not found." });
+    var next = Math.max(1, Number(qty) || 1);
+    return withReady(function () {
+      return postJson(API.cartUpdate, { itemId: current.itemId, qty: next }).then(function (data) {
+        if (data && data.ok && data.cart) {
+          applySuccess(data);
+          return data;
+        }
+        state.error = (data && data.error) || "Unable to update quantity.";
+        emit();
+        return data || { ok: false, error: state.error };
+      }).catch(function () {
+        return failLocal("Unable to update quantity.");
+      });
+    });
+  }
+
+  function removeCart(index) {
+    var items = cartItems();
+    var current = items[index];
+    if (!current || !current.itemId) return Promise.resolve({ ok: false, error: "Cart item not found." });
+    return withReady(function () {
+      return postJson(API.cartRemove, { itemId: current.itemId }).then(function (data) {
+        if (data && data.ok && data.cart) {
+          applySuccess(data);
+          return data;
+        }
+        state.error = (data && data.error) || "Unable to remove this item.";
+        emit();
+        return data || { ok: false, error: state.error };
+      }).catch(function () {
+        return failLocal("Unable to remove this item.");
+      });
+    });
+  }
+
+  function clearCart() {
+    state.coupon = "";
+    persistCoupon();
+    return withReady(function () {
+      return postJson(API.cartClear, {}).then(function (data) {
+        if (data && data.ok && data.cart) {
+          applySuccess(data);
+          return data;
+        }
+        state.error = (data && data.error) || "Unable to clear the cart.";
+        emit();
+        return data || { ok: false, error: state.error };
+      }).catch(function () {
+        return failLocal("Unable to clear the cart.");
+      });
+    });
+  }
+
+  function toggleWishlist(id) {
+    if (!id) return Promise.resolve();
+    return withReady(function () {
+      return postJson(API.wishlistToggle, { productId: id }).then(function (data) {
+        if (data && data.ok && data.wishlist) {
+          applySuccess(data);
+          return data;
+        }
+        state.error = (data && data.error) || "Unable to update your wishlist.";
+        emit();
+        return data || { ok: false, error: state.error };
+      }).catch(function () {
+        return failLocal("Unable to update your wishlist.");
+      });
+    });
+  }
+
+  function removeWishlist(id) {
+    if (!id) return Promise.resolve();
+    return withReady(function () {
+      return postJson(API.wishlistRemove, { productId: id }).then(function (data) {
+        if (data && data.ok && data.wishlist) {
+          applySuccess(data);
+          return data;
+        }
+        state.error = (data && data.error) || "Unable to update your wishlist.";
+        emit();
+        return data || { ok: false, error: state.error };
+      }).catch(function () {
+        return failLocal("Unable to update your wishlist.");
+      });
+    });
+  }
+
+  function moveToCart(id) {
+    return addToCart(id).then(function (data) {
+      if (data && data.ok) return removeWishlist(id);
+      return data;
+    });
+  }
+
+  function migrateCart() {
+    if (flag(CART_MIGRATED_KEY) || forceEmpty()) return Promise.resolve({ ok: true, skipped: true });
+    var rows = localCartRows();
+    if (!rows.length) {
+      setFlag(CART_MIGRATED_KEY);
+      return Promise.resolve({ ok: true, skipped: true });
+    }
+    return postJson(API.cartMigrate, { items: rows }).then(function (data) {
+      if (data && data.ok && data.cart) {
+        applyCart(data.cart);
+        setFlag(CART_MIGRATED_KEY);
+        removeKey(CART_KEY);
+        return data;
+      }
+      return data || networkError();
+    });
+  }
+
+  function migrateWishlist() {
+    if (flag(WISHLIST_MIGRATED_KEY) || forceEmpty()) return Promise.resolve({ ok: true, skipped: true });
+    var ids = localWishlistIds();
+    if (!ids.length) {
+      setFlag(WISHLIST_MIGRATED_KEY);
+      return Promise.resolve({ ok: true, skipped: true });
+    }
+    return postJson(API.wishlistMigrate, { productIds: ids }).then(function (data) {
+      if (data && data.ok && data.wishlist) {
+        applyWishlist(data.wishlist);
+        setFlag(WISHLIST_MIGRATED_KEY);
+        removeKey(WISHLIST_KEY);
+        return data;
+      }
+      return data || networkError();
+    });
+  }
+
+  function loadFromServer() {
+    return Promise.all([getJson(API.cartGet), getJson(API.wishlistGet)]).then(function (results) {
+      var cartData = results[0];
+      var wishData = results[1];
+      if (!(cartData && cartData.ok && cartData.cart) || !(wishData && wishData.ok && wishData.wishlist)) {
+        throw new Error((cartData && cartData.error) || (wishData && wishData.error) || "Unable to load cart.");
+      }
+      applyCart(cartData.cart);
+      applyWishlist(wishData.wishlist);
+      state.source = "api";
+      return migrateCart().then(function () {
+        return migrateWishlist();
+      }).then(function () {
+        return Promise.all([getJson(API.cartGet), getJson(API.wishlistGet)]).then(function (fresh) {
+          if (fresh[0] && fresh[0].ok && fresh[0].cart) applyCart(fresh[0].cart);
+          if (fresh[1] && fresh[1].ok && fresh[1].wishlist) applyWishlist(fresh[1].wishlist);
+          state.source = "api";
+          state.error = null;
+          state.ready = true;
+          emit();
+          return { ok: true, source: "api" };
+        });
+      });
+    });
+  }
+
+  function loadLocalFallback(message) {
+    var rows = localCartRows();
+    state.cart = emptyCart();
+    state.cart.items = rows.map(function (row, index) {
+      var product = getProduct(row.id) || {};
+      return {
+        itemId: null,
+        id: row.id,
+        lineKey: cartLineId(row),
+        color: row.color,
+        size: row.size,
+        printType: row.printType,
+        printPosition: row.printPosition,
+        artworkId: row.artworkId || "",
+        artworkName: row.artworkName || "",
+        qty: Math.max(1, Number(row.qty) || 1),
+        variantId: row.variantId,
+        sku: row.sku || product.sku,
+        name: product.name || row.id,
+        image: product.image || "",
+        alt: product.alt || product.name || "",
+        unitPrice: Number(row.price != null ? row.price : product.price || 0),
+        unitMrp: Number(row.mrp != null ? row.mrp : product.mrp || 0),
+        linePrice: 0,
+        lineMrp: 0,
+        purchasable: true,
+        issues: []
+      };
+    });
+    state.cart.items.forEach(function (item) {
+      item.linePrice = item.unitPrice * item.qty;
+      item.lineMrp = item.unitMrp * item.qty;
+      state.cart.count += item.qty;
+      state.cart.subtotal += item.linePrice;
+      state.cart.mrp += item.lineMrp;
+    });
+    state.wishlistIds = localWishlistIds();
+    state.wishlistItems = state.wishlistIds.map(getProduct).filter(Boolean);
+    state.source = "local";
+    state.error = message || null;
+    state.ready = true;
+    emit();
+    return { ok: false, source: "local", error: state.error };
+  }
+
+  function ready() {
+    if (bootPromise) return bootPromise;
+    if (forceEmpty()) {
+      state.cart = emptyCart();
+      state.wishlistIds = [];
+      state.wishlistItems = [];
+      state.ready = true;
+      state.source = "local";
+      emit();
+      bootPromise = Promise.resolve({ ok: true, source: "local" });
+      return bootPromise;
+    }
+    state.loading = true;
+    bootPromise = loadFromServer().catch(function (error) {
+      return loadLocalFallback((error && error.message) || "Unable to load your cart. Showing saved browser items.");
+    }).then(function (result) {
+      state.loading = false;
+      return result;
+    });
+    return bootPromise;
+  }
+
   document.addEventListener("click", function (event) {
     var heart = event.target.closest("[data-wishlist-toggle]");
     if (heart) {
@@ -427,9 +884,11 @@
   });
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", syncCounts);
+    document.addEventListener("DOMContentLoaded", function () {
+      ready();
+    });
   } else {
-    syncCounts();
+    ready();
   }
 
   global.DSAtelier = global.DSAtelier || {};
@@ -454,6 +913,15 @@
     recommended: recommended,
     collection: collection,
     coupon: function () { return state.coupon; },
-    forceEmpty: forceEmpty
+    forceEmpty: forceEmpty,
+    ready: ready,
+    error: function () { return state.error; },
+    source: function () { return state.source; },
+    loading: function () { return state.loading; },
+    cartLineId: cartLineId,
+    quoteCheckout: quoteCheckout,
+    placeOrder: placeOrder,
+    getOrder: getOrder,
+    lastQuote: function () { return state.quote; }
   };
 })(window);

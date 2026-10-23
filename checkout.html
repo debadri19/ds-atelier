@@ -154,6 +154,21 @@
       <div class="container">
         <div class="checkout-layout" data-checkout-filled>
           <div class="checkout-main">
+            <section class="checkout-card" aria-labelledby="contact-heading">
+              <div class="checkout-card-head">
+                <div>
+                  <p class="section-kicker">Contact</p>
+                  <h2 id="contact-heading">Order Contact</h2>
+                </div>
+              </div>
+              <div class="form-field" data-field="email">
+                <label class="form-label" for="checkout-contact-email">Email address</label>
+                <input class="form-input" id="checkout-contact-email" name="email" type="email" placeholder=" " autocomplete="email" required aria-describedby="checkout-contact-email-error">
+                <p class="form-error" id="checkout-contact-email-error"></p>
+              </div>
+              <p class="checkout-note" data-contact-note role="status"></p>
+            </section>
+
             <section class="checkout-card" aria-labelledby="shipping-heading">
               <div class="checkout-card-head">
                 <div>
@@ -244,9 +259,12 @@
               <div><span>Subtotal</span><span data-summary-subtotal>₹0</span></div>
               <div><span>Shipping</span><span data-summary-shipping>Free</span></div>
               <div><span>Discount</span><span data-summary-discount>₹0</span></div>
+              <div><span>Tax</span><span data-summary-tax>₹0</span></div>
               <div class="cart-total"><span>Total</span><span data-summary-total>₹0</span></div>
             </div>
+            <p class="account-muted" data-checkout-policy></p>
             <p class="checkout-note" data-checkout-note role="status"></p>
+            <p class="account-muted">Payment is not collected in this step. The order will be created as pending payment.</p>
             <button class="btn btn-primary" type="button" data-place-order>Place Order</button>
             <a class="btn btn-secondary" href="cart.html">Back To Cart</a>
           </aside>

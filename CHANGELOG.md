@@ -4,6 +4,34 @@ Chronological history of changes that actually exist. Dates use the work session
 
 ---
 
+## 2026-10-23
+
+### Phase 5 checkout and order creation
+
+- Added additive `orders` and `order_items` tables on dedicated `ds_atelier_dev`
+- Same-origin CSRF-protected JSON under `backend/public/checkout/{quote,place,order}.php`
+- Checkout money is integer paise; shipping uses development demo ₹79 / free ≥ ₹999 and is blocked in production
+- Tax remains `unconfigured` (₹0 with notice) and is blocked in production
+- `WELCOME10` is a development demo coupon, not a production promotion
+- Placed orders are `pending_payment` / `pending`; clients cannot set payment status or customer ownership
+- Idempotent place replays the same order; cart clears only after a successful place; inventory is not decremented
+- Storefront `js/checkout.js` and `js/order-success.js` quote/place/load the server order without a visual redesign
+
+---
+
+## 2026-10-22
+
+### Phase 4 persistent cart and wishlist
+
+- Added additive `carts`, `cart_items`, `wishlists`, and `wishlist_items` tables on dedicated `ds_atelier_dev`
+- Guest identity uses HttpOnly cookie `ds_atelier_guest`; only the SHA-256 hash is stored
+- Same-origin CSRF-protected JSON under `backend/public/cart/` and `backend/public/wishlist/`
+- Guest carts and wishlists merge into the customer account on login and register
+- Storefront `js/commerce.js` reads and writes the server cart/wishlist and migrates localStorage once
+- Catalog prices and stock are the source of truth; quantity is capped at 20; checkout and payments were not added in this phase
+
+---
+
 ## 2026-10-21
 
 ### Phase 3 product catalog

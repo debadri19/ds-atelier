@@ -4,7 +4,7 @@ Premium custom apparel storefront. Tagline: **CREATE. PRINT. WEAR.**
 
 DTF printing, sublimation, custom products, bulk orders, and dropshipping for creators, brands, teams, and businesses.
 
-Current release: **v0.1.5** — Alpha. Storefront and Dashboard pages exist as a static frontend. Customer authentication is Phase 2 PHP against dedicated `ds_atelier_dev`. Catalog, cart, checkout, and payments are not connected.
+Current release: **v0.1.5** — Alpha. Storefront and Dashboard pages exist as a static frontend. Customer authentication is Phase 2 PHP against dedicated `ds_atelier_dev`. Catalog is Phase 3 read-only JSON. Cart and wishlist persist in Phase 4. Checkout creates pending-payment orders in Phase 5. Payments are not connected.
 
 ---
 
@@ -16,7 +16,7 @@ Home, Shop, Product, About, Policy, Support, Account, Cart, Checkout, Wishlist, 
 
 Includes a global design system, Light/Dark mode, responsive navigation, official brand assets, and mock product data.
 
-This is not a production PHP app yet. Customer login/register/reset are wired; catalog, cart, checkout, and payments are not.
+This is not a production PHP app yet. Customer login/register/reset, catalog reads, cart/wishlist persistence, and pending-payment checkout are wired; payments are not.
 
 ---
 
@@ -29,7 +29,7 @@ This is not a production PHP app yet. Customer login/register/reset are wired; c
 - Google Fonts: Syne + DM Sans
 - Official PNG brand assets
 
-No Node build step. PHP lives under `backend/`. Customer `auth.html` posts to `backend/public/customer/*.php`. Other storefront pages are not connected.
+No Node build step. PHP lives under `backend/`. Customer `auth.html` posts to `backend/public/customer/*.php`. Shop/Product read `backend/public/catalog/*.php`. Cart/Wishlist use `backend/public/cart/*.php` and `backend/public/wishlist/*.php`. Checkout uses `backend/public/checkout/*.php`. Payment is not collected.
 
 ---
 
@@ -71,9 +71,9 @@ Details: `docs/FRONTEND_ARCHITECTURE.md`
 | Policy (`policy.html`) | Built |
 | Support (`support.html`) | Built |
 | Account (`account.html`) | Built (frontend demo) |
-| Cart (`cart.html`) | Built (frontend demo; no server cart) |
-| Checkout (`checkout.html`) | Built (frontend demo; no payment) |
-| Wishlist (`wishlist.html`) | Built (frontend demo) |
+| Cart (`cart.html`) | Built (Phase 4 server cart against `ds_atelier_dev`) |
+| Checkout (`checkout.html`) | Built (Phase 5 pending-payment order creation; no payment capture) |
+| Wishlist (`wishlist.html`) | Built (Phase 4 server wishlist against `ds_atelier_dev`) |
 | Designs (`designs.html`, `design.html`) | Built (frontend demo) |
 | Customer auth (`auth.html`) | Built (Phase 2 PHP/JSON against `ds_atelier_dev`; SMTP reset email not sent) |
 | Dashboard (`dashboard/index.html`) | Built (frontend demo) |
@@ -160,18 +160,16 @@ When design, architecture, product flow, or integration changes, update the matc
 
 ## Future backend integration
 
-Phase 1 added a DS-specific PHP scaffold under `backend/` (config, PDO, session/CSRF helpers, fail-closed admin guard, migration convention). Storefront `.html` routes are unchanged and are not wired to these helpers.
+Phase 1 added a DS-specific PHP scaffold under `backend/`. Phase 2 wires customer auth, Phase 3 wires catalog reads, Phase 4 wires cart/wishlist, and Phase 5 creates pending-payment orders.
 
-See `docs/BACKEND_INTEGRATION.md` and `backend/README.md`. Catalog, auth, cart, checkout, payments, Newsletter, and Meta Pixel are not implemented.
+See `docs/BACKEND_INTEGRATION.md` and `backend/README.md`. Payments, Newsletter, and Meta Pixel are not implemented.
 
 ---
 
 ## Current limitations
 
-- Mock product data in JavaScript; payments are not implemented
-- `backend/` contains Phase 1 foundation only; there is no application database and no storefront PHP handlers yet
-- Cart, Checkout, Account, Wishlist, and Auth are frontend demos, not production backend flows
-- Header Search is a frontend modal against mock data, not a backend search API
+- Payments are not implemented
+- Cart and Wishlist persist in `ds_atelier_dev`; Checkout creates pending-payment orders; Account demo order history remains frontend-only
+- Header Search uses the loaded catalog API (demo fallback is explicit)
 - Listing cards use View Product; configuration and Add to Cart live on Product
-- Frontend UI for current pages exists; backend integration and production QA remain pending
-- Canonical customer auth is uncommitted local `auth.html`; GitHub `main` at HEAD `555d395` still names the older `login.html` commit
+- Payment capture, admin CRUD, and production QA remain pending

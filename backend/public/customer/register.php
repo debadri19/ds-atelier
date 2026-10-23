@@ -20,6 +20,7 @@ if (!$result['ok'] || !$result['pdo'] instanceof PDO) {
 try {
     $out = ds_atelier_register_customer($result['pdo'], $body);
     if (!empty($out['ok'])) {
+        ds_atelier_commerce_try_merge($result['pdo'], $config, (int) $out['customer']['id']);
         $out['csrf'] = ds_atelier_csrf_token();
     }
     ds_atelier_send($out);

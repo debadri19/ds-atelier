@@ -18,39 +18,66 @@
     return "₹" + Number(value || 0).toLocaleString("en-IN");
   }
 
+  function queryRef() {
+    try {
+      return new URLSearchParams(global.location.search).get("ref") || "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function paymentLabel(status) {
+    var value = String(status || "").toLowerCase();
+    if (value === "pending" || value === "pending_payment") return "Pending payment";
+    if (value === "paid") return "Paid";
+    return status || "Pending payment";
+  }
+
   function hydrate(item) {
     var catalog = global.DSAtelier && global.DSAtelier.catalog;
     var product = catalog && catalog.getById ? catalog.getById(item.productId) : null;
     return {
-      name: (product && product.name) || item.name || "Product",
-      image: (product && product.image) || item.image || "",
-      alt: (product && product.alt) || item.name || "Product",
+      name: item.name || (product && product.name) || "Product",
+      image: item.image || (product && product.image) || "",
+      alt: item.alt || (product && product.alt) || item.name || "Product",
       color: item.color || "",
       size: item.size || "",
       printType: item.printType || "",
+      printPosition: item.printPosition || "",
       qty: Math.max(1, Number(item.qty) || 1),
-      price: Number(item.price != null ? item.price : (product && product.price)) || 0
+      price: Number(item.unitPrice != null ? item.unitPrice : item.price != null ? item.price : (product && product.price)) || 0,
+      linePrice: Number(item.linePrice != null ? item.linePrice : 0)
     };
   }
 
-  function orderSubtotal(order) {
-    if (order.subtotal != null) return Number(order.subtotal) || 0;
-    return (order.items || []).map(hydrate).reduce(function (sum, item) {
-      return sum + item.price * item.qty;
-    }, 0);
+  function formatShipping(order, account) {
+    var shipping = order && order.shipping ? order.shipping : null;
+    if (shipping && shipping.name) {
+      var line = [shipping.line1, shipping.line2, shipping.city, shipping.state + " " + shipping.pincode]
+        .filter(Boolean)
+        .join(", ");
+      return {
+        html:
+          "<strong>" + escapeHtml(shipping.name) + "</strong><br>" +
+          escapeHtml(line) + "<br>" +
+          escapeHtml(shipping.phone || "")
+      };
+    }
+    var address = account && account.getAddress && order.addressId ? account.getAddress(order.addressId) : null;
+    if (!address && account && account.defaultAddress) address = account.defaultAddress();
+    if (!address) return { text: "Address unavailable" };
+    return {
+      html:
+        "<strong>" + escapeHtml(address.name) + "</strong><br>" +
+        escapeHtml(account.formatAddress ? account.formatAddress(address) : "") + "<br>" +
+        escapeHtml(account.formatMobile ? account.formatMobile(address.phone) : address.phone || "")
+    };
   }
 
-  function orderTotal(order) {
-    if (order.total != null) return Number(order.total) || 0;
-    return Math.max(0, orderSubtotal(order) - Number(order.discount || 0) + Number(order.shipping || 0));
-  }
-
-  function render() {
+  function renderOrder(order) {
     var filled = qs("[data-success-filled]");
     var empty = qs("[data-success-empty]");
     if (!filled) return;
-    var account = global.DSAtelier && global.DSAtelier.account;
-    var order = account && account.getLastOrder ? account.getLastOrder() : null;
     if (!order) {
       filled.hidden = true;
       if (empty) empty.hidden = false;
@@ -59,6 +86,7 @@
     if (empty) empty.hidden = true;
     filled.hidden = false;
 
+    var account = global.DSAtelier && global.DSAtelier.account;
     var idEl = qs("[data-order-id]");
     var dateEl = qs("[data-order-date]");
     var statusEl = qs("[data-payment-status]");
@@ -66,29 +94,29 @@
     var shipEl = qs("[data-shipping-summary]");
     var itemsEl = qs("[data-order-items]");
     var view = qs("[data-view-order-link]");
+    var noticeEl = qs("[data-order-notice]");
 
-    if (idEl) idEl.textContent = order.id;
+    var ref = order.ref || order.id;
+    if (idEl) idEl.textContent = ref || "";
     if (dateEl) dateEl.textContent = order.date || "";
-    if (statusEl) statusEl.textContent = order.paymentStatus || "Paid";
-    if (methodEl) methodEl.textContent = order.payment || "";
-    if (view) view.href = "account.html#order/" + encodeURIComponent(order.id);
+    if (statusEl) statusEl.textContent = paymentLabel(order.paymentStatus || order.status);
+    if (methodEl) methodEl.textContent = order.paymentMethod || order.payment || "";
+    if (view) view.href = "account.html#order/" + encodeURIComponent(ref || "");
+    if (noticeEl) {
+      var notices = Array.isArray(order.notices) ? order.notices : [];
+      noticeEl.textContent = notices.join(" ") || "Payment has not been collected. This order is pending payment.";
+    }
 
-    var address = account.getAddress ? account.getAddress(order.addressId) : null;
-    if (!address && account.defaultAddress) address = account.defaultAddress();
+    var ship = formatShipping(order, account);
     if (shipEl) {
-      if (address) {
-        shipEl.innerHTML =
-          "<strong>" + escapeHtml(address.name) + "</strong><br>" +
-          escapeHtml(account.formatAddress ? account.formatAddress(address) : "") + "<br>" +
-          escapeHtml(account.formatMobile ? account.formatMobile(address.phone) : address.phone || "");
-      } else {
-        shipEl.textContent = "Address unavailable";
-      }
+      if (ship.html) shipEl.innerHTML = ship.html;
+      else shipEl.textContent = ship.text || "Address unavailable";
     }
 
     var items = (order.items || []).map(hydrate);
     if (itemsEl) {
       itemsEl.innerHTML = items.map(function (item) {
+        var lineTotal = item.linePrice || item.price * item.qty;
         return (
           '<article class="success-line">' +
             '<div class="success-line-media"><img src="' + escapeHtml(item.image) + '" alt="' + escapeHtml(item.alt) + '"></div>' +
@@ -101,28 +129,59 @@
                 " · Qty " + escapeHtml(item.qty) +
               "</p>" +
             "</div>" +
-            '<span class="success-line-price">' + money(item.price * item.qty) + "</span>" +
+            '<span class="success-line-price">' + money(lineTotal) + "</span>" +
           "</article>"
         );
       }).join("");
     }
 
-    var subtotal = orderSubtotal(order);
-    var shipping = Number(order.shipping || 0);
-    var discount = Number(order.discount || 0);
+    var subtotal = Number(order.itemSubtotal != null ? order.itemSubtotal : order.subtotal || 0);
+    var shippingAmt = Number(order.shippingTotal != null ? order.shippingTotal : order.shipping || 0);
+    var discount = Number(order.discountTotal != null ? order.discountTotal : order.discount || 0);
+    var tax = Number(order.taxTotal != null ? order.taxTotal : order.tax || 0);
+    var total = Number(order.grandTotal != null ? order.grandTotal : order.total || 0);
     var subEl = qs("[data-order-subtotal]");
     var shipAmt = qs("[data-order-shipping]");
     var discEl = qs("[data-order-discount]");
+    var taxEl = qs("[data-order-tax]");
     var totalEl = qs("[data-order-total]");
     if (subEl) subEl.textContent = money(subtotal);
-    if (shipAmt) shipAmt.textContent = shipping ? money(shipping) : "Free";
+    if (shipAmt) shipAmt.textContent = shippingAmt ? money(shippingAmt) : "Free";
     if (discEl) discEl.textContent = discount ? "−" + money(discount) : money(0);
-    if (totalEl) totalEl.textContent = money(orderTotal(order));
+    if (taxEl) taxEl.textContent = money(tax);
+    if (totalEl) totalEl.textContent = money(total);
+  }
+
+  function localOrder(ref) {
+    var account = global.DSAtelier && global.DSAtelier.account;
+    if (ref && account && account.getOrder) {
+      var found = account.getOrder(ref);
+      if (found) return found;
+    }
+    return account && account.getLastOrder ? account.getLastOrder() : null;
+  }
+
+  function load() {
+    var filled = qs("[data-success-filled]");
+    if (!filled) return;
+    var commerce = global.DSAtelier && global.DSAtelier.commerce;
+    var ref = queryRef();
+    if (commerce && commerce.getOrder && ref) {
+      commerce.getOrder(ref).then(function (data) {
+        if (data && data.ok && data.order) {
+          renderOrder(data.order);
+          return;
+        }
+        renderOrder(localOrder(ref));
+      });
+      return;
+    }
+    renderOrder(localOrder(ref));
   }
 
   function init() {
     if (!qs("[data-success-filled]")) return;
-    render();
+    load();
   }
 
   global.DSAtelier = global.DSAtelier || {};

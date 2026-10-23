@@ -19,9 +19,21 @@
     if (global.DSAtelier && global.DSAtelier.ui && global.DSAtelier.ui.busy) global.DSAtelier.ui.busy(el);
   }
 
+  function issueLabel(issues) {
+    if (!issues || !issues.length) return "";
+    if (issues.indexOf("out_of_stock") !== -1 || issues.indexOf("insufficient_stock") !== -1) {
+      return "This item is out of stock or the quantity exceeds available stock.";
+    }
+    if (issues.indexOf("variant_inactive") !== -1 || issues.indexOf("unavailable") !== -1) {
+      return "This item is no longer available.";
+    }
+    return "This item cannot be purchased right now.";
+  }
+
   function line(item) {
     var row = item.row;
     var product = item.product;
+    var warning = issueLabel(item.issues);
     return (
       '<article class="cart-item" data-cart-index="' + item.index + '">' +
         '<a class="cart-item-media" href="product.html?id=' + encodeURIComponent(product.id) + '">' +
@@ -36,6 +48,7 @@
             "<span>Position: " + row.printPosition + "</span>" +
             (row.artworkName ? "<span>Artwork: " + row.artworkName + "</span>" : "") +
           "</div>" +
+          (warning ? '<p class="cart-note is-error">' + warning + "</p>" : "") +
         "</div>" +
         '<div class="cart-item-tools">' +
           '<div class="cart-qty" role="group" aria-label="Quantity">' +
@@ -57,6 +70,18 @@
     if (list) list.innerHTML = items.map(line).join("");
     if (filled) filled.hidden = !items.length;
     if (empty) empty.hidden = items.length > 0;
+    if (checkoutNote) {
+      var error = commerce.error ? commerce.error() : "";
+      if (error) {
+        checkoutNote.hidden = false;
+        checkoutNote.textContent = error;
+        checkoutNote.classList.add("is-error");
+      } else if (checkoutNote.classList.contains("is-error") && checkoutNote.textContent && items.length) {
+        checkoutNote.hidden = true;
+        checkoutNote.textContent = "";
+        checkoutNote.classList.remove("is-error");
+      }
+    }
     var map = {
       "[data-summary-mrp]": commerce.money(totals.mrp),
       "[data-summary-discount]": totals.discount ? "−" + commerce.money(totals.discount) : commerce.money(0),
@@ -86,16 +111,25 @@
     if (minus) {
       var i = Number(minus.getAttribute("data-qty-minus"));
       var current = commerce.cartItems()[i];
-      if (current) commerce.setQty(i, current.row.qty - 1);
+      if (current) {
+        busy(minus);
+        commerce.setQty(i, current.row.qty - 1);
+      }
     }
     var plus = event.target.closest("[data-qty-plus]");
     if (plus) {
       var j = Number(plus.getAttribute("data-qty-plus"));
       var next = commerce.cartItems()[j];
-      if (next) commerce.setQty(j, next.row.qty + 1);
+      if (next) {
+        busy(plus);
+        commerce.setQty(j, next.row.qty + 1);
+      }
     }
     var remove = event.target.closest("[data-remove-cart]");
-    if (remove) commerce.removeCart(Number(remove.getAttribute("data-remove-cart")));
+    if (remove) {
+      busy(remove);
+      commerce.removeCart(Number(remove.getAttribute("data-remove-cart")));
+    }
     var checkout = event.target.closest("[data-checkout]");
     if (checkout) {
       if (!commerce.cartItems().length) {
@@ -154,7 +188,11 @@
       document.addEventListener("ds-atelier-commerce", render);
       bound = true;
     }
-    render();
+    if (commerce.ready) {
+      commerce.ready().then(render);
+    } else {
+      render();
+    }
   }
 
   global.DSAtelier = global.DSAtelier || {};

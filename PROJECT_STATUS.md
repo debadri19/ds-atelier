@@ -1,11 +1,11 @@
 # Project Status — DS ATELIER
 
 Version: v0.1.5  
-Status: Alpha — Frontend plus Phase 2 customer authentication and Phase 3 read-only catalog
+Status: Alpha — Frontend plus Phase 2 customer authentication, Phase 3 read-only catalog, Phase 4 persistent cart/wishlist, and Phase 5 checkout/order creation
 
 Truthful snapshot. Do not treat planned work as done.
 
-Cart, checkout, and payments are not integrated. Phase 2 wires customer `auth.html` to same-origin PHP against dedicated `ds_atelier_dev`. Phase 3 wires Shop, Home, and Product to read-only catalog JSON. Dashboard authentication remains a frontend demo.
+Payments are not integrated. Phase 2 wires customer `auth.html` to same-origin PHP against dedicated `ds_atelier_dev`. Phase 3 wires Shop, Home, and Product to read-only catalog JSON. Phase 4 stores cart and wishlist in `ds_atelier_dev` for guests and signed-in customers. Phase 5 creates pending-payment orders from the server cart. Dashboard authentication remains a frontend demo.
 
 ---
 
@@ -20,7 +20,8 @@ Cart, checkout, and payments are not integrated. Phase 2 wires customer `auth.ht
 - Policy page
 - Support page
 - Customer account dashboard (`account.html`) — frontend demo
-- Cart, Checkout, Wishlist, Designs — frontend demo pages
+- Cart and Wishlist — Phase 4 server persistence against `ds_atelier_dev`
+- Checkout — Phase 5 pending-payment order creation against `ds_atelier_dev`; payment is not collected; Designs remain a frontend demo page
 - Customer authentication (`auth.html`) — Phase 2 server login/register/logout/reset against `ds_atelier_dev`; `#login` `#register` `#forgot-password` `#reset-password`; legacy redirects retained. Password-reset email is not sent (SMTP not configured).
 - Studio Dashboard (`dashboard/index.html`, categories, products, designs, media) — frontend demo
 - Dashboard authentication (`dashboard/auth.html`) — frontend demo; separate from customer auth; legacy `dashboard/login.html` redirect retained
@@ -34,6 +35,8 @@ Cart, checkout, and payments are not integrated. Phase 2 wires customer `auth.ht
 - Phase 1 backend foundation files under `backend/`
 - Phase 2 customer PHP/JSON handlers under `backend/public/customer/` and `customers` / `customer_password_resets` tables in `ds_atelier_dev`
 - Phase 3 catalog tables, development fixtures, and read-only JSON under `backend/public/catalog/`
+- Phase 4 cart/wishlist tables and CSRF-protected JSON under `backend/public/cart/` and `backend/public/wishlist/`
+- Phase 5 order tables and CSRF-protected JSON under `backend/public/checkout/`
 
 ### Header
 
@@ -77,7 +80,7 @@ Cart, checkout, and payments are not integrated. Phase 2 wires customer `auth.ht
 
 ## Pending
 
-- Core PHP/MySQL integration (cart, checkout, payment, orders, wishlist, admin). Customer auth is Phase 2; catalog read APIs are Phase 3; Dashboard auth is not.
+- Core PHP/MySQL integration (payment capture, invoices/email, admin orders). Customer auth is Phase 2; catalog read APIs are Phase 3; cart/wishlist persistence is Phase 4; checkout/order creation is Phase 5; Dashboard auth is not.
 - Artwork migration (replace `js/artworks.js` mocks) and admin catalog CRUD
 - Dashboard production persistence (Categories/Products/Designs/Media) and placeholder modules (Orders, Customers, Discounts, Settings)
 - Dedicated Custom Order / Bulk Orders / Dropshipping PHP pages — **Needs Verification** against the backend repo (Home sections exist here; dedicated PHP files do not)
@@ -96,7 +99,7 @@ See `docs/PROJECT_AUDIT_PENDING.md` for evidence and status labels.
 - Apparel visuals on Home are SVG placeholders, not photography
 - Storefront images live under `assets/images/{hero,categories,products,services,icons,miscellaneous}/`
 - Product mockups live under `assets/images/products/<product-slug>/mockups/default/<color>/`
-- Cart, Checkout, Account, and Wishlist persist in the browser only (`localStorage` / `sessionStorage`); they are not server sessions
+- Cart and Wishlist persist in `ds_atelier_dev` (guest cookie `ds_atelier_guest` or customer session). Checkout creates pending-payment orders; Account demo order history still uses browser storage. Coupons remain local (`ds-atelier-coupon`) until quote/place.
 - Customer Auth uses a PHP session against `ds_atelier_dev`. Forgot-password issues a hashed token but does not send email (SMTP not configured). Reset requires `?token=` on `auth.html#reset-password`.
 - `account.html` still uses the demo session store for account UI data
 - Catalog listings and PDP read `backend/public/catalog/*.php`. `js/catalog.js` mock data is development/demo fallback only.
@@ -108,9 +111,9 @@ See `docs/PROJECT_AUDIT_PENDING.md` for evidence and status labels.
 
 1. Safely commit/push the local authentication route rename and Phase 2 backend when the owner approves
 2. Configure SMTP before claiming password-reset email delivery
-3. Persistent cart/wishlist, checkout, orders, payments, and admin catalog CRUD (Phase 4+)
+3. Payment capture, invoices/email, and admin catalog CRUD (Phase 6+)
 4. Production end-to-end QA
 
-Frontend pages for Home, Shop, Product, About, Policy, Support, Account, Cart, Checkout, Wishlist, Designs, and Auth exist. Backend integration, production catalog, and production QA are not complete.
+Frontend pages for Home, Shop, Product, About, Policy, Support, Account, Cart, Checkout, Wishlist, Designs, and Auth exist. Payments, production catalog CRUD, and production QA are not complete.
 
-Do not claim backend integration, payments, or production search is complete. Do not describe Cart or Checkout pages as unbuilt.
+Do not claim payments or production search is complete. Do not describe Cart or Wishlist as browser-only after Phase 4. Do not describe Checkout as unbuilt. Do not describe placed orders as paid.

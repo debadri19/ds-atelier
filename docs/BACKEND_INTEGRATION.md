@@ -1,6 +1,6 @@
 # Backend Integration — DS ATELIER
 
-This repository remains a **standalone frontend** except for Phase 2 customer authentication and Phase 3 read-only catalog APIs. Phase 1 added a DS-specific PHP foundation under `backend/`. Cart, checkout and payments are **not** connected. Dashboard authentication is still a frontend demo.
+This repository remains a **standalone frontend** except for Phase 2 customer authentication, Phase 3 read-only catalog APIs, Phase 4 persistent cart/wishlist, and Phase 5 checkout/order creation. Phase 1 added a DS-specific PHP foundation under `backend/`. Payments are **not** connected. Dashboard authentication is still a frontend demo.
 
 Do not treat `js/main.js` mock products as production database data.
 
@@ -32,11 +32,11 @@ Do not restyle the storefront to match any previous MoonAura UI while wiring PHP
 | Area | Now |
 |---|---|
 | Catalog | Shop, Home, and Product read `backend/public/catalog/*.php`. `js/catalog.js` keeps mock products for development/demo fallback only. |
-| Cart | `cart.html` frontend demo (`js/commerce.js` localStorage); not a server cart |
-| Checkout | `checkout.html` frontend demo; no payment gateway |
+| Cart | `cart.html` plus `js/commerce.js` against `backend/public/cart/*.php`; guest cookie or customer session |
+| Checkout | `checkout.html` plus `js/checkout.js` against `backend/public/checkout/*.php`; pending-payment orders only |
 | Auth / account | Customer `auth.html` uses PHP/JSON against `ds_atelier_dev`. `account.html` remains a frontend demo. Password-reset email is not sent. |
-| Wishlist | `wishlist.html` frontend demo |
-| Orders | Demo orders in account UI only |
+| Wishlist | `wishlist.html` plus `js/commerce.js` against `backend/public/wishlist/*.php` |
+| Orders | Phase 5 pending-payment rows in `ds_atelier_dev`; `account.html` history remains a frontend demo |
 | Payments | Badge labels in footer; checkout does not capture payment |
 | Custom options | Frontend configuration on Product page only |
 | Dashboard | Frontend demo modules; Orders/Customers/Discounts/Settings are placeholders |
@@ -65,11 +65,11 @@ Then Add to Cart / Buy Now against the real cart API.
 
 ### Cart
 
-Map configured line items (including artwork references) to the existing cart/session model.
+Configured PDP lines (print type, colour, size, quantity, print position, artwork id/name) post to `backend/public/cart/add.php`. Catalog prices and stock are the source of truth. Artwork files are not stored until a later checkout phase.
 
 ### Checkout
 
-Reuse existing checkout, payment, tax, and order creation. Frontend must follow DS ATELIER pages (`checkout.css` later), not a legacy skin.
+`checkout.html` posts quote/place to `backend/public/checkout/{quote,place}.php`. Orders are `pending_payment` / `pending`. Shipping and tax policies fail closed in production when unconfigured. Payment capture is not implemented. Frontend must follow DS ATELIER pages, not a legacy skin.
 
 ### Authentication / account
 
@@ -77,7 +77,7 @@ Customer `auth.html` posts to `backend/public/customer/*.php`. Keep Dashboard `d
 
 ### Wishlist
 
-`wishlist.html` exists as a frontend demo; connect it to the existing wishlist backend if present.
+`wishlist.html` reads `backend/public/wishlist/get.php`. Toggle/add/remove are CSRF-protected. Unpublished products are excluded.
 
 ### Order tracking
 
@@ -132,7 +132,36 @@ Applied against dedicated `ds_atelier_dev` only:
 - Development seeder copies the existing mock products without overwriting rows that already exist
 - Same-origin JSON handlers: `backend/public/catalog/{products,product,categories}.php`
 - `js/catalog.js`, `js/shop.js`, `js/product.js`, and Home featured products consume those handlers
-- Unpublished products and inactive variants are excluded; unavailable variants cannot be added to the browser cart
+- Unpublished products and inactive variants are excluded; unavailable variants cannot be purchased
 - Static mock-data fallback is limited to `file:` pages or explicit `?demo=1` / `ds-atelier-demo-catalog=1`
 
 Out of this phase: admin CRUD, persistent cart/wishlist, checkout, orders, payments, Newsletter, Meta Pixel/CAPI, Dashboard authentication.
+
+## Phase 4 persistent cart and wishlist (2026-10-22)
+
+Applied against dedicated `ds_atelier_dev` only:
+
+- Additive tables: `carts`, `cart_items`, `wishlists`, `wishlist_items`
+- Guest identity: HttpOnly cookie `ds_atelier_guest` (64-hex raw, SHA-256 stored)
+- Same-origin JSON: `backend/public/cart/{get,add,update,remove,clear,migrate}.php` and `backend/public/wishlist/{get,add,remove,toggle,migrate}.php`
+- CSRF required on mutating endpoints; directory `index.php` files return 403
+- Line identity: `slug|colour|size|printType|printPosition|artworkId`; add increments qty; migrate uses max qty
+- Guest cart/wishlist merge into the customer account on login and register
+- `js/commerce.js` hydrates from the server and migrates localStorage once (`ds-atelier-cart-migrated` / `ds-atelier-wishlist-migrated`)
+
+Out of this phase: checkout, orders, payments, artwork file storage, Newsletter, Meta Pixel/CAPI, Dashboard authentication, admin catalog CRUD.
+
+## Phase 5 checkout and order creation (2026-10-23)
+
+Applied against dedicated `ds_atelier_dev` only:
+
+- Additive tables: `orders`, `order_items`
+- Same-origin JSON: `backend/public/checkout/{quote,place,order}.php`
+- CSRF required on quote and place; directory `index.php` returns 403
+- Money in integer paise; shipping `development_demo` ₹79 / free ≥ ₹999 (blocked in production); tax `unconfigured` = ₹0 with notice (blocked in production)
+- `WELCOME10` is a development demo coupon
+- Orders are `pending_payment` / `pending`; clients cannot set payment status or customer ownership
+- Idempotency key unique; cart cleared only after successful place; inventory is not decremented
+- `js/checkout.js` and `js/order-success.js` quote/place/load the server order without a visual redesign
+
+Out of this phase: payment capture, invoices/email, inventory decrement, admin order dashboard, Newsletter, Meta Pixel/CAPI, Dashboard authentication, admin catalog CRUD.

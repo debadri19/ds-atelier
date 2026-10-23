@@ -11,6 +11,11 @@
   var addressMode = "shipping";
   var editingId = "";
   var placing = false;
+  var quoting = false;
+  var quoteAgain = false;
+  var quoteTimer = null;
+  var lastQuote = null;
+  var placeKey = "";
 
   function qs(sel, root) {
     return (root || document).querySelector(sel);
@@ -123,6 +128,23 @@
     );
   }
 
+  function moneyAmount(value) {
+    return commerce.money(Number(value || 0));
+  }
+
+  function contactEmail() {
+    var input = qs("#checkout-contact-email");
+    return input ? String(input.value || "").trim() : "";
+  }
+
+  function selectedAddress(id) {
+    var list = addresses();
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) return list[i];
+    }
+    return null;
+  }
+
   function line(item) {
     var product = item.product;
     var row = item.row;
@@ -136,9 +158,9 @@
             (row.printType ? " · " + escapeHtml(row.printType) : "") +
             (row.printPosition ? " · " + escapeHtml(row.printPosition) : "") +
           "</p>" +
-          '<p class="checkout-line-meta">' + commerce.money(product.price) + " × " + escapeHtml(row.qty) + "</p>" +
+          '<p class="checkout-line-meta">' + moneyAmount(row.price != null ? row.price : product.price) + " × " + escapeHtml(row.qty) + "</p>" +
         "</div>" +
-        '<span class="checkout-line-price">' + commerce.money(item.linePrice) + "</span>" +
+        '<span class="checkout-line-price">' + moneyAmount(item.linePrice) + "</span>" +
       "</article>"
     );
   }
@@ -176,29 +198,92 @@
   function renderSummary() {
     if (!commerce) return;
     var items = commerce.cartItems();
-    var totals = commerce.totals();
+    var quote = lastQuote;
     var list = qs("[data-summary-items]");
     if (list) list.innerHTML = items.map(line).join("");
-    var saleSubtotal = 0;
-    items.forEach(function (item) { saleSubtotal += item.linePrice; });
-    var couponDiscount = totals.coupon === "WELCOME10" ? Math.round(saleSubtotal * 0.1) : 0;
+    var subtotal = quote ? quote.itemSubtotal : 0;
+    var shipping = quote ? quote.shippingTotal : 0;
+    var discount = quote ? quote.discountTotal : 0;
+    var tax = quote ? quote.taxTotal : 0;
+    var total = quote ? quote.grandTotal : 0;
     var map = {
-      "[data-summary-subtotal]": commerce.money(saleSubtotal),
-      "[data-summary-shipping]": totals.shipping ? commerce.money(totals.shipping) : "Free",
-      "[data-summary-discount]": couponDiscount ? "−" + commerce.money(couponDiscount) : commerce.money(0),
-      "[data-summary-total]": commerce.money(totals.total)
+      "[data-summary-subtotal]": moneyAmount(subtotal),
+      "[data-summary-shipping]": Number(shipping) ? moneyAmount(shipping) : "Free",
+      "[data-summary-discount]": Number(discount) ? "−" + moneyAmount(discount) : moneyAmount(0),
+      "[data-summary-tax]": moneyAmount(tax),
+      "[data-summary-total]": moneyAmount(total)
     };
     Object.keys(map).forEach(function (sel) {
       var el = qs(sel);
       if (el) el.textContent = map[sel];
     });
-    var coupon = totals.coupon === "WELCOME10" ? "WELCOME10" : "";
+    var coupon = quote && quote.coupon ? quote.coupon : (commerce.coupon ? commerce.coupon() : "");
     var applied = qs("[data-coupon-applied]");
     var codeEl = qs("[data-coupon-code]");
     var input = qs("#checkout-coupon");
     if (applied) applied.hidden = !coupon;
     if (codeEl) codeEl.textContent = coupon ? coupon + " applied" : "";
     if (input && coupon && !input.value) input.value = coupon;
+    var policy = qs("[data-checkout-policy]");
+    if (policy) {
+      var notices = quote && Array.isArray(quote.notices) ? quote.notices.slice() : [];
+      policy.textContent = notices.join(" ");
+    }
+  }
+
+  function fillContact() {
+    var input = qs("#checkout-contact-email");
+    if (!input || input.value) return;
+    var profile = account && account.getProfile ? account.getProfile() : {};
+    if (profile && profile.email) input.value = profile.email;
+    syncFilled(input.closest(".form-field"));
+  }
+
+  function requestQuote() {
+    if (!commerce || !commerce.quoteCheckout) return;
+    if (quoting) {
+      quoteAgain = true;
+      return;
+    }
+    if (!commerce.cartItems().length) {
+      lastQuote = null;
+      renderSummary();
+      return;
+    }
+    quoting = true;
+    commerce.quoteCheckout(commerce.coupon ? commerce.coupon() : "").then(function (data) {
+      quoting = false;
+      if (quoteAgain) {
+        quoteAgain = false;
+        requestQuote();
+        return;
+      }
+      if (!live()) return;
+      if (data && data.ok && data.quote) {
+        lastQuote = data.quote;
+        setNote(qs("[data-checkout-note]"), "");
+      } else {
+        lastQuote = null;
+        setNote(qs("[data-checkout-note]"), (data && data.error) || "Unable to calculate checkout totals.", "is-error");
+      }
+      renderSummary();
+    }).catch(function () {
+      quoting = false;
+      if (quoteAgain) {
+        quoteAgain = false;
+        requestQuote();
+        return;
+      }
+      if (!live()) return;
+      lastQuote = null;
+      setNote(qs("[data-checkout-note]"), "Unable to calculate checkout totals.", "is-error");
+      renderSummary();
+    });
+  }
+
+  function scheduleQuote() {
+    if (quoteTimer) window.clearTimeout(quoteTimer);
+    quoteTimer = window.setTimeout(requestQuote, 120);
   }
 
   function render() {
@@ -207,6 +292,7 @@
     if (filled) filled.hidden = !items.length;
     if (empty) empty.hidden = items.length > 0;
     if (!items.length) return;
+    fillContact();
     renderAddresses();
     renderSummary();
     var same = qs("[data-billing-same]");
@@ -300,25 +386,6 @@
     return valid;
   }
 
-  function orderDate() {
-    try {
-      return new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-    } catch (e) {
-      return "8 Oct 2026";
-    }
-  }
-
-  function pad(value) {
-    return (value < 10 ? "0" : "") + value;
-  }
-
-  function orderId() {
-    var now = new Date();
-    var y = String(now.getFullYear()).slice(2);
-    var n = String(Math.floor(1000 + Math.random() * 9000));
-    return "DSA-" + y + pad(now.getMonth() + 1) + pad(now.getDate()) + "-" + n;
-  }
-
   function go(href) {
     var link = document.createElement("a");
     link.href = href;
@@ -327,18 +394,27 @@
     if (link.parentNode) link.parentNode.removeChild(link);
   }
 
+  function isEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+  }
+
   function validateCheckout() {
     var note = qs("[data-checkout-note]");
     setNote(note, "");
     setNote(qs("[data-shipping-note]"), "");
     setNote(qs("[data-billing-note]"), "");
     setNote(qs("[data-payment-note]"), "");
+    setNote(qs("[data-contact-note]"), "");
     if (!commerce.cartItems().length) {
       setNote(note, "Your cart is empty.", "is-error");
       return false;
     }
     var focusNote = null;
-    if (!shippingId) {
+    if (!isEmail(contactEmail())) {
+      setNote(qs("[data-contact-note]"), "Enter a valid email address.", "is-error");
+      setNote(note, "Enter a valid email address to continue.", "is-error");
+      focusNote = qs("[data-contact-note]");
+    } else if (!shippingId) {
       setNote(qs("[data-shipping-note]"), "Select a shipping address.", "is-error");
       setNote(note, "Select a shipping address to continue.", "is-error");
       focusNote = qs("[data-shipping-note]");
@@ -357,51 +433,97 @@
     return !focusNote;
   }
 
+  function addressPayload(address) {
+    if (!address) return null;
+    return {
+      name: address.name,
+      phone: address.phone,
+      line1: address.line1,
+      line2: address.line2 || "",
+      city: address.city,
+      state: address.state,
+      pincode: address.pincode,
+      country: "India"
+    };
+  }
+
+  function unlockPlace(button) {
+    placing = false;
+    if (button) button.disabled = false;
+  }
+
   function placeOrder(button) {
     if (placing) return;
     if (!validateCheckout()) return;
+    if (!commerce || !commerce.placeOrder) {
+      setNote(qs("[data-checkout-note]"), "Checkout is unavailable. Please try again later.", "is-error");
+      return;
+    }
+    var shipping = selectedAddress(shippingId);
+    var billing = billingSame ? shipping : selectedAddress(billingId);
+    if (!shipping || !billing) {
+      setNote(qs("[data-checkout-note]"), "Select a valid address to continue.", "is-error");
+      return;
+    }
+    if (!placeKey) {
+      placeKey = "chk_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 12);
+    }
     placing = true;
     button.disabled = true;
-    busy(button, 900);
-    window.setTimeout(function () {
-      placing = false;
-      button.disabled = false;
-      if (!live() || !commerce) return;
-      var items = commerce.cartItems();
-      var totals = commerce.totals();
-      var saleSubtotal = 0;
-      items.forEach(function (item) { saleSubtotal += item.linePrice; });
-      var couponDiscount = totals.coupon === "WELCOME10" ? Math.round(saleSubtotal * 0.1) : 0;
-      var order = {
-        id: orderId(),
-        date: orderDate(),
-        status: "Processing",
-        payment: payment,
-        paymentStatus: "Paid",
-        coupon: totals.coupon === "WELCOME10" ? "WELCOME10" : null,
-        shipping: totals.shipping,
-        discount: couponDiscount,
-        subtotal: saleSubtotal,
-        total: totals.total,
-        addressId: shippingId,
-        billingAddressId: billingSame ? shippingId : billingId,
-        billingSame: billingSame,
-        items: items.map(function (item) {
-          return {
-            productId: item.product.id,
-            color: item.row.color,
-            size: item.row.size,
-            printType: item.row.printType,
-            printPosition: item.row.printPosition,
-            qty: item.row.qty,
-            price: item.product.price
-          };
-        })
-      };
-      if (account && account.addOrder) account.addOrder(order);
-      if (commerce.clearCart) commerce.clearCart();
-      go("order-success.html");
-    }, 720);
+    busy(button);
+    setNote(qs("[data-checkout-note]"), "Placing your order…");
+    commerce.placeOrder({
+      contact: { email: contactEmail() },
+      shipping: addressPayload(shipping),
+      billing: addressPayload(billing),
+      billingSame: billingSame,
+      paymentMethod: payment,
+      coupon: commerce.coupon ? commerce.coupon() : "",
+      idempotencyKey: placeKey
+    }).then(function (data) {
+      if (!live()) return;
+      if (data && data.ok && data.order && data.order.ref) {
+        if (account && account.addOrder) {
+          account.addOrder({
+            id: data.order.ref,
+            date: data.order.date,
+            status: data.order.status,
+            payment: data.order.paymentMethod,
+            paymentStatus: data.order.paymentStatus,
+            coupon: data.order.coupon,
+            shipping: Number(data.order.shippingTotal || 0),
+            discount: Number(data.order.discountTotal || 0),
+            tax: Number(data.order.taxTotal || 0),
+            subtotal: Number(data.order.itemSubtotal || 0),
+            total: Number(data.order.grandTotal || 0),
+            addressId: shippingId,
+            billingSame: billingSame,
+            items: (data.order.items || []).map(function (item) {
+              return {
+                productId: item.productId,
+                name: item.name,
+                color: item.color,
+                size: item.size,
+                printType: item.printType,
+                printPosition: item.printPosition,
+                qty: item.qty,
+                price: Number(item.unitPrice || 0)
+              };
+            })
+          });
+        }
+        go("order-success.html?ref=" + encodeURIComponent(data.order.ref));
+        return;
+      }
+      unlockPlace(button);
+      placeKey = "";
+      lastQuote = null;
+      scheduleQuote();
+      setNote(qs("[data-checkout-note]"), (data && data.error) || "Unable to place this order.", "is-error");
+    }).catch(function () {
+      unlockPlace(button);
+      setNote(qs("[data-checkout-note]"), "Unable to place this order. Please try again.", "is-error");
+    });
   }
 
   function onClick(event) {
@@ -440,6 +562,8 @@
         couponNote.hidden = false;
         setNote(couponNote, "Coupon removed.", "is-success");
       }
+      lastQuote = null;
+      scheduleQuote();
       return;
     }
     if (event.target.closest("[data-place-order]")) {
@@ -485,13 +609,16 @@
       var note = qs("[data-coupon-note]");
       busy(submitBtn);
       var code = input ? input.value : "";
-      var ok = commerce.applyCoupon(code);
+      var applied = commerce.applyCoupon(code);
+      var ok = applied === "WELCOME10";
       if (note) {
         note.hidden = false;
         note.textContent = ok ? "WELCOME10 applied." : (String(code).trim() ? "Use WELCOME10 for 10% off." : "Enter a coupon code.");
         note.classList.toggle("is-success", ok);
         note.classList.toggle("is-error", !ok);
       }
+      lastQuote = null;
+      scheduleQuote();
     });
   }
 
@@ -556,6 +683,10 @@
       bound = true;
     }
     render();
+    scheduleQuote();
+  }
+    render();
+    scheduleQuote();
   }
 
   global.DSAtelier = global.DSAtelier || {};
