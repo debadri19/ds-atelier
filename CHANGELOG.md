@@ -4,7 +4,24 @@ Chronological history of changes that actually exist. Dates use the work session
 
 ---
 
-## 2026-10-23
+## 2026-10-24
+
+### Phase 6B inventory reservation
+
+- Additive `inventory_reservations` and `inventory_movements` tables on dedicated `ds_atelier_dev`
+- `product_variants.stock` remains on-hand; catalog, cart, and checkout use available-to-sell (on-hand minus reserved minus committed)
+- Checkout place reserves in-stock units inside the order transaction; made-to-order is not qty-capped by on-hand
+- Commit, release, expiry, and a stock-safety return restore or hold units without decrementing on-hand
+- No public admin inventory endpoints; `ds_atelier_admin_require()` remains fail-closed
+- Payment capture, invoices/email, and admin inventory CRUD are not included
+
+### Phase 6A customer order management
+
+- Account order history reads owned rows from `backend/public/customer/orders.php` / `backend/public/checkout/orders.php`
+- `js/account.js` no longer seeds demo orders or shows another customer's localStorage history
+- `js/order-success.js` loads only the requested server order; API failure or an unmatched ref shows empty, not a different order
+- Guest and signed-in access remain ownership-scoped; pending-payment copy is unchanged
+- Admin order management is not included; the fail-closed admin guard still denies without `_ds_atelier_admin_id`
 
 ### Phase 5 checkout and order creation
 

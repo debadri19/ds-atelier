@@ -22,7 +22,9 @@
     wishlistMigrate: "backend/public/wishlist/migrate.php",
     checkoutQuote: "backend/public/checkout/quote.php",
     checkoutPlace: "backend/public/checkout/place.php",
-    checkoutOrder: "backend/public/checkout/order.php"
+    checkoutOrder: "backend/public/checkout/order.php",
+    checkoutOrders: "backend/public/checkout/orders.php",
+    customerOrders: "backend/public/customer/orders.php"
   };
 
   function catalog() {
@@ -427,6 +429,20 @@
       return data || { ok: false, error: "Order not found." };
     }).catch(function () {
       return { ok: false, error: "Unable to load this order." };
+    });
+  }
+
+  function listOrders(params) {
+    var query = [];
+    if (params && params.page) query.push("page=" + encodeURIComponent(params.page));
+    if (params && (params.perPage || params.per_page)) {
+      query.push("per_page=" + encodeURIComponent(params.perPage || params.per_page));
+    }
+    var url = API.customerOrders + (query.length ? "?" + query.join("&") : "");
+    return getJson(url).then(function (data) {
+      return data || { ok: false, error: "Unable to load your orders." };
+    }).catch(function () {
+      return { ok: false, error: "Unable to load your orders." };
     });
   }
 
@@ -922,6 +938,7 @@
     quoteCheckout: quoteCheckout,
     placeOrder: placeOrder,
     getOrder: getOrder,
+    listOrders: listOrders,
     lastQuote: function () { return state.quote; }
   };
 })(window);

@@ -20,9 +20,9 @@ These items are supported by the current workspace and/or the 2026-10-11 histori
 Required future implementation.
 
 - Catalog listings and PDP read `backend/public/catalog/*.php`; `js/catalog.js` is development/demo fallback.
-- Customer auth is Phase 2 PHP against `ds_atelier_dev`. Account, addresses, and order history remain frontend/demo stores (`localStorage` / `sessionStorage`).
-- Cart and Wishlist persist in `ds_atelier_dev`. Checkout creates pending-payment orders; payment is not collected.
-- Account addresses and order history remain frontend/demo stores (`localStorage` / `sessionStorage`).
+- Customer auth is Phase 2 PHP against `ds_atelier_dev`. Account addresses remain a frontend demo; order history is Phase 6A.
+- Cart and Wishlist persist in `ds_atelier_dev`. Checkout creates pending-payment orders and reserves in-stock units; payment is not collected.
+- Account addresses remain frontend/demo stores (`localStorage` / `sessionStorage`); order history is Phase 6A.
 
 **Evidence:** Catalog, cart, wishlist, and checkout JSON live under `backend/public/`. Payment capture, invoices/email, and admin orders are not implemented. Customer `js/auth.js` posts to `backend/public/customer/*.php` (Phase 2).
 
@@ -59,7 +59,7 @@ Unresolved against older notes; **not** confirmed as missing product features in
 
 Required after P1–P3, not a current frontend blocker.
 
-- Real product → cart → pending-payment checkout → order confirmation is testable against `ds_atelier_dev`. Payment capture and account order history are not.
+- Real product → cart → pending-payment checkout → order confirmation is testable against `ds_atelier_dev`. Inventory reservation is Phase 6B. Payment capture is not.
 - Customer **authentication UI** QA was executed in this workspace on 2026-10-11 and passed (see Completed). Do not rebuild that UI unless a new regression is found.
 
 ### P7 — Git synchronization
@@ -155,7 +155,7 @@ Do not promote these to Confirmed Pending or Completed without more evidence.
 | Artwork | `js/artworks.js` mock dataset | Persistent artwork/product mapping |
 | Cart / Checkout | Server cart/wishlist and pending-payment orders in `ds_atelier_dev` | Payment capture, production shipping/tax |
 | Customer auth | `auth.html` + `js/auth.js` + PHP session on `ds_atelier_dev` | SMTP password-reset email (not configured) |
-| Account / orders | Phase 5 pending-payment rows; `account.html` demo history | Server account order history |
+| Account / orders | Phase 6A owned list/detail against pending-payment rows | Admin order dashboard, payment capture |
 | Wishlist | `wishlist.html` plus `backend/public/wishlist/*.php` | Artwork file storage |
 | Dashboard | session demo store; placeholder commerce modules | Persistent CRUD, media uploads, admin auth |
 | Payments | Footer badge labels / demo checkout copy | Gateway verification |
@@ -172,7 +172,7 @@ Supported by current files and `docs/BACKEND_INTEGRATION.md`:
 - Durable media storage for Dashboard Media/mockups
 - Production end-to-end QA after that wiring (P6)
 
-This frontend repository has no Node build step. Phase 1 added `backend/` foundation files. Phase 2 added customer auth. Phase 3 added catalog reads. Phase 4 added cart/wishlist. Phase 5 added pending-payment checkout against `ds_atelier_dev`.
+This frontend repository has no Node build step. Phase 1 added `backend/` foundation files. Phase 2 added customer auth. Phase 3 added catalog reads. Phase 4 added cart/wishlist. Phase 5 added pending-payment checkout against `ds_atelier_dev`. Phase 6A added owned customer order history.
 
 ---
 

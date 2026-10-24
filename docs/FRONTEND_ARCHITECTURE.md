@@ -1,6 +1,6 @@
 # Frontend Architecture — DS ATELIER
 
-Standalone static frontend plus Phase 2 customer authentication, Phase 3 read-only catalog APIs, Phase 4 persistent cart/wishlist, and Phase 5 checkout/order creation. No bundler. Dashboard authentication remains frontend-only.
+Standalone static frontend plus Phase 2 customer authentication, Phase 3 read-only catalog APIs, Phase 4 persistent cart/wishlist, Phase 5 checkout/order creation, Phase 6A customer order history, and Phase 6B inventory reservation. No bundler. Dashboard authentication remains frontend-only.
 
 ---
 
@@ -63,11 +63,11 @@ Standalone static frontend plus Phase 2 customer authentication, Phase 3 read-on
     product.js               Product gallery, configuration, upload UI
     policy.js                Policy section navigation
     support.js               Support search, FAQ accordion, contact form
-    account.js               Account dashboard sections, demo orders, addresses, profile
+    account.js               Account dashboard sections, server order history, addresses, profile
     commerce.js              Server cart/wishlist/checkout client with localStorage migration
     cart.js                  Cart page
     checkout.js              Checkout page (Phase 5 quote/place)
-    order-success.js         Order confirmation (Phase 5 server order)
+    order-success.js         Order confirmation (Phase 6A server order only; no localStorage fallback)
     wishlist.js              Wishlist page
     auth.js                  Customer authentication states (PHP/JSON in Phase 2)
     admin-data.js            Dashboard session demo data (`ds-atelier-admin-demo`)
@@ -228,10 +228,10 @@ Future page scripts should be additive and must not fork the theme system.
 | About | `about.html` | built |
 | Policy | `policy.html` | built |
 | Support | `support.html` | built |
-| Account | `account.html` | built (frontend demo) |
+| Account | `account.html` | built (Phase 6A server order history; profile/addresses demo) |
 | Cart | `cart.html` | built (Phase 4 server cart) |
 | Checkout | `checkout.html` | built (Phase 5 pending-payment orders) |
-| Order success | `order-success.html` | built (Phase 5 server order; pending payment) |
+| Order success | `order-success.html` | built (Phase 6A server order only; pending payment) |
 | Wishlist | `wishlist.html` | built (Phase 4 server wishlist) |
 | Customer auth | `auth.html` | built (frontend demo; local uncommitted canonical) |
 | Dashboard | `dashboard/index.html` | built (frontend demo) |
@@ -265,6 +265,6 @@ Below 768px: floating bottom navigation and extra body padding for safe area.
 
 ## Data
 
-Products live in `backend/public/catalog/*.php` at runtime, with `js/catalog.js` as development/demo fallback. Cart and wishlist persist in `ds_atelier_dev` through `js/commerce.js`. Checkout still uses frontend-only address/order demo data.
+Products live in `backend/public/catalog/*.php` at runtime, with `js/catalog.js` as development/demo fallback. Variant `stock` is available-to-sell after Phase 6B. Cart and wishlist persist in `ds_atelier_dev` through `js/commerce.js`. Checkout still uses frontend-only address demo data. Account order history and order confirmation read owned server orders. In-stock checkout reserves units so the storefront cannot oversell.
 
 Product Details is `product.html?id=<product-id>`. Missing or unknown `id` falls back to `oversized-graphic-tee`. View Product CTAs use that query. Related cards use the same URL pattern. Direct URLs, refresh, and back/forward are full page loads.

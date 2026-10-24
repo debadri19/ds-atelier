@@ -2,8 +2,6 @@
   var PROFILE_KEY = "ds-atelier-profile";
   var ADDRESS_KEY = "ds-atelier-addresses";
   var SESSION_KEY = "ds-atelier-demo-session";
-  var ORDERS_KEY = "ds-atelier-orders";
-  var LAST_ORDER_KEY = "ds-atelier-last-order";
   var DEFAULT_PROFILE = {
     name: "Ananya Rao",
     email: "ananya.rao@email.com",
@@ -35,66 +33,14 @@
       isDefault: false
     }
   ];
-  var DEFAULT_ORDERS = [
-    {
-      id: "DSA-261002-7721",
-      date: "2 Oct 2026",
-      status: "Processing",
-      payment: "UPI",
-      coupon: null,
-      shipping: 0,
-      discount: 500,
-      addressId: "addr-home",
-      items: [
-        { productId: "custom-sports-jersey", color: "Red", size: "L", qty: 1, price: 1299 }
-      ]
-    },
-    {
-      id: "DSA-260928-4412",
-      date: "28 Sep 2026",
-      status: "Shipped",
-      payment: "Razorpay",
-      coupon: "WELCOME10",
-      shipping: 0,
-      discount: 920,
-      addressId: "addr-home",
-      items: [
-        { productId: "oversized-graphic-tee", color: "Cream", size: "L", qty: 1, price: 799 },
-        { productId: "anime-graphic-tee", color: "Black", size: "M", qty: 2, price: 899 }
-      ]
-    },
-    {
-      id: "DSA-260922-1187",
-      date: "22 Sep 2026",
-      status: "Delivered",
-      payment: "Visa",
-      coupon: null,
-      shipping: 0,
-      discount: 500,
-      addressId: "addr-studio",
-      items: [
-        { productId: "minimal-hoodie", color: "Charcoal", size: "M", qty: 1, price: 1499 }
-      ]
-    },
-    {
-      id: "DSA-260815-3094",
-      date: "15 Aug 2026",
-      status: "Cancelled",
-      payment: "UPI",
-      coupon: null,
-      shipping: 79,
-      discount: 300,
-      addressId: "addr-home",
-      items: [
-        { productId: "custom-tote-bag", color: "Cream", size: "M", qty: 1, price: 499 }
-      ]
-    }
-  ];
   var ORDERS = [];
 
   var bound = false;
   var addressesLoaded = false;
   var ordersLoaded = false;
+  var ordersLoading = false;
+  var ordersError = "";
+  var orderDetailLoading = false;
   var state = {
     profile: null,
     addresses: [],
@@ -191,16 +137,53 @@
   }
 
   function statusClass(status) {
-    var key = String(status || "").toLowerCase();
-    if (key === "processing") return "is-processing";
+    var key = String(status || "").toLowerCase().replace(/[\s-]+/g, "_");
+    if (key === "pending_payment" || key === "pending" || key === "processing") return "is-processing";
     if (key === "shipped") return "is-shipped";
     if (key === "delivered") return "is-delivered";
-    if (key === "cancelled") return "is-cancelled";
+    if (key === "cancelled" || key === "failed") return "is-cancelled";
     return "";
   }
 
+  function statusLabel(status) {
+    var key = String(status || "").toLowerCase().replace(/[\s-]+/g, "_");
+    if (key === "pending_payment") return "Pending payment";
+    if (key === "pending") return "Pending";
+    if (key === "processing") return "Processing";
+    if (key === "shipped") return "Shipped";
+    if (key === "delivered") return "Delivered";
+    if (key === "cancelled") return "Cancelled";
+    if (key === "failed") return "Failed";
+    if (key === "paid") return "Paid";
+    return status || "";
+  }
+
   function pendingStatuses() {
-    return { Processing: true, Shipped: true };
+    return {
+      Processing: true,
+      Shipped: true,
+      processing: true,
+      shipped: true,
+      pending: true,
+      pending_payment: true,
+      "Pending payment": true,
+      Pending: true
+    };
+  }
+
+  function orderRef(order) {
+    return String((order && (order.ref || order.id)) || "");
+  }
+
+  function orderAmount(order, keys) {
+    if (!order) return 0;
+    for (var i = 0; i < keys.length; i++) {
+      var value = order[keys[i]];
+      if (value == null || value === "" || typeof value === "object") continue;
+      var amount = Number(value);
+      if (!isNaN(amount)) return amount;
+    }
+    return 0;
   }
 
   function getProduct(id) {
@@ -218,7 +201,8 @@
       color: item.color || product.color || "",
       size: item.size || "",
       qty: Math.max(1, Number(item.qty) || 1),
-      price: Number(item.price != null ? item.price : product.price) || 0
+      price: Number(item.unitPrice != null ? item.unitPrice : item.price != null ? item.price : product.price) || 0,
+      linePrice: Number(item.linePrice != null ? item.linePrice : 0)
     };
   }
 
@@ -227,14 +211,17 @@
   }
 
   function orderSubtotal(order) {
+    var stored = orderAmount(order, ["itemSubtotal", "subtotal"]);
+    if (stored) return stored;
     return orderItems(order).reduce(function (sum, item) {
-      return sum + item.price * item.qty;
+      return sum + (item.linePrice || item.price * item.qty);
     }, 0);
   }
 
   function orderTotal(order) {
-    if (order && order.total != null && order.total !== "") return Number(order.total) || 0;
-    return Math.max(0, orderSubtotal(order) - Number(order.discount || 0) + Number(order.shipping || 0));
+    var stored = orderAmount(order, ["grandTotal", "total"]);
+    if (stored) return stored;
+    return Math.max(0, orderSubtotal(order) - orderAmount(order, ["discountTotal", "discount"]) + orderAmount(order, ["shippingTotal"]));
   }
 
   function orderCountLabel(order) {
@@ -255,48 +242,113 @@
     return html;
   }
 
-  function loadOrders() {
-    var extra = readJson(ORDERS_KEY, []);
-    if (!Array.isArray(extra)) extra = [];
-    var seen = {};
-    var merged = [];
-    extra.concat(DEFAULT_ORDERS).forEach(function (order) {
-      if (!order || !order.id || seen[order.id]) return;
-      seen[order.id] = true;
-      merged.push(order);
-    });
-    return merged;
-  }
-
-  function persistOrders() {
-    var seeded = {};
-    DEFAULT_ORDERS.forEach(function (order) { seeded[order.id] = true; });
-    writeJson(ORDERS_KEY, ORDERS.filter(function (order) { return order && order.id && !seeded[order.id]; }));
+  function upsertOrder(order) {
+    if (!order || !orderRef(order)) return null;
+    var ref = orderRef(order);
+    var next = Object.assign({}, order, { id: ref, ref: ref });
+    ORDERS = [next].concat(ORDERS.filter(function (row) { return orderRef(row) !== ref; }));
+    return next;
   }
 
   function addOrder(order) {
-    if (!order || !order.id) return null;
-    if (!ordersLoaded) {
-      ORDERS = loadOrders();
-      ordersLoaded = true;
-    }
-    ORDERS = [order].concat(ORDERS.filter(function (row) { return row.id !== order.id; }));
-    persistOrders();
-    writeJson(LAST_ORDER_KEY, order);
+    var saved = upsertOrder(order);
     emitAccount();
     if (live()) {
       renderOverview();
       renderOrders();
     }
-    return order;
+    return saved;
   }
 
   function findOrder(id) {
-    if (!ordersLoaded) {
-      ORDERS = loadOrders();
+    var ref = String(id || "");
+    return ORDERS.filter(function (order) { return orderRef(order) === ref; })[0] || null;
+  }
+
+  function fetchOrders() {
+    var store = commerce();
+    if (!store || !store.listOrders) {
       ordersLoaded = true;
+      ordersLoading = false;
+      ordersError = "";
+      ORDERS = [];
+      if (live()) {
+        renderOverview();
+        renderOrders();
+        applySection();
+      }
+      return Promise.resolve([]);
     }
-    return ORDERS.filter(function (order) { return order.id === id; })[0] || null;
+    ordersLoading = true;
+    ordersError = "";
+    if (live()) renderOrders();
+    return store.listOrders().then(function (data) {
+      ordersLoading = false;
+      ordersLoaded = true;
+      if (data && data.ok && Array.isArray(data.orders)) {
+        ORDERS = data.orders.map(function (order) {
+          var ref = orderRef(order);
+          return Object.assign({}, order, { id: ref, ref: ref });
+        });
+        ordersError = "";
+      } else {
+        ORDERS = [];
+        ordersError = (data && data.error) || "Unable to load your orders.";
+      }
+      emitAccount();
+      if (live()) {
+        renderOverview();
+        renderOrders();
+        applySection();
+      }
+      return ORDERS.slice();
+    }).catch(function () {
+      ordersLoading = false;
+      ordersLoaded = true;
+      ORDERS = [];
+      ordersError = "Unable to load your orders.";
+      if (live()) {
+        renderOverview();
+        renderOrders();
+        applySection();
+      }
+      return [];
+    });
+  }
+
+  function fetchOrder(id) {
+    var ref = String(id || "");
+    var store = commerce();
+    if (!ref || !store || !store.getOrder) {
+      if (live()) applySection();
+      return Promise.resolve(null);
+    }
+    var cached = findOrder(ref);
+    if (cached && cached.items) {
+      if (live()) applySection();
+      return Promise.resolve(cached);
+    }
+    orderDetailLoading = true;
+    if (live()) applySection();
+    return store.getOrder(ref).then(function (data) {
+      orderDetailLoading = false;
+      if (data && data.ok && data.order && (orderRef(data.order) === ref || !data.order.ref)) {
+        var saved = upsertOrder(data.order);
+        emitAccount();
+        if (live()) {
+          renderOverview();
+          renderOrders();
+          applySection();
+        }
+        return saved;
+      }
+      if (live()) applySection();
+      return null;
+    }).catch(function () {
+      orderDetailLoading = false;
+      if (live()) applySection();
+      return null;
+    });
   }
 
   function findAddress(id) {
@@ -392,10 +444,6 @@
     if (!addressesLoaded) {
       state.addresses = loadAddresses();
       addressesLoaded = true;
-    }
-    if (!ordersLoaded) {
-      ORDERS = loadOrders();
-      ordersLoaded = true;
     }
   }
 
@@ -504,7 +552,8 @@
     if (mobileEl) mobileEl.textContent = formatMobile(state.profile.mobile);
 
     var pending = ORDERS.filter(function (order) {
-      return pendingStatuses()[order.status];
+      var status = String((order && order.status) || "");
+      return pendingStatuses()[status] || pendingStatuses()[status.toLowerCase()];
     }).length;
     var totalEl = qs("[data-stat-orders]");
     var pendingEl = qs("[data-stat-pending]");
@@ -523,37 +572,76 @@
     var list = qs("[data-order-list]");
     var empty = qs("[data-orders-empty]");
     if (!list) return;
+    if (ordersLoading && !ORDERS.length) {
+      list.innerHTML = '<p class="account-muted" data-orders-loading>Loading your orders…</p>';
+      if (empty) empty.hidden = true;
+      return;
+    }
+    if (ordersError && !ORDERS.length) {
+      list.innerHTML = "";
+      if (empty) {
+        empty.hidden = false;
+        var copy = qs("p", empty);
+        if (copy) copy.textContent = ordersError;
+      }
+      return;
+    }
     if (!ORDERS.length) {
       list.innerHTML = "";
-      if (empty) empty.hidden = false;
+      if (empty) {
+        empty.hidden = false;
+        var emptyCopy = qs("p", empty);
+        if (emptyCopy) emptyCopy.textContent = "No orders yet.";
+      }
       return;
     }
     if (empty) empty.hidden = true;
     list.innerHTML = ORDERS.map(function (order) {
+      var ref = orderRef(order);
       return (
         '<article class="account-order">' +
           '<div class="account-order-head">' +
-            '<p class="account-order-id">' + escapeHtml(order.id) + "</p>" +
-            '<span class="account-status ' + statusClass(order.status) + '">' + escapeHtml(order.status) + "</span>" +
+            '<p class="account-order-id">' + escapeHtml(ref) + "</p>" +
+            '<span class="account-status ' + statusClass(order.status) + '">' + escapeHtml(statusLabel(order.status)) + "</span>" +
           "</div>" +
-          '<p class="account-order-meta">' + escapeHtml(order.date) + " · " + escapeHtml(orderCountLabel(order)) + "</p>" +
+          '<p class="account-order-meta">' + escapeHtml(order.date || "") + " · " + escapeHtml(orderCountLabel(order)) + "</p>" +
           '<ul class="account-order-products">' + orderProductLines(order) + "</ul>" +
           '<div class="account-order-foot">' +
             '<span class="account-order-total">' + money(orderTotal(order)) + "</span>" +
-            '<button class="btn btn-secondary btn-sm" type="button" data-view-order="' + escapeHtml(order.id) + '">View Details</button>' +
+            '<button class="btn btn-secondary btn-sm" type="button" data-view-order="' + escapeHtml(ref) + '">View Details</button>' +
           "</div>" +
         "</article>"
       );
     }).join("");
   }
 
+  function shippingFromOrder(order) {
+    if (order && order.shipping && typeof order.shipping === "object" && order.shipping.name) {
+      return order.shipping;
+    }
+    return addressForOrder(order);
+  }
+
   function renderOrderDetail(order) {
     var root = qs("[data-order-detail]");
-    if (!root || !order) return;
+    if (!root) return;
+    if (!order) {
+      root.innerHTML = orderDetailLoading
+        ? '<p class="account-muted">Loading this order…</p>'
+        : '<div class="account-empty"><p>Order not found.</p><a class="btn btn-primary" href="account.html#orders">Back to Orders</a></div>';
+      return;
+    }
     var items = orderItems(order);
-    var address = addressForOrder(order);
+    var address = shippingFromOrder(order);
     var subtotal = orderSubtotal(order);
+    var shippingAmt = orderAmount(order, ["shippingTotal"]);
+    var discountAmt = orderAmount(order, ["discountTotal", "discount"]);
+    var taxAmt = orderAmount(order, ["taxTotal", "tax"]);
+    var paymentMethod = order.paymentMethod || order.payment || "";
+    var paymentStatus = order.paymentStatus || "";
+    var notices = Array.isArray(order.notices) ? order.notices : [];
     var lines = items.map(function (item) {
+      var lineTotal = item.linePrice || item.price * item.qty;
       return (
         '<article class="account-line">' +
           '<div class="account-line-media"><img src="' + escapeHtml(item.image) + '" alt="' + escapeHtml(item.alt) + '"></div>' +
@@ -565,7 +653,7 @@
               "<span>Qty: " + escapeHtml(item.qty) + "</span>" +
             "</div>" +
           "</div>" +
-          '<span class="account-line-price">' + money(item.price * item.qty) + "</span>" +
+          '<span class="account-line-price">' + money(lineTotal) + "</span>" +
         "</article>"
       );
     }).join("");
@@ -574,16 +662,18 @@
         escapeHtml(formatAddress(address)) + "<br>" +
         escapeHtml(formatMobile(address.phone))
       : "Address unavailable";
+    var ref = orderRef(order);
     root.innerHTML =
       '<div class="account-card">' +
         '<div class="account-card-head">' +
           "<div>" +
             '<p class="section-kicker">Order</p>' +
-            '<h2 class="account-panel-title">' + escapeHtml(order.id) + "</h2>" +
-            '<p class="account-muted">' + escapeHtml(order.date) + "</p>" +
+            '<h2 class="account-panel-title">' + escapeHtml(ref) + "</h2>" +
+            '<p class="account-muted">' + escapeHtml(order.date || "") + "</p>" +
           "</div>" +
-          '<span class="account-status ' + statusClass(order.status) + '">' + escapeHtml(order.status) + "</span>" +
+          '<span class="account-status ' + statusClass(order.status) + '">' + escapeHtml(statusLabel(order.status)) + "</span>" +
         "</div>" +
+        (notices.length ? '<p class="account-muted">' + escapeHtml(notices.join(" ")) + "</p>" : "") +
         '<div class="account-detail-grid">' +
           "<div>" +
             lines +
@@ -591,8 +681,9 @@
           '<aside class="account-detail-aside">' +
             '<div class="account-rows">' +
               "<div><span>Subtotal</span><span>" + money(subtotal) + "</span></div>" +
-              "<div><span>Shipping</span><span>" + (order.shipping ? money(order.shipping) : "Free") + "</span></div>" +
-              (order.discount ? "<div><span>Discount" + (order.coupon ? " (" + escapeHtml(order.coupon) + ")" : "") + "</span><span>−" + money(order.discount) + "</span></div>" : "") +
+              "<div><span>Shipping</span><span>" + (shippingAmt ? money(shippingAmt) : "Free") + "</span></div>" +
+              (discountAmt ? "<div><span>Discount" + (order.coupon ? " (" + escapeHtml(order.coupon) + ")" : "") + "</span><span>−" + money(discountAmt) + "</span></div>" : "") +
+              "<div><span>Tax</span><span>" + money(taxAmt) + "</span></div>" +
               '<div class="account-total"><span>Total</span><span>' + money(orderTotal(order)) + "</span></div>" +
             "</div>" +
             '<div class="account-detail-block">' +
@@ -600,8 +691,8 @@
               '<p class="account-muted">' + addressHtml + "</p>" +
             "</div>" +
             '<div class="account-detail-block">' +
-              '<p class="account-stat-label">Payment method</p>' +
-              '<p class="account-muted">' + escapeHtml(order.payment) + "</p>" +
+              '<p class="account-stat-label">Payment</p>' +
+              '<p class="account-muted">' + escapeHtml(paymentMethod) + (paymentStatus ? " · " + escapeHtml(statusLabel(paymentStatus === "pending" ? "pending_payment" : paymentStatus)) : "") + "</p>" +
             "</div>" +
           "</aside>" +
         "</div>" +
@@ -658,11 +749,9 @@
     return SECTIONS[section] ? section : "overview";
   }
 
-  function setSection(section, orderId) {
-    var next = SECTIONS[section] ? section : "overview";
-    state.section = next;
-    state.orderId = orderId || "";
-    var showDetail = next === "orders" && !!state.orderId && !!findOrder(state.orderId);
+  function applySection() {
+    var next = SECTIONS[state.section] ? state.section : "overview";
+    var showDetail = next === "orders" && !!state.orderId;
 
     qsa("[data-account-panel]").forEach(function (panel) {
       var name = panel.getAttribute("data-account-panel");
@@ -685,6 +774,18 @@
     if (activeBtn && activeBtn.scrollIntoView && window.matchMedia("(max-width: 992px)").matches) {
       activeBtn.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
     }
+  }
+
+  function setSection(section, orderId) {
+    var next = SECTIONS[section] ? section : "overview";
+    var requested = orderId || "";
+    state.section = next;
+    state.orderId = requested;
+    if (next === "orders" && requested && !findOrder(requested)) {
+      fetchOrder(requested);
+      return;
+    }
+    applySection();
   }
 
   function navigate(section, orderId) {
@@ -1057,9 +1158,9 @@
   function init() {
     state.profile = loadProfile();
     state.addresses = loadAddresses();
-    ORDERS = loadOrders();
+    ORDERS = [];
     addressesLoaded = true;
-    ordersLoaded = true;
+    ordersLoaded = false;
     persistProfile();
     persistAddresses();
     if (!qs("[data-account-panel]")) return;
@@ -1085,6 +1186,7 @@
       history.replaceState(null, "", "#" + sectionHash(initial.section, initial.orderId));
     }
     setSection(initial.section, initial.orderId);
+    fetchOrders();
   }
 
   global.DSAtelier = global.DSAtelier || {};
@@ -1116,11 +1218,10 @@
     addOrder: addOrder,
     getOrder: findOrder,
     getOrders: function () {
-      ensureStore();
       return ORDERS.slice();
     },
     getLastOrder: function () {
-      return readJson(LAST_ORDER_KEY, null);
+      return findOrder(state.orderId) || ORDERS[0] || null;
     }
   };
   init();

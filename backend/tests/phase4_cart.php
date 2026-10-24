@@ -63,6 +63,7 @@ function ds_phase4_cleanup(PDO $pdo, array $customerIds, array $guestHashes, arr
         $placeholders = implode(',', array_fill(0, count($productIds), '?'));
         $pdo->prepare("DELETE FROM cart_items WHERE product_id IN ($placeholders)")->execute($productIds);
         $pdo->prepare("DELETE FROM wishlist_items WHERE product_id IN ($placeholders)")->execute($productIds);
+        ds_atelier_inventory_purge_products($pdo, $productIds);
         $pdo->prepare("DELETE FROM product_variants WHERE product_id IN ($placeholders)")->execute($productIds);
         $pdo->prepare("DELETE FROM product_media WHERE product_id IN ($placeholders)")->execute($productIds);
         $pdo->prepare("DELETE FROM product_print_types WHERE product_id IN ($placeholders)")->execute($productIds);

@@ -409,8 +409,9 @@ function ds_atelier_catalog_fetch_active_variants(PDO $pdo, array $productIds): 
          ORDER BY s.sort_order ASC, c.sort_order ASC, v.id ASC"
     );
     $stmt->execute(array_values($productIds));
+    $rows = ds_atelier_inventory_decorate_variants($pdo, $stmt->fetchAll());
     $out = [];
-    foreach ($stmt->fetchAll() as $row) {
+    foreach ($rows as $row) {
         $out[(int) $row['product_id']][] = $row;
     }
     return $out;
@@ -424,7 +425,7 @@ function ds_atelier_catalog_variant_purchasable(array $variant, string $availabi
     if ($availability === 'Made to order') {
         return true;
     }
-    return (int) ($variant['stock'] ?? 0) > 0;
+    return ds_atelier_inventory_available(['availability' => $availability], $variant) > 0;
 }
 
 function ds_atelier_catalog_map_variant(array $row, string $availability): array
@@ -438,7 +439,9 @@ function ds_atelier_catalog_map_variant(array $row, string $availability): array
         'color' => (string) $row['colour_name'],
         'price' => (float) $row['price'],
         'mrp' => (float) $row['mrp'],
-        'stock' => (int) $row['stock'],
+        'stock' => (int) ($row['available'] ?? $row['stock'] ?? 0),
+        'available' => (int) ($row['available'] ?? $row['stock'] ?? 0),
+        'onHand' => (int) ($row['on_hand'] ?? $row['stock'] ?? 0),
         'active' => true,
         'purchasable' => $purchasable,
         'image' => $row['image'] !== null && $row['image'] !== '' ? (string) $row['image'] : null,

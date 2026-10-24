@@ -283,7 +283,11 @@ function ds_atelier_commerce_load_variant(PDO $pdo, int $productId, ?int $varian
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $row = $stmt->fetch();
-    return $row ?: null;
+    if (!$row) {
+        return null;
+    }
+    $decorated = ds_atelier_inventory_decorate_variants($pdo, [$row]);
+    return $decorated[0] ?? $row;
 }
 
 function ds_atelier_commerce_print_types(PDO $pdo, int $productId): array
@@ -320,7 +324,7 @@ function ds_atelier_commerce_stock_limit(array $product, array $variant): int
     if ((string) ($product['availability'] ?? '') === 'Made to order') {
         return DS_ATELIER_CART_QTY_MAX;
     }
-    return min(DS_ATELIER_CART_QTY_MAX, max(0, (int) ($variant['stock'] ?? 0)));
+    return min(DS_ATELIER_CART_QTY_MAX, ds_atelier_inventory_available($product, $variant));
 }
 
 function ds_atelier_commerce_resolve_add(PDO $pdo, array $input): array
@@ -463,7 +467,7 @@ function ds_atelier_cart_map_item(array $row): array
         'unitMrp' => $unitMrp,
         'linePrice' => round($unitPrice * $qty, 2),
         'lineMrp' => round($unitMrp * $qty, 2),
-        'stock' => (int) $row['stock'],
+        'stock' => (int) ($row['available'] ?? $row['stock'] ?? 0),
         'availability' => (string) $row['availability'],
         'purchasable' => $purchasable,
         'issues' => $issues,
@@ -499,8 +503,9 @@ function ds_atelier_cart_fetch_items(PDO $pdo, int $cartId): array
          ORDER BY ci.id ASC'
     );
     $stmt->execute([$cartId]);
+    $rows = ds_atelier_inventory_decorate_variants($pdo, $stmt->fetchAll());
     $items = [];
-    foreach ($stmt->fetchAll() as $row) {
+    foreach ($rows as $row) {
         $items[] = ds_atelier_cart_map_item($row);
     }
     return $items;

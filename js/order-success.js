@@ -80,7 +80,18 @@
     if (!filled) return;
     if (!order) {
       filled.hidden = true;
-      if (empty) empty.hidden = false;
+      if (empty) {
+        empty.hidden = false;
+        var title = qs("h2", empty);
+        var copy = qs("p", empty);
+        if (queryRef()) {
+          if (title) title.textContent = "Order not found";
+          if (copy) copy.textContent = "We could not find that order. If you just placed it, refresh this page or open it from your account.";
+        } else {
+          if (title) title.textContent = "No recent order";
+          if (copy) copy.textContent = "Place an order from checkout to see confirmation details here.";
+        }
+      }
       return;
     }
     if (empty) empty.hidden = true;
@@ -152,31 +163,28 @@
     if (totalEl) totalEl.textContent = money(total);
   }
 
-  function localOrder(ref) {
-    var account = global.DSAtelier && global.DSAtelier.account;
-    if (ref && account && account.getOrder) {
-      var found = account.getOrder(ref);
-      if (found) return found;
-    }
-    return account && account.getLastOrder ? account.getLastOrder() : null;
-  }
-
   function load() {
     var filled = qs("[data-success-filled]");
     if (!filled) return;
     var commerce = global.DSAtelier && global.DSAtelier.commerce;
     var ref = queryRef();
-    if (commerce && commerce.getOrder && ref) {
+    if (!ref) {
+      renderOrder(null);
+      return;
+    }
+    if (commerce && commerce.getOrder) {
       commerce.getOrder(ref).then(function (data) {
-        if (data && data.ok && data.order) {
+        if (data && data.ok && data.order && (!data.order.ref || data.order.ref === ref || data.order.id === ref)) {
           renderOrder(data.order);
           return;
         }
-        renderOrder(localOrder(ref));
+        renderOrder(null);
+      }).catch(function () {
+        renderOrder(null);
       });
       return;
     }
-    renderOrder(localOrder(ref));
+    renderOrder(null);
   }
 
   function init() {

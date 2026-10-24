@@ -1,6 +1,6 @@
 # Backend Integration — DS ATELIER
 
-This repository remains a **standalone frontend** except for Phase 2 customer authentication, Phase 3 read-only catalog APIs, Phase 4 persistent cart/wishlist, and Phase 5 checkout/order creation. Phase 1 added a DS-specific PHP foundation under `backend/`. Payments are **not** connected. Dashboard authentication is still a frontend demo.
+This repository remains a **standalone frontend** except for Phase 2 customer authentication, Phase 3 read-only catalog APIs, Phase 4 persistent cart/wishlist, Phase 5 checkout/order creation, Phase 6A customer order history, and Phase 6B inventory reservation. Phase 1 added a DS-specific PHP foundation under `backend/`. Payments are **not** connected. Dashboard authentication is still a frontend demo.
 
 Do not treat `js/main.js` mock products as production database data.
 
@@ -34,9 +34,9 @@ Do not restyle the storefront to match any previous MoonAura UI while wiring PHP
 | Catalog | Shop, Home, and Product read `backend/public/catalog/*.php`. `js/catalog.js` keeps mock products for development/demo fallback only. |
 | Cart | `cart.html` plus `js/commerce.js` against `backend/public/cart/*.php`; guest cookie or customer session |
 | Checkout | `checkout.html` plus `js/checkout.js` against `backend/public/checkout/*.php`; pending-payment orders only |
-| Auth / account | Customer `auth.html` uses PHP/JSON against `ds_atelier_dev`. `account.html` remains a frontend demo. Password-reset email is not sent. |
+| Auth / account | Customer `auth.html` uses PHP/JSON against `ds_atelier_dev`. `account.html` profile/addresses remain a frontend demo; order history is Phase 6A. Password-reset email is not sent. |
 | Wishlist | `wishlist.html` plus `js/commerce.js` against `backend/public/wishlist/*.php` |
-| Orders | Phase 5 pending-payment rows in `ds_atelier_dev`; `account.html` history remains a frontend demo |
+| Orders | Phase 5 pending-payment rows in `ds_atelier_dev`; Phase 6A owned list/detail on Account and order confirmation; Phase 6B reserves in-stock units at place |
 | Payments | Badge labels in footer; checkout does not capture payment |
 | Custom options | Frontend configuration on Product page only |
 | Dashboard | Frontend demo modules; Orders/Customers/Discounts/Settings are placeholders |
@@ -73,7 +73,7 @@ Configured PDP lines (print type, colour, size, quantity, print position, artwor
 
 ### Authentication / account
 
-Customer `auth.html` posts to `backend/public/customer/*.php`. Keep Dashboard `dashboard/auth.html` separate. Do not treat the `account.html` demo session store as production account data.
+Customer `auth.html` posts to `backend/public/customer/*.php`. Keep Dashboard `dashboard/auth.html` separate. Do not treat the `account.html` demo session store as production profile data. Order history reads owned rows from `backend/public/customer/orders.php`.
 
 ### Wishlist
 
@@ -81,7 +81,7 @@ Customer `auth.html` posts to `backend/public/customer/*.php`. Keep Dashboard `d
 
 ### Order tracking
 
-Support/account area later; consume existing order records.
+Account order history consumes owned Phase 5 records. Admin order management is blocked until server-side admin authorization exists.
 
 ### Custom product options
 
@@ -165,3 +165,30 @@ Applied against dedicated `ds_atelier_dev` only:
 - `js/checkout.js` and `js/order-success.js` quote/place/load the server order without a visual redesign
 
 Out of this phase: payment capture, invoices/email, inventory decrement, admin order dashboard, Newsletter, Meta Pixel/CAPI, Dashboard authentication, admin catalog CRUD.
+
+## Phase 6A customer order management (2026-10-23)
+
+Applied against dedicated `ds_atelier_dev` only:
+
+- Same-origin JSON: `backend/public/customer/orders.php` and `backend/public/checkout/orders.php`
+- List/detail are ownership-scoped to the current customer session or guest cookie
+- `js/account.js` renders the server order list; demo seeded orders are removed
+- `js/order-success.js` loads only the requested server order; API failure or unmatched ref shows empty
+- Pending-payment presentation is unchanged; clients still cannot set payment status
+- Admin order endpoints are not public; `ds_atelier_admin_require()` remains fail-closed
+
+Out of this phase: payment capture, invoices/email, inventory decrement, admin order dashboard, Newsletter, Meta Pixel/CAPI, Dashboard authentication, admin catalog CRUD.
+
+## Phase 6B inventory reservation (2026-10-24)
+
+Applied against dedicated `ds_atelier_dev` only:
+
+- Additive tables: `inventory_reservations`, `inventory_movements`
+- `product_variants.stock` remains on-hand; available-to-sell = on-hand − reserved − committed
+- Catalog, cart, and checkout use available-to-sell; made-to-order is not qty-capped by on-hand
+- Checkout place reserves in-stock units in the same transaction; concurrent place cannot oversell
+- Commit, release, expiry, and a stock-safety return do not decrement on-hand
+- No public admin inventory endpoints; `ds_atelier_admin_require()` remains fail-closed
+- CLI helper: `php backend/bin/expire-inventory.php`
+
+Out of this phase: payment capture, invoices/email, admin inventory CRUD, Newsletter, Meta Pixel/CAPI, Dashboard authentication, admin catalog CRUD.

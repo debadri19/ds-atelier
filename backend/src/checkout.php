@@ -904,6 +904,7 @@ function ds_atelier_checkout_place(PDO $pdo, array $config, array $input): array
                 print_type, print_position, artwork_id, artwork_name, quantity, unit_price, unit_mrp, line_price, line_mrp
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
+        $reserveItems = [];
         foreach ($items as $item) {
             $itemStmt->execute([
                 $orderId,
@@ -924,6 +925,17 @@ function ds_atelier_checkout_place(PDO $pdo, array $config, array $input): array
                 ds_atelier_money_format(ds_atelier_money_paise($item['linePrice'])),
                 ds_atelier_money_format(ds_atelier_money_paise($item['lineMrp'])),
             ]);
+            $orderItemId = (int) $pdo->lastInsertId();
+            $reserveItems[] = array_merge($item, [
+                'order_item_id' => $orderItemId,
+                'orderItemId' => $orderItemId,
+            ]);
+        }
+
+        $reserved = ds_atelier_inventory_reserve_order($pdo, $orderId, $reserveItems);
+        if (($reserved['ok'] ?? false) !== true) {
+            $pdo->rollBack();
+            return $reserved;
         }
 
         $pdo->prepare('DELETE FROM cart_items WHERE cart_id = ?')->execute([(int) $cart['id']]);

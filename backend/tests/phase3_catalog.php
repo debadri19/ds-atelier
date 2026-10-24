@@ -39,6 +39,7 @@ function ds_phase3_cleanup(PDO $pdo, array $productIds): void
     if ($productIds === []) {
         return;
     }
+    ds_atelier_inventory_purge_products($pdo, $productIds);
     $placeholders = implode(',', array_fill(0, count($productIds), '?'));
     $pdo->prepare("DELETE FROM product_variants WHERE product_id IN ($placeholders)")->execute($productIds);
     $pdo->prepare("DELETE FROM product_media WHERE product_id IN ($placeholders)")->execute($productIds);

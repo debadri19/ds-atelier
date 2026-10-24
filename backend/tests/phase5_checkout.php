@@ -56,6 +56,7 @@ function ds_phase5_cleanup(PDO $pdo, array $customerIds, array $guestHashes, arr
     $orderIds = array_values(array_unique(array_filter($orderIds)));
     if ($orderIds !== []) {
         $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+        ds_atelier_inventory_purge_orders($pdo, $orderIds);
         $pdo->prepare("DELETE FROM order_items WHERE order_id IN ($placeholders)")->execute($orderIds);
         $pdo->prepare("DELETE FROM orders WHERE id IN ($placeholders)")->execute($orderIds);
     }
@@ -84,6 +85,7 @@ function ds_phase5_cleanup(PDO $pdo, array $customerIds, array $guestHashes, arr
         $pdo->prepare("DELETE FROM cart_items WHERE product_id IN ($placeholders)")->execute($productIds);
         $pdo->prepare("DELETE FROM wishlist_items WHERE product_id IN ($placeholders)")->execute($productIds);
         $pdo->prepare("DELETE FROM order_items WHERE product_id IN ($placeholders)")->execute($productIds);
+        ds_atelier_inventory_purge_products($pdo, $productIds);
         $pdo->prepare("DELETE FROM product_variants WHERE product_id IN ($placeholders)")->execute($productIds);
         $pdo->prepare("DELETE FROM product_media WHERE product_id IN ($placeholders)")->execute($productIds);
         $pdo->prepare("DELETE FROM product_print_types WHERE product_id IN ($placeholders)")->execute($productIds);

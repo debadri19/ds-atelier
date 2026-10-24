@@ -1,11 +1,11 @@
 # Project Status — DS ATELIER
 
 Version: v0.1.5  
-Status: Alpha — Frontend plus Phase 2 customer authentication, Phase 3 read-only catalog, Phase 4 persistent cart/wishlist, and Phase 5 checkout/order creation
+Status: Alpha — Frontend plus Phase 2 customer authentication, Phase 3 read-only catalog, Phase 4 persistent cart/wishlist, Phase 5 checkout/order creation, Phase 6A customer order history, and Phase 6B inventory reservation
 
 Truthful snapshot. Do not treat planned work as done.
 
-Payments are not integrated. Phase 2 wires customer `auth.html` to same-origin PHP against dedicated `ds_atelier_dev`. Phase 3 wires Shop, Home, and Product to read-only catalog JSON. Phase 4 stores cart and wishlist in `ds_atelier_dev` for guests and signed-in customers. Phase 5 creates pending-payment orders from the server cart. Dashboard authentication remains a frontend demo.
+Payments are not integrated. Phase 2 wires customer `auth.html` to same-origin PHP against dedicated `ds_atelier_dev`. Phase 3 wires Shop, Home, and Product to read-only catalog JSON. Phase 4 stores cart and wishlist in `ds_atelier_dev` for guests and signed-in customers. Phase 5 creates pending-payment orders from the server cart. Phase 6A reads those owned orders on Account and order confirmation. Phase 6B reserves in-stock units at place so available-to-sell cannot oversell. Dashboard authentication remains a frontend demo.
 
 ---
 
@@ -19,7 +19,7 @@ Payments are not integrated. Phase 2 wires customer `auth.html` to same-origin P
 - About page
 - Policy page
 - Support page
-- Customer account dashboard (`account.html`) — frontend demo
+- Customer account dashboard (`account.html`) — profile/addresses remain a frontend demo; order history is Phase 6A against `ds_atelier_dev`
 - Cart and Wishlist — Phase 4 server persistence against `ds_atelier_dev`
 - Checkout — Phase 5 pending-payment order creation against `ds_atelier_dev`; payment is not collected; Designs remain a frontend demo page
 - Customer authentication (`auth.html`) — Phase 2 server login/register/logout/reset against `ds_atelier_dev`; `#login` `#register` `#forgot-password` `#reset-password`; legacy redirects retained. Password-reset email is not sent (SMTP not configured).
@@ -37,6 +37,8 @@ Payments are not integrated. Phase 2 wires customer `auth.html` to same-origin P
 - Phase 3 catalog tables, development fixtures, and read-only JSON under `backend/public/catalog/`
 - Phase 4 cart/wishlist tables and CSRF-protected JSON under `backend/public/cart/` and `backend/public/wishlist/`
 - Phase 5 order tables and CSRF-protected JSON under `backend/public/checkout/`
+- Phase 6A customer order list/detail against owned pending-payment rows; confirmation no longer falls back to a different localStorage order
+- Phase 6B inventory reservation: available-to-sell is on-hand minus reserved minus committed; checkout cannot oversell in-stock variants
 
 ### Header
 
@@ -80,7 +82,7 @@ Payments are not integrated. Phase 2 wires customer `auth.html` to same-origin P
 
 ## Pending
 
-- Core PHP/MySQL integration (payment capture, invoices/email, admin orders). Customer auth is Phase 2; catalog read APIs are Phase 3; cart/wishlist persistence is Phase 4; checkout/order creation is Phase 5; Dashboard auth is not.
+- Core PHP/MySQL integration (payment capture, invoices/email, admin orders). Customer auth is Phase 2; catalog read APIs are Phase 3; cart/wishlist persistence is Phase 4; checkout/order creation is Phase 5; customer order history is Phase 6A; inventory reservation is Phase 6B; Dashboard auth is not.
 - Artwork migration (replace `js/artworks.js` mocks) and admin catalog CRUD
 - Dashboard production persistence (Categories/Products/Designs/Media) and placeholder modules (Orders, Customers, Discounts, Settings)
 - Dedicated Custom Order / Bulk Orders / Dropshipping PHP pages — **Needs Verification** against the backend repo (Home sections exist here; dedicated PHP files do not)
@@ -99,10 +101,11 @@ See `docs/PROJECT_AUDIT_PENDING.md` for evidence and status labels.
 - Apparel visuals on Home are SVG placeholders, not photography
 - Storefront images live under `assets/images/{hero,categories,products,services,icons,miscellaneous}/`
 - Product mockups live under `assets/images/products/<product-slug>/mockups/default/<color>/`
-- Cart and Wishlist persist in `ds_atelier_dev` (guest cookie `ds_atelier_guest` or customer session). Checkout creates pending-payment orders; Account demo order history still uses browser storage. Coupons remain local (`ds-atelier-coupon`) until quote/place.
+- Cart and Wishlist persist in `ds_atelier_dev` (guest cookie `ds_atelier_guest` or customer session). Checkout creates pending-payment orders; Account order history reads owned rows from `backend/public/customer/orders.php`. Coupons remain local (`ds-atelier-coupon`) until quote/place.
 - Customer Auth uses a PHP session against `ds_atelier_dev`. Forgot-password issues a hashed token but does not send email (SMTP not configured). Reset requires `?token=` on `auth.html#reset-password`.
-- `account.html` still uses the demo session store for account UI data
-- Catalog listings and PDP read `backend/public/catalog/*.php`. `js/catalog.js` mock data is development/demo fallback only.
+- `account.html` still uses the demo session store for profile and addresses; order history is server-backed
+- Admin order management is blocked until server-side admin authorization exists
+- Catalog listings and PDP read `backend/public/catalog/*.php`. Variant `stock` in those payloads is available-to-sell after Phase 6B. `js/catalog.js` mock data is development/demo fallback only.
 - Canonical customer auth in this working tree is `auth.html`; that rename is not in commit `555d395`
 
 ---
@@ -111,9 +114,9 @@ See `docs/PROJECT_AUDIT_PENDING.md` for evidence and status labels.
 
 1. Safely commit/push the local authentication route rename and Phase 2 backend when the owner approves
 2. Configure SMTP before claiming password-reset email delivery
-3. Payment capture, invoices/email, and admin catalog CRUD (Phase 6+)
+3. Payment capture, invoices/email, and admin catalog/order CRUD (Phase 6C+)
 4. Production end-to-end QA
 
-Frontend pages for Home, Shop, Product, About, Policy, Support, Account, Cart, Checkout, Wishlist, Designs, and Auth exist. Payments, production catalog CRUD, and production QA are not complete.
+Frontend pages for Home, Shop, Product, About, Policy, Support, Account, Cart, Checkout, Wishlist, Designs, and Auth exist. Payments, production catalog CRUD, admin orders, and production QA are not complete.
 
-Do not claim payments or production search is complete. Do not describe Cart or Wishlist as browser-only after Phase 4. Do not describe Checkout as unbuilt. Do not describe placed orders as paid.
+Do not claim payments or production search is complete. Do not describe Cart or Wishlist as browser-only after Phase 4. Do not describe Checkout as unbuilt. Do not describe placed orders as paid. Do not describe Account order history as demo-only after Phase 6A.
