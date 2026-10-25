@@ -28,7 +28,7 @@ if (!$result['ok'] || !$result['pdo'] instanceof PDO) {
 }
 
 try {
-    $out = ds_atelier_create_password_reset($result['pdo'], $email);
+    $out = ds_atelier_create_password_reset($result['pdo'], $email, $config);
     ds_atelier_log('info', 'Password reset requested', $config);
     ds_atelier_send($out);
 } catch (Throwable $e) {

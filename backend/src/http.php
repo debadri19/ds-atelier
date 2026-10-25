@@ -45,7 +45,15 @@ function ds_atelier_boot_customer_request(): array
 
 function ds_atelier_public_payload(array $result): array
 {
-    unset($result['code'], $result['token'], $result['issued'], $result['email']);
+    unset(
+        $result['code'],
+        $result['token'],
+        $result['issued'],
+        $result['email'],
+        $result['queued'],
+        $result['key_secret'],
+        $result['webhook_secret']
+    );
     if (array_key_exists('email_sent', $result) && $result['email_sent'] !== true) {
         $result['email_sent'] = false;
     }

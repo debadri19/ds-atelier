@@ -18,6 +18,13 @@ require_once __DIR__ . '/catalog.php';
 require_once __DIR__ . '/catalog-seed.php';
 require_once __DIR__ . '/cart.php';
 require_once __DIR__ . '/checkout.php';
+require_once __DIR__ . '/fulfilment.php';
+require_once __DIR__ . '/invoice.php';
+require_once __DIR__ . '/mail.php';
+require_once __DIR__ . '/mail-templates.php';
+require_once __DIR__ . '/mail-queue.php';
+require_once __DIR__ . '/payment.php';
+require_once __DIR__ . '/admin-auth.php';
 require_once __DIR__ . '/http.php';
 
 function ds_atelier_bootstrap(?string $envFile = null): array

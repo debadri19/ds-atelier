@@ -1,6 +1,6 @@
 # Backend Integration — DS ATELIER
 
-This repository remains a **standalone frontend** except for Phase 2 customer authentication, Phase 3 read-only catalog APIs, Phase 4 persistent cart/wishlist, Phase 5 checkout/order creation, Phase 6A customer order history, and Phase 6B inventory reservation. Phase 1 added a DS-specific PHP foundation under `backend/`. Payments are **not** connected. Dashboard authentication is still a frontend demo.
+This repository remains a **standalone frontend** except for Phase 2 customer authentication, Phase 3 read-only catalog APIs, Phase 4 persistent cart/wishlist, Phase 5 checkout/order creation, Phase 6A customer order history, Phase 6B inventory reservation, Phase 6C fulfilment/invoices, and Phase 6D transactional email. Phase 1 added a DS-specific PHP foundation under `backend/`. Payments are **not** connected. Dashboard authentication is still a frontend demo.
 
 Do not treat `js/main.js` mock products as production database data.
 
@@ -36,7 +36,7 @@ Do not restyle the storefront to match any previous MoonAura UI while wiring PHP
 | Checkout | `checkout.html` plus `js/checkout.js` against `backend/public/checkout/*.php`; pending-payment orders only |
 | Auth / account | Customer `auth.html` uses PHP/JSON against `ds_atelier_dev`. `account.html` profile/addresses remain a frontend demo; order history is Phase 6A. Password-reset email is not sent. |
 | Wishlist | `wishlist.html` plus `js/commerce.js` against `backend/public/wishlist/*.php` |
-| Orders | Phase 5 pending-payment rows in `ds_atelier_dev`; Phase 6A owned list/detail on Account and order confirmation; Phase 6B reserves in-stock units at place |
+| Orders | Phase 5 pending-payment rows in `ds_atelier_dev`; Phase 6A owned list/detail on Account and order confirmation; Phase 6B reserves in-stock units at place; Phase 6C adds owned fulfilment/invoice fields |
 | Payments | Badge labels in footer; checkout does not capture payment |
 | Custom options | Frontend configuration on Product page only |
 | Dashboard | Frontend demo modules; Orders/Customers/Discounts/Settings are placeholders |
@@ -81,7 +81,7 @@ Customer `auth.html` posts to `backend/public/customer/*.php`. Keep Dashboard `d
 
 ### Order tracking
 
-Account order history consumes owned Phase 5 records. Admin order management is blocked until server-side admin authorization exists.
+Account order history consumes owned Phase 5 records plus Phase 6C fulfilment/invoice fields. Admin fulfilment writes remain fail-closed until `_ds_atelier_admin_id` exists.
 
 ### Custom product options
 
@@ -120,7 +120,7 @@ Applied against dedicated `ds_atelier_dev` only:
 - `js/auth.js` posts login/register/forgot/reset/logout to those handlers
 - Passwords use `password_hash` / `password_verify`; reset tokens store SHA-256 only
 - Public forgot-password JSON never includes the raw token and reports `email_sent: false`
-- SMTP is not configured; no reset email is sent
+- SMTP delivery is not verified; Phase 6D may queue a reset email. Public JSON still reports `email_sent: false`
 
 Out of this phase: catalog, cart, wishlist, checkout, payments, Newsletter, Meta Pixel/CAPI, Dashboard authentication.
 
@@ -192,3 +192,31 @@ Applied against dedicated `ds_atelier_dev` only:
 - CLI helper: `php backend/bin/expire-inventory.php`
 
 Out of this phase: payment capture, invoices/email, admin inventory CRUD, Newsletter, Meta Pixel/CAPI, Dashboard authentication, admin catalog CRUD.
+
+## Phase 6C fulfilment and invoices (2026-10-24)
+
+Applied against dedicated `ds_atelier_dev` only:
+
+- Additive tables: `shipments`, `shipment_events`, `invoices`
+- Checkout place creates an unfulfilled shipment and a unique development/test invoice from persisted snapshots
+- Customer order JSON includes `fulfilment` and `invoice`; Account/order-success show tracking only when stored
+- Invoice download: `backend/public/customer/invoice-download.php` is ownership-scoped HTML. No PDF library is present
+- `backend/public/admin/fulfilment.php` requires CSRF and `ds_atelier_admin_require()`; unauthenticated writes return 403
+- Payment status remains independent of shipment status; pending-payment orders cannot be dispatched
+- Seller GST/legal details remain unconfigured; invoices are marked development/test
+
+Out of this phase: payment capture/webhooks, production tax invoices, courier APIs, SMTP, Dashboard authentication, admin catalog CRUD.
+
+## Phase 6D transactional email (2026-10-25)
+
+Implemented against dedicated `ds_atelier_dev` only. Live MySQL was unavailable in this environment, so the outbox migration is present and not applied here.
+
+- Additive table: `email_outbox` (`backend/migrations/20261025160000_create_email_outbox.sql`)
+- Transports: `disabled`, `test`, `smtp` via `DS_ATELIER_MAIL_*`. Development defaults to `test`. Production rejects `test`. PHP `mail()` is not used
+- Checkout place queues `order_placed` in the same transaction. Fulfilment transitions queue `fulfilment_update` or `order_cancelled`. Password reset queues `password_reset` after a valid hashed token is stored
+- Templates include HTML plus plain text. Order placed copy stays pending payment. Invoice links use `backend/public/customer/invoice-download.php`
+- Worker: `php backend/bin/send-email-queue.php`. `--status` does not send. No cron/scheduler is configured
+- Admin fulfilment writes remain fail-closed; unauthorized transitions cannot queue notifications
+- Real SMTP credentials and inbox delivery are not verified
+
+Out of this phase: payment capture/webhooks, Newsletter/marketing email, Meta Pixel/CAPI, Dashboard authentication, courier APIs.

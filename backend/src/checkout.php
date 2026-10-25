@@ -485,7 +485,7 @@ function ds_atelier_checkout_quote(PDO $pdo, array $config, array $input): array
     return $quoted;
 }
 
-function ds_atelier_checkout_order_public(array $order, array $items): array
+function ds_atelier_checkout_order_public(array $order, array $items, ?array $shipment = null, ?array $invoice = null): array
 {
     $shipping = [
         'name' => (string) $order['shipping_name'],
@@ -499,7 +499,7 @@ function ds_atelier_checkout_order_public(array $order, array $items): array
     ];
     $created = (string) $order['created_at'];
     $timestamp = strtotime($created) ?: time();
-    return [
+    $payload = [
         'id' => (string) $order['public_ref'],
         'ref' => (string) $order['public_ref'],
         'status' => (string) $order['status'],
@@ -539,6 +539,9 @@ function ds_atelier_checkout_order_public(array $order, array $items): array
             ];
         }, $items),
     ];
+    $payload['fulfilment'] = ds_atelier_fulfilment_public($shipment);
+    $payload['invoice'] = ds_atelier_invoice_public($invoice);
+    return $payload;
 }
 
 function ds_atelier_checkout_find_order_by_ref(PDO $pdo, string $ref): ?array
@@ -680,10 +683,18 @@ function ds_atelier_checkout_list_orders(PDO $pdo, array $config, array $input):
     $rows = $listStmt->fetchAll() ?: [];
     $orderIds = array_map(static fn (array $row): int => (int) $row['id'], $rows);
     $itemsByOrder = ds_atelier_checkout_order_items_for_ids($pdo, $orderIds);
+    $shipments = ds_atelier_fulfilment_map_for_orders($pdo, $orderIds);
+    $invoices = ds_atelier_invoice_map_for_orders($pdo, $orderIds);
 
     $orders = [];
     foreach ($rows as $row) {
-        $orders[] = ds_atelier_checkout_order_public($row, $itemsByOrder[(int) $row['id']] ?? []);
+        $orderId = (int) $row['id'];
+        $orders[] = ds_atelier_checkout_order_public(
+            $row,
+            $itemsByOrder[$orderId] ?? [],
+            $shipments[$orderId] ?? null,
+            $invoices[$orderId] ?? null
+        );
     }
 
     return [
@@ -729,9 +740,11 @@ function ds_atelier_checkout_get_order(PDO $pdo, array $config, array $input): a
         return ['ok' => false, 'error' => 'Order not found.', 'code' => 404];
     }
     $items = ds_atelier_checkout_order_items($pdo, (int) $order['id']);
+    $shipment = ds_atelier_fulfilment_find_by_order($pdo, (int) $order['id']);
+    $invoice = ds_atelier_invoice_find_by_order($pdo, (int) $order['id']);
     return [
         'ok' => true,
-        'order' => ds_atelier_checkout_order_public($order, $items),
+        'order' => ds_atelier_checkout_order_public($order, $items, $shipment, $invoice),
         'code' => 200,
     ];
 }
@@ -796,7 +809,12 @@ function ds_atelier_checkout_place(PDO $pdo, array $config, array $input): array
             $cartState = ds_atelier_cart_get($pdo, $config);
             return [
                 'ok' => true,
-                'order' => ds_atelier_checkout_order_public($existing, $existingItems),
+                'order' => ds_atelier_checkout_order_public(
+                    $existing,
+                    $existingItems,
+                    ds_atelier_fulfilment_find_by_order($pdo, (int) $existing['id']),
+                    ds_atelier_invoice_find_by_order($pdo, (int) $existing['id'])
+                ),
                 'cart' => $cartState['cart'],
                 'replayed' => true,
                 'code' => 200,
@@ -887,7 +905,12 @@ function ds_atelier_checkout_place(PDO $pdo, array $config, array $input): array
                     $cartState = ds_atelier_cart_get($pdo, $config);
                     return [
                         'ok' => true,
-                        'order' => ds_atelier_checkout_order_public($existing, $existingItems),
+                        'order' => ds_atelier_checkout_order_public(
+                            $existing,
+                            $existingItems,
+                            ds_atelier_fulfilment_find_by_order($pdo, (int) $existing['id']),
+                            ds_atelier_invoice_find_by_order($pdo, (int) $existing['id'])
+                        ),
                         'cart' => $cartState['cart'],
                         'replayed' => true,
                         'code' => 200,
@@ -938,6 +961,24 @@ function ds_atelier_checkout_place(PDO $pdo, array $config, array $input): array
             return $reserved;
         }
 
+        if (ds_atelier_fulfilment_tables_exist($pdo)) {
+            ds_atelier_fulfilment_ensure_row($pdo, $orderId);
+        }
+
+        $placedStmt = $pdo->prepare('SELECT * FROM orders WHERE id = ? LIMIT 1');
+        $placedStmt->execute([$orderId]);
+        $placedOrder = $placedStmt->fetch();
+        if (is_array($placedOrder)) {
+            $placedItems = ds_atelier_checkout_order_items($pdo, $orderId);
+            $issued = ds_atelier_invoice_issue($pdo, $config, $placedOrder, $placedItems);
+            $invoiceRow = is_array($issued['invoice'] ?? null) ? $issued['invoice'] : null;
+            try {
+                ds_atelier_mail_queue_order_placed($pdo, $config, $placedOrder, $placedItems, $invoiceRow);
+            } catch (Throwable $e) {
+                ds_atelier_log('error', 'Order placed email was not queued', $config);
+            }
+        }
+
         $pdo->prepare('DELETE FROM cart_items WHERE cart_id = ?')->execute([(int) $cart['id']]);
         ds_atelier_cart_touch($pdo, (int) $cart['id']);
         $pdo->commit();
@@ -953,7 +994,12 @@ function ds_atelier_checkout_place(PDO $pdo, array $config, array $input): array
     $cartState = ds_atelier_cart_get($pdo, $config);
     return [
         'ok' => true,
-        'order' => $order !== null ? ds_atelier_checkout_order_public($order, $orderItems) : null,
+        'order' => $order !== null ? ds_atelier_checkout_order_public(
+            $order,
+            $orderItems,
+            $order !== null ? ds_atelier_fulfilment_find_by_order($pdo, (int) $order['id']) : null,
+            $order !== null ? ds_atelier_invoice_find_by_order($pdo, (int) $order['id']) : null
+        ) : null,
         'cart' => $cartState['cart'],
         'code' => 201,
     ];

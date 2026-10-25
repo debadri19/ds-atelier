@@ -138,8 +138,8 @@
 
   function statusClass(status) {
     var key = String(status || "").toLowerCase().replace(/[\s-]+/g, "_");
-    if (key === "pending_payment" || key === "pending" || key === "processing") return "is-processing";
-    if (key === "shipped") return "is-shipped";
+    if (key === "pending_payment" || key === "pending" || key === "processing" || key === "unfulfilled") return "is-processing";
+    if (key === "shipped" || key === "dispatched" || key === "in_transit") return "is-shipped";
     if (key === "delivered") return "is-delivered";
     if (key === "cancelled" || key === "failed") return "is-cancelled";
     return "";
@@ -150,7 +150,10 @@
     if (key === "pending_payment") return "Pending payment";
     if (key === "pending") return "Pending";
     if (key === "processing") return "Processing";
+    if (key === "unfulfilled") return "Awaiting fulfilment";
     if (key === "shipped") return "Shipped";
+    if (key === "dispatched") return "Dispatched";
+    if (key === "in_transit") return "In transit";
     if (key === "delivered") return "Delivered";
     if (key === "cancelled") return "Cancelled";
     if (key === "failed") return "Failed";
@@ -615,6 +618,36 @@
     }).join("");
   }
 
+  function fulfilmentBlock(order) {
+    var fulfilment = order && order.fulfilment ? order.fulfilment : null;
+    var status = fulfilment && fulfilment.status ? fulfilment.status : "unfulfilled";
+    var html = '<div class="account-detail-block" data-order-fulfilment>' +
+      '<p class="account-stat-label">Fulfilment</p>' +
+      '<p class="account-muted">' + escapeHtml(statusLabel(status)) + "</p>";
+    if (fulfilment && fulfilment.courierName && fulfilment.trackingNumber) {
+      html += '<p class="account-muted">' + escapeHtml(fulfilment.courierName) + " · " + escapeHtml(fulfilment.trackingNumber) + "</p>";
+      if (fulfilment.trackingUrl) {
+        html += '<p><a class="account-muted" href="' + escapeHtml(fulfilment.trackingUrl) + '" rel="noopener noreferrer" target="_blank">Track shipment</a></p>';
+      }
+    }
+    html += "</div>";
+    return html;
+  }
+
+  function invoiceBlock(order) {
+    var invoice = order && order.invoice ? order.invoice : null;
+    if (!invoice || !invoice.number) {
+      return '<div class="account-detail-block" data-order-invoice><p class="account-stat-label">Invoice</p><p class="account-muted">Invoice not available yet.</p></div>';
+    }
+    var href = invoice.downloadPath || (commerce() && commerce().invoiceDownloadUrl ? commerce().invoiceDownloadUrl(invoice.number) : "");
+    var kind = invoice.kind === "development_test" ? "Development/test invoice" : "Invoice";
+    return '<div class="account-detail-block" data-order-invoice>' +
+      '<p class="account-stat-label">Invoice</p>' +
+      '<p class="account-muted">' + escapeHtml(kind) + " · " + escapeHtml(invoice.number) + "</p>" +
+      (href ? '<p><a class="btn btn-secondary btn-sm" href="' + escapeHtml(href) + '">Download invoice</a></p>' : "") +
+      "</div>";
+  }
+
   function shippingFromOrder(order) {
     if (order && order.shipping && typeof order.shipping === "object" && order.shipping.name) {
       return order.shipping;
@@ -694,6 +727,8 @@
               '<p class="account-stat-label">Payment</p>' +
               '<p class="account-muted">' + escapeHtml(paymentMethod) + (paymentStatus ? " · " + escapeHtml(statusLabel(paymentStatus === "pending" ? "pending_payment" : paymentStatus)) : "") + "</p>" +
             "</div>" +
+            fulfilmentBlock(order) +
+            invoiceBlock(order) +
           "</aside>" +
         "</div>" +
       "</div>";

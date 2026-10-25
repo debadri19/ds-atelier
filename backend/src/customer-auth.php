@@ -212,7 +212,7 @@ function ds_atelier_login_customer(PDO $pdo, array $input): array
     return ['ok' => true, 'customer' => ds_atelier_customer_public($customer), 'code' => 200];
 }
 
-function ds_atelier_create_password_reset(PDO $pdo, string $email): array
+function ds_atelier_create_password_reset(PDO $pdo, string $email, array $config = []): array
 {
     $email = ds_atelier_normalize_email($email);
     $generic = ['ok' => true, 'message' => DS_ATELIER_AUTH_GENERIC_FORGOT, 'issued' => false, 'email_sent' => false, 'code' => 200];
@@ -229,18 +229,45 @@ function ds_atelier_create_password_reset(PDO $pdo, string $email): array
     $raw = bin2hex(random_bytes(32));
     $hash = hash('sha256', $raw);
     $expires = (new DateTimeImmutable('now'))->modify('+' . DS_ATELIER_RESET_TTL_SECONDS . ' seconds')->format('Y-m-d H:i:s');
+    $queued = false;
+    $own = !$pdo->inTransaction();
+    if ($own) {
+        $pdo->beginTransaction();
+    }
+    try {
+        $pdo->prepare('UPDATE customer_password_resets SET used_at = COALESCE(used_at, NOW()) WHERE customer_id = ? AND used_at IS NULL')
+            ->execute([(int) $customer['id']]);
 
-    $pdo->prepare('UPDATE customer_password_resets SET used_at = COALESCE(used_at, NOW()) WHERE customer_id = ? AND used_at IS NULL')
-        ->execute([(int) $customer['id']]);
-
-    $stmt = $pdo->prepare('INSERT INTO customer_password_resets (customer_id, token_hash, expires_at) VALUES (?, ?, ?)');
-    $stmt->execute([(int) $customer['id'], $hash, $expires]);
+        $stmt = $pdo->prepare('INSERT INTO customer_password_resets (customer_id, token_hash, expires_at) VALUES (?, ?, ?)');
+        $stmt->execute([(int) $customer['id'], $hash, $expires]);
+        $resetId = (int) $pdo->lastInsertId();
+        if ($config !== []) {
+            try {
+                $queue = ds_atelier_mail_queue_password_reset($pdo, $config, $customer, $raw, $resetId);
+                $queued = ($queue['ok'] ?? false) === true && (($queue['queued'] ?? false) === true || ($queue['replayed'] ?? false) === true);
+                if ($queued !== true) {
+                    ds_atelier_log('error', 'Password reset email was not queued', $config);
+                }
+            } catch (Throwable $e) {
+                ds_atelier_log('error', 'Password reset email was not queued', $config);
+            }
+        }
+        if ($own) {
+            $pdo->commit();
+        }
+    } catch (Throwable $e) {
+        if ($own && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
 
     return [
         'ok' => true,
         'message' => DS_ATELIER_AUTH_GENERIC_FORGOT,
         'issued' => true,
         'email_sent' => false,
+        'queued' => $queued,
         'code' => 200,
         'token' => $raw,
         'email' => $email,

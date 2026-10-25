@@ -26,6 +26,17 @@
     }
   }
 
+  function statusLabel(status) {
+    var value = String(status || "").toLowerCase();
+    if (value === "unfulfilled") return "Awaiting fulfilment";
+    if (value === "processing") return "Processing";
+    if (value === "dispatched") return "Dispatched";
+    if (value === "in_transit") return "In transit";
+    if (value === "delivered") return "Delivered";
+    if (value === "cancelled") return "Cancelled";
+    return status || "Awaiting fulfilment";
+  }
+
   function paymentLabel(status) {
     var value = String(status || "").toLowerCase();
     if (value === "pending" || value === "pending_payment") return "Pending payment";
@@ -116,6 +127,22 @@
     if (noticeEl) {
       var notices = Array.isArray(order.notices) ? order.notices : [];
       noticeEl.textContent = notices.join(" ") || "Payment has not been collected. This order is pending payment.";
+    }
+    var fulfilmentEl = qs("[data-fulfilment-status]");
+    if (fulfilmentEl) {
+      var fulfilment = order.fulfilment || {};
+      fulfilmentEl.textContent = statusLabel(fulfilment.status || "unfulfilled");
+    }
+    var invoiceEl = qs("[data-invoice-link]");
+    if (invoiceEl) {
+      var invoice = order.invoice || null;
+      if (invoice && invoice.number) {
+        invoiceEl.hidden = false;
+        invoiceEl.href = invoice.downloadPath || ("backend/public/customer/invoice-download.php?number=" + encodeURIComponent(invoice.number));
+        invoiceEl.textContent = "Download invoice";
+      } else {
+        invoiceEl.hidden = true;
+      }
     }
 
     var ship = formatShipping(order, account);

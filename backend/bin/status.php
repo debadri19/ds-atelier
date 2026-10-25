@@ -25,6 +25,21 @@ fwrite(STDOUT, "session_name=" . $config['session']['name'] . "\n");
 fwrite(STDOUT, "session_secure=" . ($config['session']['secure'] ? '1' : '0') . "\n");
 fwrite(STDOUT, "session_samesite=" . $config['session']['samesite'] . "\n");
 
+$mail = ds_atelier_mail_status_summary($config);
+fwrite(STDOUT, "mail_transport=" . $mail['transport'] . "\n");
+fwrite(STDOUT, "mail_ready=" . $mail['ready'] . "\n");
+fwrite(STDOUT, "mail_real=" . $mail['real'] . "\n");
+fwrite(STDOUT, "mail_from_configured=" . $mail['from_configured'] . "\n");
+fwrite(STDOUT, "mail_smtp_configured=" . $mail['smtp_configured'] . "\n");
+fwrite(STDOUT, "mail_app_url_configured=" . $mail['app_url_configured'] . "\n");
+
+$pay = ds_atelier_payment_status_summary($config);
+fwrite(STDOUT, "payment_provider=" . $pay['provider'] . "\n");
+fwrite(STDOUT, "payment_configured=" . $pay['configured'] . "\n");
+fwrite(STDOUT, "payment_ready=" . $pay['ready'] . "\n");
+fwrite(STDOUT, "payment_live=" . $pay['live'] . "\n");
+fwrite(STDOUT, "payment_webhook_configured=" . $pay['webhook_configured'] . "\n");
+
 if (in_array('--config-only', $argv, true)) {
     exit(0);
 }

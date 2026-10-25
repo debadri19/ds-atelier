@@ -9,6 +9,9 @@ function ds_atelier_admin_authenticated(): bool
     }
 
     $adminId = $_SESSION['_ds_atelier_admin_id'] ?? null;
+    if (is_string($adminId) && ctype_digit($adminId)) {
+        $adminId = (int) $adminId;
+    }
     return is_int($adminId) && $adminId > 0;
 }
 

@@ -39,6 +39,7 @@ function ds_cleanup(PDO $pdo, array $ids): void
         return;
     }
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    ds_atelier_mail_purge_customers($pdo, $ids);
     $pdo->prepare("UPDATE customer_password_resets SET used_at = COALESCE(used_at, NOW()) WHERE customer_id IN ($placeholders)")
         ->execute($ids);
     $pdo->prepare("DELETE FROM customer_password_resets WHERE customer_id IN ($placeholders)")

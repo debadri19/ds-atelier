@@ -24,7 +24,7 @@ Required future implementation.
 - Cart and Wishlist persist in `ds_atelier_dev`. Checkout creates pending-payment orders and reserves in-stock units; payment is not collected.
 - Account addresses remain frontend/demo stores (`localStorage` / `sessionStorage`); order history is Phase 6A.
 
-**Evidence:** Catalog, cart, wishlist, and checkout JSON live under `backend/public/`. Payment capture, invoices/email, and admin orders are not implemented. Customer `js/auth.js` posts to `backend/public/customer/*.php` (Phase 2).
+**Evidence:** Catalog, cart, wishlist, checkout, owned order history, inventory reservation, and Phase 6C fulfilment/invoice JSON live under `backend/public/`. Payment capture, production tax invoices/email, and authorized admin order writes are not implemented. Customer `js/auth.js` posts to `backend/public/customer/*.php` (Phase 2).
 
 ### P2 — Production catalog and artwork data
 
@@ -154,8 +154,8 @@ Do not promote these to Confirmed Pending or Completed without more evidence.
 | Catalog | Shop/Product read `backend/public/catalog/*.php`; `js/catalog.js` demo fallback | Admin CRUD, production imagery |
 | Artwork | `js/artworks.js` mock dataset | Persistent artwork/product mapping |
 | Cart / Checkout | Server cart/wishlist and pending-payment orders in `ds_atelier_dev` | Payment capture, production shipping/tax |
-| Customer auth | `auth.html` + `js/auth.js` + PHP session on `ds_atelier_dev` | SMTP password-reset email (not configured) |
-| Account / orders | Phase 6A owned list/detail against pending-payment rows | Admin order dashboard, payment capture |
+| Customer auth | `auth.html` + `js/auth.js` + PHP session on `ds_atelier_dev` | Real SMTP password-reset delivery (queued only; unverified) |
+| Account / orders | Phase 6A owned list/detail plus Phase 6C fulfilment/invoice fields | Authorized admin fulfilment writes, payment capture |
 | Wishlist | `wishlist.html` plus `backend/public/wishlist/*.php` | Artwork file storage |
 | Dashboard | session demo store; placeholder commerce modules | Persistent CRUD, media uploads, admin auth |
 | Payments | Footer badge labels / demo checkout copy | Gateway verification |
@@ -168,11 +168,11 @@ Do not describe Cart, Checkout, Account, Wishlist, or Auth as “not built.” D
 
 Supported by current files and `docs/BACKEND_INTEGRATION.md`:
 
-- Payment capture, invoices/email, admin orders, production shipping/tax
+- Payment capture, production tax invoices/email, authorized admin order writes, production shipping/tax
 - Durable media storage for Dashboard Media/mockups
 - Production end-to-end QA after that wiring (P6)
 
-This frontend repository has no Node build step. Phase 1 added `backend/` foundation files. Phase 2 added customer auth. Phase 3 added catalog reads. Phase 4 added cart/wishlist. Phase 5 added pending-payment checkout against `ds_atelier_dev`. Phase 6A added owned customer order history.
+This frontend repository has no Node build step. Phase 1 added `backend/` foundation files. Phase 2 added customer auth. Phase 3 added catalog reads. Phase 4 added cart/wishlist. Phase 5 added pending-payment checkout against `ds_atelier_dev`. Phase 6A added owned customer order history. Phase 6B added inventory reservation. Phase 6C added fulfilment/invoice services with fail-closed admin writes. Phase 6D added a transactional email outbox and manual worker.
 
 ---
 
@@ -275,3 +275,27 @@ Implemented locally, not committed. Dedicated `ds_atelier_dev` only.
 - Password-reset email: **not sent**. SMTP is not configured. Public JSON reports `email_sent: false` and never includes the raw token
 - Dashboard `dashboard/auth.html` was not modified
 - Catalog, cart, wishlist, checkout, payments, Newsletter, Meta Pixel/CAPI were not implemented
+
+## Phase 6C fulfilment and invoices (2026-10-24)
+
+Implemented in this workspace, not committed. Dedicated `ds_atelier_dev` only.
+
+- Additive migrations: `shipments`, `shipment_events`, `invoices` (not applied in this environment if MySQL is unavailable)
+- Customer order JSON includes `fulfilment` and `invoice`; Account/order-success show tracking only when stored
+- Invoice download is ownership-scoped HTML. No PDF renderer is installed. Seller GST/legal policy remains unconfigured; documents are development/test
+- Admin fulfilment writes remain fail-closed (`ds_atelier_admin_require()`). Do not treat Dashboard demo login as authorization
+- Tests: `php backend/tests/phase6c_fulfilment_invoices.php` — 22 passed, 0 failed, 1 skipped (`live fulfilment and invoice queries`, `ds_atelier_dev unavailable`). PDO to `127.0.0.1` returned `SQLSTATE[HY000] [2002] Connection refused`. Migrations were not applied in this environment
+- Outstanding from earlier phases remains: Phase 1 PDO fixture verification, Phase 6A live ownership HTTP, Phase 6B inventory lifecycle, until those suites are re-run against `ds_atelier_dev`
+
+## Phase 6D transactional email (2026-10-25)
+
+Implemented in this workspace, not committed. Dedicated `ds_atelier_dev` only.
+
+- Additive migration: `email_outbox` (not applied; MySQL connection refused)
+- Order placed, fulfilment update, cancellation, and password-reset events queue in the business transaction
+- Transports: `disabled` / `test` / `smtp`. Development uses `test`. PHP `mail()` is not used. No Composer mailer
+- Worker is manual: `php backend/bin/send-email-queue.php`. `--status` does not send. No scheduler is configured
+- Public forgot-password JSON still reports `email_sent: false` and never includes the raw token
+- Tests: `php backend/tests/phase6d_email.php` — 31 passed, 0 failed, 1 skipped (`live email queue queries`, `ds_atelier_dev unavailable`)
+- Real SMTP delivery: **not verified**
+- Do not remove Phase 6C live-database QC or Phase 6B verification items because Phase 6D code exists

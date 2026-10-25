@@ -24,7 +24,9 @@
     checkoutPlace: "backend/public/checkout/place.php",
     checkoutOrder: "backend/public/checkout/order.php",
     checkoutOrders: "backend/public/checkout/orders.php",
-    customerOrders: "backend/public/customer/orders.php"
+    customerOrders: "backend/public/customer/orders.php",
+    customerInvoice: "backend/public/customer/invoice.php",
+    customerInvoiceDownload: "backend/public/customer/invoice-download.php"
   };
 
   function catalog() {
@@ -429,6 +431,22 @@
       return data || { ok: false, error: "Order not found." };
     }).catch(function () {
       return { ok: false, error: "Unable to load this order." };
+    });
+  }
+
+  function invoiceDownloadUrl(number) {
+    return API.customerInvoiceDownload + "?number=" + encodeURIComponent(number || "");
+  }
+
+  function getInvoice(params) {
+    var query = [];
+    if (params && params.number) query.push("number=" + encodeURIComponent(params.number));
+    if (params && params.ref) query.push("ref=" + encodeURIComponent(params.ref));
+    var url = API.customerInvoice + (query.length ? "?" + query.join("&") : "");
+    return getJson(url).then(function (data) {
+      return data || { ok: false, error: "Invoice not found." };
+    }).catch(function () {
+      return { ok: false, error: "Unable to load this invoice." };
     });
   }
 
@@ -939,6 +957,8 @@
     placeOrder: placeOrder,
     getOrder: getOrder,
     listOrders: listOrders,
+    getInvoice: getInvoice,
+    invoiceDownloadUrl: invoiceDownloadUrl,
     lastQuote: function () { return state.quote; }
   };
 })(window);

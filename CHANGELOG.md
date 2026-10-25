@@ -4,7 +4,30 @@ Chronological history of changes that actually exist. Dates use the work session
 
 ---
 
+## 2026-10-25
+
+### Phase 6D transactional email and notifications
+
+- Additive `email_outbox` table on dedicated `ds_atelier_dev`
+- Test and SMTP transports via `DS_ATELIER_*` env; development defaults to test; production rejects test
+- Checkout place, fulfilment transitions, and password-reset issue queue events in the business transaction
+- Templates: order placed (pending payment), fulfilment update, cancellation, password reset, with HTML plus plain text
+- Worker: `php backend/bin/send-email-queue.php` (manual; `--status` does not send). No scheduler is configured
+- Public forgot-password JSON still reports `email_sent: false` and never includes the raw token
+- PHP `mail()` is not used. No Composer mailer is installed. Real SMTP delivery is not verified
+- Tests: `backend/tests/phase6d_email.php`
+
 ## 2026-10-24
+
+### Phase 6C fulfilment and invoices
+
+- Additive `shipments`, `shipment_events`, and `invoices` tables on dedicated `ds_atelier_dev`
+- Checkout place creates an unfulfilled shipment row and a unique development/test invoice from persisted order snapshots
+- Customer order JSON includes fulfilment and invoice summaries; Account and order-success show tracking only when stored
+- Invoice download is ownership-scoped HTML (`text/html` attachment). No PDF library is installed, so PDF download is not claimed
+- Admin fulfilment writes use `ds_atelier_admin_require()` and remain fail-closed; payment status is never set from customer or fulfilment endpoints
+- Seller GST/legal invoice policy remains `unconfigured`; documents are marked development/test
+- Tests: `backend/tests/phase6c_fulfilment_invoices.php`
 
 ### Phase 6B inventory reservation
 
